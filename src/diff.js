@@ -1,13 +1,14 @@
 import jc from 'json-cycle';
 import _ from 'lodash';
+import check from './check';
 
 function isNumeric(n) {
   return !isNaN(parseFloat(n)) && isFinite(n);
 }
 
 function _prune(el) {
-  for (let key in el) {
-    var val = el[key];
+  for (const key in el) {
+    const val = el[key];
     if (Array.isArray(val)) {
       if (val.length && !isEmpty(val)) {
         if (_prune(val)) {
@@ -35,8 +36,8 @@ function prune(obj) {
 }
 
 function isEmpty(el) {
-  var containsValid = 0;
-  for (let i in el) {
+  let containsValid = 0;
+  for (const i in el) {
     if (el[i] || isNumeric(el[i])) {
       containsValid = true;
     }
@@ -118,11 +119,11 @@ function valueForKeyPath(keyPath, current) {
 }
 
 function unsetKeyPath(keyPath, obj) {
-  let keys = keyPath.split('.');
-  var current = obj;
-  var i = 0;
+  const keys = keyPath.split('.');
+  let current = obj;
+  let i = 0;
   while (i < keys.length - 1) {
-    let key = keys[i];
+    const key = keys[i];
     if (Array.isArray(current)) {
       if (!current[parseInt(key)]) {
         return 0;
@@ -136,9 +137,9 @@ function unsetKeyPath(keyPath, obj) {
     }
     i++;
   }
-  let lastKey = keys[keys.length - 1];
+  const lastKey = keys[keys.length - 1];
   if (Array.isArray(current)) {
-    let index = parseInt(lastKey);
+    const index = parseInt(lastKey);
     if (current[index] !== void 0) {
       delete current[index];
       return 1;
@@ -154,8 +155,8 @@ function unsetKeyPath(keyPath, obj) {
 }
 
 function _keyPathContainsPath(keyPath, ignorePath) {
-  let p = keyPath.split('.');
-  let t = ignorePath.split('.');
+  const p = keyPath.split('.');
+  const t = ignorePath.split('.');
   if (!(p.length > t.length)) {
     return false;
   }
@@ -175,9 +176,9 @@ function keyPathContainsPath(keyPath, ignorePath) {
 }
 
 function trimUnsetter(modifier) {
-  let keys = Object.keys(modifier);
-  for (let one in keys) {
-    for (let two in keys) {
+  const keys = Object.keys(modifier);
+  for (const one in keys) {
+    for (const two in keys) {
       if (_keyPathContainsPath(keys[one], keys[two])) {
         delete modifier[keys[one]];
       }
@@ -187,11 +188,11 @@ function trimUnsetter(modifier) {
 }
 
 function filteredKeyPaths(keyPaths, ignore) {
-  var toFilter = [];
-  for (let ig in ignore) {
-    let ignorePath = ignore[ig];
-    for (let i in keyPaths) {
-      let keyPath = keyPaths[i];
+  const toFilter = [];
+  for (const ig in ignore) {
+    const ignorePath = ignore[ig];
+    for (const i in keyPaths) {
+      const keyPath = keyPaths[i];
       if (keyPathContainsPath(keyPath, ignorePath)) {
         toFilter.push(keyPath);
       }
@@ -200,9 +201,9 @@ function filteredKeyPaths(keyPaths, ignore) {
   return _.difference(keyPaths, toFilter);
 }
 
-function keyPaths(obj, options, stack, parent) {
-  stack = stack || [];
-  options = options || {};
+function keyPaths(obj, _options, _stack, parent) {
+  const stack = _stack || [];
+  const options = _options || {};
   for (const el of Object.keys(obj)) {
     if (obj.hasOwnProperty.call(el)) {
       if (Array.isArray(obj[el])) {
@@ -256,14 +257,11 @@ function keyPaths(obj, options, stack, parent) {
 }
 
 function allKeyPaths(obj) {
-  return keyPaths(obj, {
-    allLevels: true
-  });
+  return keyPaths(obj, {allLevels: true});
 }
 
 function forwardDiffToModifier(prev, doc, fieldsToIgnore) {
-  var filteredKeys;
-  filteredKeys = _.union(_.difference(keyPaths(prev), keyPaths(doc)), fieldsToIgnore || []);
+  const filteredKeys = _.union(_.difference(keyPaths(prev), keyPaths(doc)), fieldsToIgnore || []);
   return diffToModifier(prev, doc, filteredKeys);
 }
 
@@ -275,7 +273,9 @@ function shouldSet(val, prev) {
   } else if (isNumeric(val)) {
     return (prev !== val) || !isNumeric(prev);
   } else if (val !== null && typeof val === 'object') {
-    return Object.keys(val).length && !_.isEqual(prev, val);
+    return Object
+      .keys(val)
+      .length && !_.isEqual(prev, val);
   } else if (val) {
     return prev !== val;
   }
@@ -294,28 +294,25 @@ function shouldUnset(val, prev) {
 }
 
 function diffToModifier(prev, doc, fieldsToIgnore, pruneEmptyObjects) {
-  var curVal, delta, existingKeyPaths, forwardKeyPaths, k, keyPath, newDelta, val;
-  delta = {
+  const delta = {
     $set: {},
     $unset: {}
   };
   if (doc) {
-    forwardKeyPaths = filteredKeyPaths(keyPaths(doc), fieldsToIgnore);
-    for (k in forwardKeyPaths) {
-      keyPath = forwardKeyPaths[k];
-      val = valueForKeyPath(keyPath, doc);
+    const forwardKeyPaths = filteredKeyPaths(keyPaths(doc), fieldsToIgnore);
+    for (const k in forwardKeyPaths) {
+      const keyPath = forwardKeyPaths[k];
+      const val = valueForKeyPath(keyPath, doc);
       if (shouldSet(val, valueForKeyPath(keyPath, prev))) {
         delta.$set[keyPath] = val;
       }
     }
   }
   if (prev) {
-    existingKeyPaths = filteredKeyPaths(keyPaths(prev, {
-      allLevels: true
-    }), fieldsToIgnore);
-    for (k in existingKeyPaths) {
-      keyPath = existingKeyPaths[k];
-      curVal = valueForKeyPath(keyPath, doc);
+    const existingKeyPaths = filteredKeyPaths(keyPaths(prev, {allLevels: true}), fieldsToIgnore);
+    for (const k in existingKeyPaths) {
+      const keyPath = existingKeyPaths[k];
+      const curVal = valueForKeyPath(keyPath, doc);
       if (shouldUnset(curVal, valueForKeyPath(keyPath, prev))) {
         delta.$unset[keyPath] = true;
       }
@@ -330,40 +327,37 @@ function diffToModifier(prev, doc, fieldsToIgnore, pruneEmptyObjects) {
   }
   if (Object.keys(delta).length) {
     if (pruneEmptyObjects) {
-      newDelta = diffToModifier(prev, (_.clone(prev), delta), fieldsToIgnore, false);
+      const newDelta = diffToModifier(prev, (_.clone(prev), delta), fieldsToIgnore, false);
       return newDelta || delta;
-    } else {
-      return delta;
     }
-  } else {
-    return false;
+    return delta;
   }
+  return false;
 }
 
 function flatObject(object) {
-  var flat = {};
-  _.each(allKeyPaths(object), function(keyPath) {
-    return flat[keyPath] = valueForKeyPath(keyPath, object);
+  const flat = {};
+  _.each(allKeyPaths(object), (keyPath) => {
+    flat[keyPath] = valueForKeyPath(keyPath, object);
   });
   return flat;
 }
 
 function flatterObject(object) {
-  var flat = {};
-  _.each(keyPaths(object), function(keyPath) {
-    return flat[keyPath] = valueForKeyPath(keyPath, object);
+  const flat = {};
+  _.each(keyPaths(object), (keyPath) => {
+    flat[keyPath] = valueForKeyPath(keyPath, object);
   });
   return flat;
 }
 
 function modifierToObj(modifier) {
-  var obj;
   if (modifier) {
-    obj = {};
-    _.each(modifier.$set, function(val, keyPath) {
+    const obj = {};
+    _.each(modifier.$set, (val, keyPath) => {
       return setValueForKeyPath(val, keyPath, obj);
     });
-    _.each(modifier.$unset, function(val, keyPath) {
+    _.each(modifier.$unset, (val, keyPath) => {
       return setValueForKeyPath('', keyPath, obj);
     });
     return obj;
@@ -371,7 +365,7 @@ function modifierToObj(modifier) {
 }
 
 function objToModifier(obj) {
-  return diffToModifier(void 0, obj);
+  return diffToModifier(undefined, obj);
 }
 
 function apply(dest, source) {
@@ -382,7 +376,7 @@ function apply(dest, source) {
     $set(dest, source);
     $unset(dest, source);
   } else {
-    let mod = objToModifier(source);
+    const mod = objToModifier(source);
     $set(dest, mod);
     $unset(dest, mod);
   }
@@ -397,7 +391,7 @@ function $set(dest, source) {
   if (source.$set || source.$unset) {
     return $set(dest, source.$set);
   }
-  return _.each(source, function(val, keyPath) {
+  return _.each(source, (val, keyPath) => {
     if (isNumeric(val) || val) {
       return setValueForKeyPath(val, keyPath, dest);
     }
@@ -406,7 +400,7 @@ function $set(dest, source) {
 
 function $addToSet(dest, src) {
   if (!Array.isArray(dest)) {
-    throw "$addToSet, 1st arg not array";
+    throw new Error('$addToSet, 1st arg not array');
   }
   if (!_.contains(dest, src)) {
     dest.push(src);
@@ -421,17 +415,19 @@ function $unset(dest, source) {
   if (source.$unset || source.$set) {
     return $unset(dest, source.$unset);
   }
-  return _.each(source, function(val, keyPath) {
+  return _.each(source, (val, keyPath) => {
     return unsetKeyPath(keyPath, dest);
   });
 }
 
 function update(doc, options) {
-  var model;
+  let model;
   if (_.isFunction(options.get)) {
     model = options.get();
   } else if (doc.id && options.collection) {
-    model = options.collection.findOne({ _id: doc.id });
+    model = options
+      .collection
+      .findOne({_id: doc.id});
   }
   if (!model) {
     throw new Error('Diff: no doc to diff against');
@@ -442,64 +438,62 @@ function update(doc, options) {
       throw new Error('Diff: no setter provided');
     }
     if (_.isFunction(options.set)) {
-      var clone = _.clone(model);
-      apply(clone, diff);
+      const copy = _.clone(model);
+      apply(copy, diff);
       options.set(clone);
       if (!_.isEqual(clone, model)) {
         throw new Error('Diff: not equal after update');
       }
     } else if (options.collection) {
-      options.collection.update({ _id: model._id }, { $set: diff });
+      options
+        .collection
+        .update({
+          _id: model._id
+        }, {$set: diff});
     }
   }
   return diff;
 }
 
 function clone(obj) {
-  var attr, copy, i, len;
-  copy = void 0;
-  if (null === obj || 'object' !== typeof obj) {
+  let copy;
+  if (obj === null || typeof obj !== 'object') {
     return obj;
   } else if (obj instanceof Date) {
-    copy = new Date;
+    copy = new Date();
     copy.setTime(obj.getTime());
     return copy;
   } else if (obj instanceof Array) {
     copy = [];
-    i = 0;
-    len = obj.length;
-    while (i < len) {
+    for (let i = 0; i < obj.length; i += 1) {
       copy[i] = clone(obj[i]);
-      i++;
     }
     return copy;
   } else if (obj instanceof Object) {
     copy = {};
-    for (attr in obj) {
-      if (obj.hasOwnProperty(attr)) {
+    for (const attr in obj) {
+      if (obj.hasOwnProperty.call(attr)) {
         copy[attr] = clone(obj[attr]);
       }
     }
     return copy;
-  } else {
-    throw new Error('Unable to copy obj! Its type isn\'t supported.');
   }
+  throw new Error('Unable to copy obj! Its type isn\'t supported.');
 }
 
 function mapModifierToKey(modifier, key) {
-  var keyPath, valueModifier;
-  valueModifier = {};
-  for (keyPath in modifier.$set) {
+  const valueModifier = {};
+  for (const keyPath in modifier.$set) {
     if (valueModifier.$set == null) {
       valueModifier.$set = {};
     }
     valueModifier.$set[key + '.' + keyPath] = modifier.$set[keyPath];
   }
-  for (keyPath in modifier.$unset) {
+  for (const keyPath in modifier.$unset) {
     if (valueModifier.$unset == null) {
       valueModifier.$unset = {};
     }
-    valueModifier.$unset[key + '.' + keyPath] = modifier.$set[keyPath];
+    valueModifier.$unset[`${key}.${keyPath}`] = modifier.$set[keyPath];
   }
   return valueModifier;
 }
@@ -510,9 +504,7 @@ function stringify(json, rep, ind) {
 
 export {
   diffToModifier,
-  diffToModifier as diff,
   forwardDiffToModifier,
-  forwardDiffToModifier as forwardDiff,
   valueForKeyPath,
   keyPathContainsPath,
   setValueForKeyPath,
