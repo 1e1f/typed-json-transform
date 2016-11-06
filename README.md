@@ -1,5 +1,7 @@
 ## js-object-tools
 
+Status](https://secure.travis-ci.org/structuresound/js-object-tools.png?branch=master)](http://travis-ci.org/structuresound/js-object-tools) [![COVERALLS](https://img.shields.io/coveralls/structuresound/js-object-tools.svg)]()
+[![NPM](https://nodei.co/npm/js-object-tools.png?downloads=true)](https://nodei.co/npm/js-object-tools/)
 
 ## check
 
