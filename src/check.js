@@ -1,4 +1,5 @@
 import _ from 'lodash';
+import diff from './diff';
 
 function isNumeric(n) {
   return !isNaN(parseFloat(n)) && isFinite(n);
@@ -24,6 +25,7 @@ function _c(val, type) {
     case Object:
     case 'Object':
       return val !== null && typeof val === 'object' && !_c(val, Date) && !_c(val, Array) && !_c(val, Error);
+    case Boolean:
     case 'Boolean':
       return typeof val === 'boolean';
     case Error:
@@ -41,7 +43,7 @@ function _c(val, type) {
 
 function check(val, type) {
   if (_c(type, 'Array')) {
-    return _.any(type, (sType) => {
+    return diff.any(type, (sType) => {
       return _c(val, sType);
     });
   }

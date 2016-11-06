@@ -22,14 +22,30 @@ describe('diff', () => {
   it('getters do not mutate original', () => {
     const cloned = diff.clone(basicObject);
     diff.valueForKeyPath('a.b', basicObject);
-    // diff.diffToModifier(basicObject, cloned);
-    // diff.forwardDiffToModifier(basicObject, cloned);
-    // diff.modifierToObj(basicObject);
-    // diff.allKeyPaths(basicObject);
-    // diff.flatObject(basicObject);
-    // diff.clone(basicObject);
-    // diff.stringify(basicObject);
+    diff.diffToModifier(basicObject, cloned);
+    diff.forwardDiffToModifier(basicObject, cloned);
+    diff.modifierToObj(basicObject);
+    diff.allKeyPaths(basicObject);
+    diff.flatObject(basicObject);
+    diff.clone(basicObject);
+    diff.combine(basicObject, basicObject);
+    diff.stringify(basicObject);
     objectEqual(cloned, basicObject);
+  });
+
+  it('can combine 2 objects into a new object', () => {
+    const res = diff.combine({
+      a: 'b',
+      c: 'z'
+    }, {
+      c: 'd',
+      e: 'f'
+    });
+    assert.deepEqual(res, {
+      a: 'b',
+      c: 'd',
+      e: 'f'
+    });
   });
 
   it('can get value at Keypath', () => {

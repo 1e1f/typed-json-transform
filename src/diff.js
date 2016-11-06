@@ -393,12 +393,40 @@ function $set(dest, source) {
   });
 }
 
-function contains(set, match) {
+function combine(...args) {
+  const result = {};
+  for (const dict of args) {
+    _.extend(result, dict);
+  }
+  return result;
+}
+
+function any(iterable, fn) {
+  for (const v of iterable) {
+    if (fn(v)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function _contains(set, match) {
   for (const val of set) {
     if (val === match) {
       return true;
     }
   }
+}
+
+function contains(set, match) {
+  if (check(match, Array)) {
+    for (const val of match) {
+      if (_contains(set, val)) {
+        return true;
+      }
+    }
+  }
+  return _contains(set, match);
 }
 
 function $addToSet(dest, src) {
@@ -528,9 +556,11 @@ export default {
   objToModifier,
   flatObject,
   flatterObject,
+  any,
   contains,
   prune,
   clone,
+  combine,
   $set,
   $addToSet,
   $unset,
