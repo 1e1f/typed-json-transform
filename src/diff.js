@@ -2,32 +2,39 @@ import jc from 'json-cycle';
 import _ from 'lodash';
 import check from './check';
 
-function isNumeric(n) {
-  return !isNaN(parseFloat(n)) && isFinite(n);
+function isEmpty(input) {
+  const ref = input;
+  if (!check(input, Object)) {
+    throw new Error('checking non object for non-empty keys');
+  }
+  let containsValid = false;
+  for (const k of Object.keys(ref)) {
+    if (check(ref[k], 'any')) {
+      containsValid = true;
+    }
+  }
+  return !containsValid;
 }
 
-function _prune(el) {
-  for (const key in el) {
-    const val = el[key];
-    if (Array.isArray(val)) {
-      if (val.length && !isEmpty(val)) {
-        if (_prune(val)) {
-          delete el[key];
-        }
-      } else {
-        delete el[key];
+function _prune(input) {
+  if (!check(input, Object)) {
+    throw new Error('attempting to _prune undefined object');
+  }
+  const ref = input;
+  let pruned = false;
+  for (const k of Object.keys(ref)) {
+    const val = ref[k];
+    if (check(val, Object)) {
+      if (_prune(val)) {
+        pruned = true;
       }
-    } else if (val instanceof Date) {} else if (val !== null && typeof val === 'object') {
-      if (Object.keys(val).length && !isEmpty(val)) {
-        if (_prune(val)) {
-          delete el[key];
-        }
-      } else {
-        delete el[key];
+      if (isEmpty(val)) {
+        delete ref[k];
+        pruned = true;
       }
     }
   }
-  return isEmpty(el);
+  return pruned;
 }
 
 function prune(obj) {
@@ -35,78 +42,71 @@ function prune(obj) {
   return obj;
 }
 
-function isEmpty(el) {
-  let containsValid = 0;
-  for (const i in el) {
-    if (el[i] || isNumeric(el[i])) {
-      containsValid = true;
-    }
-  }
-  return !containsValid;
-}
-
-function setValueForKeyPath(value, keyPath, current) {
+function setValueForKeyPath(value, keyPath, input) {
+  let current = input;
   const keys = keyPath.split('.');
-  for (const i of keys) {
-    if (keys[i]) {
-      const thisKey = keys[i];
-      if (keys.length > i) {
-        const nextKey = keys[i + 1];
-        if (check(nextKey, Number)) {
-          if (Array.isArray(current)) {
-            if (!Array.isArray(current[parseInt(thisKey, 10)])) {
-              current[parseInt(thisKey, 10)] = [];
-            }
-          } else if (!Array.isArray(current[thisKey])) {
-            current[thisKey] = [];
+  for (let i = 0; i < keys.length - 1; i += 1) {
+    const thisKey = keys[i];
+    const nextKey = keys[i + 1];
+    if (nextKey) {
+      if (check(nextKey, Number)) {
+        if (Array.isArray(current)) {
+          if (!Array.isArray(current[parseInt(thisKey, 10)])) {
+            current[parseInt(thisKey, 10)] = [];
           }
-        } else if (Array.isArray(current)) {
-          if (current[parseInt(thisKey, 10)] === null || typeof current[parseInt(thisKey, 10)] !== 'object') {
-            current[parseInt(thisKey, 10)] = {};
-          }
-        } else if (current[thisKey] === null || typeof current[thisKey] !== 'object') {
-          current[thisKey] = {};
+        } else if (!Array.isArray(current[thisKey])) {
+          current[thisKey] = [];
         }
-      }
-      if (Array.isArray(current)) {
-        current = current[parseInt(thisKey, 10)];
-      } else {
-        current = current[thisKey];
-      }
-      const lastKey = keys[keys.length - 1];
-      if (Array.isArray(current)) {
-        current[parseInt(lastKey, 10)] = value;
-      } else {
-        current[lastKey] = value;
+      } else if (Array.isArray(current)) {
+        if (!(current[parseInt(thisKey, 10)] !== null && typeof current[parseInt(thisKey, 10)] === 'object')) {
+          current[parseInt(thisKey, 10)] = {};
+        }
+      } else if (!(current[thisKey] !== null && typeof current[thisKey] === 'object')) {
+        current[thisKey] = {};
       }
     }
+    if (Array.isArray(current)) {
+      current = current[parseInt(thisKey, 10)];
+    } else {
+      current = current[thisKey];
+    }
+  }
+  const lastKey = keys[keys.length - 1];
+  if (Array.isArray(current)) {
+    current[parseInt(lastKey, 10)] = value;
+  } else if (current !== null && typeof current === 'object') {
+    current[lastKey] = value;
   }
 }
 
-function mergeValueAtKeypath(value, keyPath, current) {
-  const existing = valueForKeyPath(keyPath, current);
+function mergeValueAtKeypath(value, keyPath, obj) {
+  // this function mutates obj
+  const existing = valueForKeyPath(keyPath, obj);
   let merged = value;
   if (check(value, Object) && check(existing, Object)) {
     merged = _.extend(existing, value);
   }
-  return setValueForKeyPath(merged, keyPath, current);
+  return setValueForKeyPath(merged, keyPath, obj);
 }
 
-function valueForKeyPath(keyPath, current) {
-  if (!current) {
-    return undefined;
+function valueForKeyPath(keyPath, input) {
+  if (!input) {
+    throw new Error('attempting to get valueForKeyPath on undefined object');
   }
+  let current = input;
   const keys = keyPath.split('.');
-  for (let i = 0; i < keys.length; i += 1) {
+  for (let i = 0; i < keys.length - 1; i += 1) {
     const key = keys[i];
     if (Array.isArray(current)) {
       if (!current[parseInt(key, 10)]) {
         return undefined;
+        // throw new Error(`no value at array position ${key} while enumerating valueForKeyPath`);
       }
       current = current[parseInt(key, 10)];
     } else if (current !== null && typeof current === 'object') {
       if (!current[key]) {
         return undefined;
+        // throw new Error(`no key: ${key} in subobject while enumerating valueForKeyPath`);
       }
       current = current[key];
     }
@@ -119,39 +119,37 @@ function valueForKeyPath(keyPath, current) {
 }
 
 function unsetKeyPath(keyPath, obj) {
+  // this function mutates obj
   const keys = keyPath.split('.');
   let current = obj;
-  let i = 0;
-  while (i < keys.length - 1) {
+  for (let i = 0; i < keys.length - 1; i += 1) {
     const key = keys[i];
     if (Array.isArray(current)) {
-      if (!current[parseInt(key)]) {
+      if (!current[parseInt(key, 10)]) {
         return 0;
       }
-      current = current[parseInt(key)];
+      current = current[parseInt(key, 10)];
     } else if (current !== null && typeof current === 'object') {
       if (!current[key]) {
         return 0;
       }
       current = current[key];
     }
-    i++;
   }
   const lastKey = keys[keys.length - 1];
   if (Array.isArray(current)) {
-    const index = parseInt(lastKey);
-    if (current[index] !== void 0) {
+    const index = parseInt(lastKey, 10);
+    if (current[index] !== undefined) {
       delete current[index];
       return 1;
     }
     return 0;
-  } else {
-    if (current[lastKey] !== void 0) {
-      delete current[lastKey];
-      return 1;
-    }
-    return 0;
   }
+  if (current[lastKey] !== undefined) {
+    delete current[lastKey];
+    return 1;
+  }
+  return 0;
 }
 
 function _keyPathContainsPath(keyPath, ignorePath) {
@@ -160,7 +158,7 @@ function _keyPathContainsPath(keyPath, ignorePath) {
   if (!(p.length > t.length)) {
     return false;
   }
-  for (let i = 0; i < t.length; i++) {
+  for (let i = 0; i < t.length; i += 1) {
     if (p[i] !== t[i]) {
       return false;
     }
@@ -175,37 +173,26 @@ function keyPathContainsPath(keyPath, ignorePath) {
   return _keyPathContainsPath(keyPath, ignorePath);
 }
 
-function trimUnsetter(modifier) {
-  const keys = Object.keys(modifier);
-  for (const one in keys) {
-    for (const two in keys) {
-      if (_keyPathContainsPath(keys[one], keys[two])) {
-        delete modifier[keys[one]];
-      }
-    }
+function filteredKeyPaths(_keyPaths, ignore) {
+  if (!ignore.length) {
+    return _keyPaths;
   }
-  return modifier;
-}
-
-function filteredKeyPaths(keyPaths, ignore) {
   const toFilter = [];
-  for (const ig in ignore) {
-    const ignorePath = ignore[ig];
-    for (const i in keyPaths) {
-      const keyPath = keyPaths[i];
+  for (const ignorePath of ignore) {
+    for (const keyPath of _keyPaths) {
       if (keyPathContainsPath(keyPath, ignorePath)) {
         toFilter.push(keyPath);
       }
     }
   }
-  return _.difference(keyPaths, toFilter);
+  return _.difference(_keyPaths, toFilter);
 }
 
 function keyPaths(obj, _options, _stack, parent) {
   const stack = _stack || [];
-  const options = _options || {};
+  const options = clone(_options || {});
   for (const el of Object.keys(obj)) {
-    if (obj.hasOwnProperty.call(el)) {
+    if (obj[el]) {
       if (Array.isArray(obj[el])) {
         if (options.allLevels) {
           stack.push(parent
@@ -270,8 +257,8 @@ function shouldSet(val, prev) {
     return !_.isEqual(prev, val);
   } else if (val instanceof Date) {
     return !(prev instanceof Date) || (val.getTime() !== prev.getTime());
-  } else if (isNumeric(val)) {
-    return (prev !== val) || !isNumeric(prev);
+  } else if (check(val, Number)) {
+    return (prev !== val) || !check(prev, Number);
   } else if (val !== null && typeof val === 'object') {
     return Object
       .keys(val)
@@ -282,7 +269,7 @@ function shouldSet(val, prev) {
 }
 
 function shouldUnset(val, prev) {
-  if ((prev || isNumeric(prev)) && !(val || isNumeric(val))) {
+  if ((prev || check(prev, Number)) && !(val || check(val, Number))) {
     return true;
   }
   if (val !== null && typeof curVal === 'object') {
@@ -299,9 +286,8 @@ function diffToModifier(prev, doc, fieldsToIgnore, pruneEmptyObjects) {
     $unset: {}
   };
   if (doc) {
-    const forwardKeyPaths = filteredKeyPaths(keyPaths(doc), fieldsToIgnore);
-    for (const k in forwardKeyPaths) {
-      const keyPath = forwardKeyPaths[k];
+    const forwardKeyPaths = filteredKeyPaths(keyPaths(doc), fieldsToIgnore || []);
+    for (const keyPath of forwardKeyPaths) {
       const val = valueForKeyPath(keyPath, doc);
       if (shouldSet(val, valueForKeyPath(keyPath, prev))) {
         delta.$set[keyPath] = val;
@@ -309,15 +295,23 @@ function diffToModifier(prev, doc, fieldsToIgnore, pruneEmptyObjects) {
     }
   }
   if (prev) {
-    const existingKeyPaths = filteredKeyPaths(keyPaths(prev, {allLevels: true}), fieldsToIgnore);
-    for (const k in existingKeyPaths) {
-      const keyPath = existingKeyPaths[k];
+    const kps = keyPaths(prev, {allLevels: true});
+    const existingKeyPaths = filteredKeyPaths(kps, fieldsToIgnore || []);
+    for (const keyPath of existingKeyPaths) {
       const curVal = valueForKeyPath(keyPath, doc);
       if (shouldUnset(curVal, valueForKeyPath(keyPath, prev))) {
         delta.$unset[keyPath] = true;
       }
     }
-    trimUnsetter(delta.$unset);
+    const modifier = delta.$unset;
+    const keys = Object.keys(modifier);
+    for (const pathA of keys) {
+      for (const pathB of keys) {
+        if (_keyPathContainsPath(pathA, pathB)) {
+          delete modifier[pathA];
+        }
+      }
+    }
   }
   if (!Object.keys(delta.$set).length) {
     delete delta.$set;
@@ -327,7 +321,7 @@ function diffToModifier(prev, doc, fieldsToIgnore, pruneEmptyObjects) {
   }
   if (Object.keys(delta).length) {
     if (pruneEmptyObjects) {
-      const newDelta = diffToModifier(prev, (_.clone(prev), delta), fieldsToIgnore, false);
+      const newDelta = diffToModifier(prev, (clone(prev), delta), fieldsToIgnore, false);
       return newDelta || delta;
     }
     return delta;
@@ -337,29 +331,30 @@ function diffToModifier(prev, doc, fieldsToIgnore, pruneEmptyObjects) {
 
 function flatObject(object) {
   const flat = {};
-  _.each(allKeyPaths(object), (keyPath) => {
+  for (const keyPath of allKeyPaths(object)) {
     flat[keyPath] = valueForKeyPath(keyPath, object);
-  });
+  }
   return flat;
 }
 
 function flatterObject(object) {
   const flat = {};
-  _.each(keyPaths(object), (keyPath) => {
+  for (const keyPath of keyPaths(object)) {
     flat[keyPath] = valueForKeyPath(keyPath, object);
-  });
+  }
   return flat;
 }
 
 function modifierToObj(modifier) {
   if (modifier) {
     const obj = {};
-    _.each(modifier.$set, (val, keyPath) => {
-      return setValueForKeyPath(val, keyPath, obj);
-    });
-    _.each(modifier.$unset, (val, keyPath) => {
-      return setValueForKeyPath('', keyPath, obj);
-    });
+    for (const keyPath of Object.keys(modifier.$set || {})) {
+      const val = modifier.$set[keyPath];
+      setValueForKeyPath(val, keyPath, obj);
+    }
+    for (const keyPath of Object.keys(modifier.$unset || {})) {
+      setValueForKeyPath(undefined, keyPath, obj);
+    }
     return obj;
   }
 }
@@ -392,17 +387,25 @@ function $set(dest, source) {
     return $set(dest, source.$set);
   }
   return _.each(source, (val, keyPath) => {
-    if (isNumeric(val) || val) {
+    if (check(val, Number) || val) {
       return setValueForKeyPath(val, keyPath, dest);
     }
   });
+}
+
+function contains(set, match) {
+  for (const val of set) {
+    if (val === match) {
+      return true;
+    }
+  }
 }
 
 function $addToSet(dest, src) {
   if (!Array.isArray(dest)) {
     throw new Error('$addToSet, 1st arg not array');
   }
-  if (!_.contains(dest, src)) {
+  if (!contains(dest, src)) {
     dest.push(src);
   }
   return dest;
@@ -438,10 +441,10 @@ function update(doc, options) {
       throw new Error('Diff: no setter provided');
     }
     if (_.isFunction(options.set)) {
-      const copy = _.clone(model);
+      const copy = clone(model);
       apply(copy, diff);
-      options.set(clone);
-      if (!_.isEqual(clone, model)) {
+      options.set(copy);
+      if (!_.isEqual(copy, model)) {
         throw new Error('Diff: not equal after update');
       }
     } else if (options.collection) {
@@ -455,41 +458,49 @@ function update(doc, options) {
   return diff;
 }
 
-function clone(obj) {
-  let copy;
-  if (obj === null || typeof obj !== 'object') {
-    return obj;
-  } else if (obj instanceof Date) {
-    copy = new Date();
-    copy.setTime(obj.getTime());
-    return copy;
-  } else if (obj instanceof Array) {
-    copy = [];
-    for (let i = 0; i < obj.length; i += 1) {
-      copy[i] = clone(obj[i]);
+function clone(input) {
+  if (input === undefined) {
+    throw new Error('can\'t clone undefined');
+  } else if (input === null) {
+    throw new Error('can\'t clone null');
+  } else if (input instanceof Date) {
+    const date = new Date();
+    date.setTime(input.getTime());
+    return date;
+  } else if (input instanceof Array) {
+    const array = [];
+    for (let i = 0; i < input.length; i += 1) {
+      array[i] = clone(input[i]);
     }
-    return copy;
-  } else if (obj instanceof Object) {
-    copy = {};
-    for (const attr in obj) {
-      if (obj.hasOwnProperty.call(attr)) {
-        copy[attr] = clone(obj[attr]);
-      }
+    return array;
+  } else if (typeof input === 'object') {
+    const newObj = {};
+    for (const key of Object.keys(input)) {
+      newObj[key] = clone(input[key]);
     }
-    return copy;
+    return newObj;
+  } else if (typeof input === 'string') {
+    return input;
+  } else if (typeof input === 'number') {
+    return input;
+  } else if (typeof input === 'boolean') {
+    return input;
   }
-  throw new Error('Unable to copy obj! Its type isn\'t supported.');
+  throw new Error(`diff.clone is unable to copy input ${JSON.stringify(input)}`);
 }
 
 function mapModifierToKey(modifier, key) {
+  if (!modifier) {
+    throw new Error('called mapModifierToKey on undefined');
+  }
   const valueModifier = {};
-  for (const keyPath in modifier.$set) {
+  for (const keyPath of Object.keys(modifier.$set || {})) {
     if (valueModifier.$set == null) {
       valueModifier.$set = {};
     }
-    valueModifier.$set[key + '.' + keyPath] = modifier.$set[keyPath];
+    valueModifier.$set[`${key}.${keyPath}`] = modifier.$set[keyPath];
   }
-  for (const keyPath in modifier.$unset) {
+  for (const keyPath of Object.keys(modifier.$unset || {})) {
     if (valueModifier.$unset == null) {
       valueModifier.$unset = {};
     }
@@ -502,12 +513,13 @@ function stringify(json, rep, ind) {
   return JSON.stringify(jc.decycle(json), rep, ind || 2);
 }
 
-export {
+export default {
   diffToModifier,
   forwardDiffToModifier,
   valueForKeyPath,
   keyPathContainsPath,
   setValueForKeyPath,
+  mergeValueAtKeypath,
   unsetKeyPath,
   keyPaths,
   allKeyPaths,
@@ -516,7 +528,7 @@ export {
   objToModifier,
   flatObject,
   flatterObject,
-  isNumeric,
+  contains,
   prune,
   clone,
   $set,

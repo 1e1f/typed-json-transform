@@ -12,6 +12,9 @@ function _c(val, type) {
     case Number:
     case 'Number':
       return isNumeric(val);
+    case Date:
+    case 'Date':
+      return val !== undefined && val instanceof Date;
     case Array:
     case 'Array':
       return Array.isArray(val);
@@ -20,7 +23,7 @@ function _c(val, type) {
       return _.isFunction(val);
     case Object:
     case 'Object':
-      return val !== null && typeof val === 'object' && !_c(val, Array) && !_c(val, Error);
+      return val !== null && typeof val === 'object' && !_c(val, Date) && !_c(val, Array) && !_c(val, Error);
     case 'Boolean':
       return typeof val === 'boolean';
     case Error:
@@ -29,6 +32,8 @@ function _c(val, type) {
     case undefined:
     case 'Undefined':
       return val === undefined;
+    case 'any':
+      return val !== undefined || isNumeric(val);
     default:
       throw new Error(`checking unsupported type ${type}`);
   }

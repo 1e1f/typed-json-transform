@@ -3,18 +3,47 @@ import {assert} from 'chai';
 
 import {diff} from '../lib';
 
-function objectEqualityTest(result, expected) {
-  return assert.deepEqual(result, expected, `${JSON.stringify(result)} '!=' ${JSON.stringify(expected)}`);
+function objectEqual(result, expected) {
+  assert.deepEqual(result, expected, `${JSON.stringify(result, 0, 2)} '!=' ${JSON.stringify(expected, 0, 2)}`);
 }
 
+const basicObject = {
+  a: {
+    b: 'c'
+  }
+};
+
 describe('diff', () => {
+  it('can make a deep copy of an object', () => {
+    const cloned = diff.clone(basicObject);
+    objectEqual(cloned, basicObject);
+  });
+
+  it('getters do not mutate original', () => {
+    const cloned = diff.clone(basicObject);
+    diff.valueForKeyPath('a.b', basicObject);
+    // diff.diffToModifier(basicObject, cloned);
+    // diff.forwardDiffToModifier(basicObject, cloned);
+    // diff.modifierToObj(basicObject);
+    // diff.allKeyPaths(basicObject);
+    // diff.flatObject(basicObject);
+    // diff.clone(basicObject);
+    // diff.stringify(basicObject);
+    objectEqual(cloned, basicObject);
+  });
+
+  it('can get value at Keypath', () => {
+    const res = diff.valueForKeyPath('a.b', basicObject);
+    assert.equal(res, basicObject.a.b);
+  });
+
   it('can setValueForKeyPath', () => {
     const obj = {};
     diff.setValueForKeyPath('f', 'a.b.c.d.e', obj);
-    return objectEqualityTest('f', obj.a.b.c.d.e);
+    assert.equal('f', obj.a.b.c.d.e);
   });
 
-  it('can unset a keypath in pace', () => {
+  it('unset keypath mutates original', () => {
     const obj = {
       a: {
         b: {
@@ -27,7 +56,7 @@ describe('diff', () => {
       }
     };
     diff.unsetKeyPath('a.b.c.d.e', obj);
-    return objectEqualityTest(obj, {
+    objectEqual(obj, {
       a: {
         b: {
           c: {
@@ -38,21 +67,20 @@ describe('diff', () => {
     });
   });
 
-  it('will prune an empty object', () => {
+  it('prune mutates original', () => {
     const obj = {
       a: {
         b: {
           c: {
             d: {
-              e: 'f'
+              e: {}
             }
           }
         }
       }
     };
-    diff.unsetKeyPath('a.b.c.d.e', obj);
     diff.prune(obj);
-    return objectEqualityTest(obj, {});
+    objectEqual(obj, {});
   });
 
   it('can convert a mongo modifier to an object', () => {
@@ -61,24 +89,11 @@ describe('diff', () => {
       'array.4': '5th element'
     };
     modifier.$unset = {
-      'emptyObject': ''
+      emptyObject: undefined
     };
     const obj = diff.modifierToObj(modifier);
     assert.equal(obj.array[4], '5th element');
-    return assert.equal(obj.emptyObject, '');
-  });
-
-  it('can flatten an object to corresponding keypaths', () => {
-    const flat = diff.flatterObject({
-      a: {
-        b: {
-          c: {
-            d: 'here\'s a thing'
-          }
-        }
-      }
-    });
-    return objectEqualityTest(flat, {'a.b.c.d': 'here\'s a thing'});
+    assert.equal(obj.emptyObject, undefined);
   });
 
   it('can expand an object to ALL keypath levels', () => {
@@ -91,7 +106,7 @@ describe('diff', () => {
         }
       }
     });
-    return objectEqualityTest(flat, {
+    objectEqual(flat, {
       'a.b.c.d': 'here\'s a thing',
       'a.b.c': {
         d: 'here\'s a thing'
@@ -111,6 +126,19 @@ describe('diff', () => {
     });
   });
 
+  it('can flatten an object to corresponding keypaths', () => {
+    const flat = diff.flatterObject({
+      a: {
+        b: {
+          c: {
+            d: 'here\'s a thing'
+          }
+        }
+      }
+    });
+    objectEqual(flat, {'a.b.c.d': 'here\'s a thing'});
+  });
+
   it('can get all object props as keypaths', () => {
     const object = {
       a: {
@@ -122,8 +150,8 @@ describe('diff', () => {
     };
     const keypaths = diff.allKeyPaths(object);
     const list = ['a', 'b', 'a.c', 'b.d'];
-    return assert(_.every(list, expected => {
-      return _.contains(keypaths, expected);
+    assert(_.every(list, expected => {
+      return diff.contains(keypaths, expected);
     }));
   });
 
@@ -145,8 +173,8 @@ describe('diff', () => {
       }
     };
     const modifier = diff.diffToModifier(a, z);
-    modifier.apply(a, diff);
-    return objectEqualityTest(a, z);
+    diff.apply(a, modifier);
+    objectEqual(a, z);
   });
 
   return it('can produce a diff of only keys added, and apply those changes', () => {
@@ -221,7 +249,7 @@ describe('diff', () => {
     };
 
     const modifier = diff.diffToModifier(a, b);
-    modifier.$update(a, diff);
-    return objectEqualityTest(a, b);
+    diff.apply(a, modifier);
+    assert.deepEqual(a, b, `failed with modifier ${JSON.stringify(modifier, 0, 2)}`);
   });
 });
