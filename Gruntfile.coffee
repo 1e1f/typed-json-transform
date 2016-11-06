@@ -22,4 +22,5 @@ module.exports = (grunt) ->
         ext: '.js'
 
   grunt.loadNpmTasks 'grunt-babel'
+  grunt.registerTask 'build', ['babel']
   grunt.registerTask 'default', ['babel']
