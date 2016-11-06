@@ -1,12 +1,12 @@
 {
-  "name": "1e1f-tools",
-  "version": "1.0.0",
+  "name": "js-object-tools",
+  "version": "0.9.1",
   "description": "diff utils",
   "main": "lib/index.js",
   "scripts": {
     "test": "mocha"
   },
-  "author": "",
+  "author": "1e1f",
   "license": "ISC",
   "devDependencies": {
     "babel-eslint": "^7.1.0",

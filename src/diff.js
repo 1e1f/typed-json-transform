@@ -89,6 +89,21 @@ function mergeValueAtKeypath(value, keyPath, obj) {
   return setValueForKeyPath(merged, keyPath, obj);
 }
 
+function extend(target, source) {
+  for (const prop in source) {
+    if (source.hasOwnProperty(prop)) {
+      if ((check(source[prop], Array) && check(target[prop], Array))) {
+        extend(target[prop], source[prop]);
+      } else if (check(source[prop], Object) && check(target[prop], Object)) {
+        extend(target[prop], source[prop]);
+      } else {
+        target[prop] = clone(source[prop]);
+      }
+    }
+  }
+  return target;
+}
+
 function valueForKeyPath(keyPath, input) {
   if (!input) {
     throw new Error('attempting to get valueForKeyPath on undefined object');
@@ -329,20 +344,37 @@ function diffToModifier(prev, doc, fieldsToIgnore, pruneEmptyObjects) {
   return false;
 }
 
-function flatObject(object) {
+function flatObject(object, options) {
   const flat = {};
-  for (const keyPath of allKeyPaths(object)) {
+  const kpFunc = (options || {}).includeBranches
+    ? allKeyPaths
+    : keyPaths;
+  for (const keyPath of kpFunc(object)) {
     flat[keyPath] = valueForKeyPath(keyPath, object);
   }
   return flat;
 }
 
-function flatterObject(object) {
-  const flat = {};
-  for (const keyPath of keyPaths(object)) {
-    flat[keyPath] = valueForKeyPath(keyPath, object);
+function groupReduce(objOrArray, groupField, reduceFunction, baseType) {
+  if (!(Array.isArray(objOrArray) || (objOrArray !== null && typeof objOrArray === 'object'))) {
+    throw new Error('not reducing array or object');
   }
-  return flat;
+  const root = {};
+  _.each(objOrArray, (value) => {
+    const key = value[groupField];
+    root[key] = reduceFunction(root[key] || baseType || {}, value, key);
+  });
+  return root;
+}
+
+function okmap(iterable, fn) {
+  const sum = {};
+  _.each(iterable, (v, k) => {
+    const res = fn(v, k);
+    const key = Object.keys(res)[0];
+    sum[key] = res[key];
+  });
+  return sum;
 }
 
 function modifierToObj(modifier) {
@@ -410,7 +442,19 @@ function any(iterable, fn) {
   return false;
 }
 
-function _contains(set, match) {
+function every(iterable, fn) {
+  for (const v of iterable) {
+    if (!fn(v)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function contains(set, match) {
+  if (check(match, Array)) {
+    return containsAny(set, match);
+  }
   for (const val of set) {
     if (val === match) {
       return true;
@@ -418,15 +462,27 @@ function _contains(set, match) {
   }
 }
 
-function contains(set, match) {
-  if (check(match, Array)) {
-    for (const val of match) {
-      if (_contains(set, val)) {
-        return true;
-      }
+function containsAny(set, match) {
+  if (!check(match, Array)) {
+    throw new Error('contains all takes a list to match');
+  }
+  for (const val of match) {
+    if (contains(set, val)) {
+      return true;
     }
   }
-  return _contains(set, match);
+}
+
+function containsAll(set, match) {
+  if (!check(match, Array)) {
+    throw new Error('contains all takes a list to match');
+  }
+  for (const val of match) {
+    if (!contains(set, val)) {
+      return false;
+    }
+  }
+  return true;
 }
 
 function $addToSet(dest, src) {
@@ -492,9 +548,7 @@ function clone(input) {
   } else if (input === null) {
     throw new Error('can\'t clone null');
   } else if (input instanceof Date) {
-    const date = new Date();
-    date.setTime(input.getTime());
-    return date;
+    return new Date(input.valueOf());
   } else if (input instanceof Array) {
     const array = [];
     for (let i = 0; i < input.length; i += 1) {
@@ -555,12 +609,16 @@ export default {
   modifierToObj,
   objToModifier,
   flatObject,
-  flatterObject,
   any,
+  every,
   contains,
+  containsAny,
+  containsAll,
   prune,
   clone,
   combine,
+  groupReduce,
+  okmap,
   $set,
   $addToSet,
   $unset,
