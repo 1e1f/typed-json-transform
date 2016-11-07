@@ -3,5 +3,5 @@ import check from './check';
 
 export {
   diff,
-  check
+  check,
 };

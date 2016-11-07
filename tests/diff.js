@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import {assert} from 'chai';
 
-import {diff} from '../lib';
+import {diff, check} from '../lib';
 
 function objectEqual(result, expected) {
   assert.deepEqual(result, expected, `${JSON.stringify(result, 0, 2)} '!=' ${JSON.stringify(expected, 0, 2)}`);
@@ -51,6 +51,27 @@ describe('clone', () => {
   });
   it('does not mutate original', () => {
     objectEqual(test, makeZ());
+  });
+});
+
+describe('boolean', () => {
+  const all = [1, 1, 1];
+  const some = [1, 0, 1, 1];
+  const none = [0, 0, 0];
+
+  function posInt(input) {
+    return check(input, Number) && input > 0;
+  }
+  it('every', () => {
+    assert.ok(diff.every(all, posInt));
+    assert.ok(!diff.every(some, posInt));
+    assert.ok(!diff.every(none, posInt));
+  });
+
+  it('any', () => {
+    assert.ok(diff.any(all, posInt));
+    assert.ok(diff.any(some, posInt));
+    assert.ok(!diff.any(none, posInt));
   });
 });
 

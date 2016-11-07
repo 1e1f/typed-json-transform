@@ -435,7 +435,7 @@ function combine(...args) {
 
 function any(iterable, fn) {
   for (const v of iterable) {
-    if (fn(v)) {
+    if (fn(v) !== false) {
       return true;
     }
   }
@@ -444,7 +444,7 @@ function any(iterable, fn) {
 
 function every(iterable, fn) {
   for (const v of iterable) {
-    if (!fn(v)) {
+    if (fn(v) === false) {
       return false;
     }
   }
@@ -460,6 +460,7 @@ function contains(set, match) {
       return true;
     }
   }
+  return false;
 }
 
 function containsAny(set, match) {
@@ -471,6 +472,7 @@ function containsAny(set, match) {
       return true;
     }
   }
+  return false;
 }
 
 function containsAll(set, match) {
@@ -595,6 +597,12 @@ function stringify(json, rep, ind) {
   return JSON.stringify(jc.decycle(json), rep, ind || 2);
 }
 
+function arrayify(val) {
+  return check(val, Array)
+    ? val
+    : [val];
+}
+
 export default {
   diffToModifier,
   forwardDiffToModifier,
@@ -624,6 +632,7 @@ export default {
   $unset,
   update,
   apply,
+  mapModifierToKey,
   stringify,
-  mapModifierToKey
+  arrayify
 };
