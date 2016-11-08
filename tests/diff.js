@@ -54,6 +54,22 @@ describe('clone', () => {
   });
 });
 
+describe('arrayify', () => {
+  const array = [1, 1];
+  const obj = makeA();
+  const string = 'hello';
+
+  it('converts obj to array', () => {
+    assert.ok(diff.arrayify(obj)[1] === 'z');
+  });
+  it('leaves string to array', () => {
+    assert.ok(diff.arrayify(string)[0] === 'hello');
+  });
+  it('leaves array alone', () => {
+    assert.ok(diff.arrayify(array)[1] === 1);
+  });
+});
+
 describe('boolean', () => {
   const all = [1, 1, 1];
   const some = [1, 0, 1, 1];

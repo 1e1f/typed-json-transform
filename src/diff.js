@@ -90,18 +90,19 @@ function mergeValueAtKeypath(value, keyPath, obj) {
 }
 
 function extend(target, source) {
-  for (const prop in source) {
-    if (source.hasOwnProperty(prop)) {
-      if ((check(source[prop], Array) && check(target[prop], Array))) {
-        extend(target[prop], source[prop]);
-      } else if (check(source[prop], Object) && check(target[prop], Object)) {
-        extend(target[prop], source[prop]);
+  const mutable = target; // this function mutates original
+  for (const key in source) {
+    if (source.hasOwnProperty(key)) {
+      if ((check(source[key], Array) && check(target[key], Array))) {
+        extend(target[key], source[key]);
+      } else if (check(source[key], Object) && check(target[key], Object)) {
+        extend(target[key], source[key]);
       } else {
-        target[prop] = clone(source[prop]);
+        mutable[key] = clone(source[key]);
       }
     }
   }
-  return target;
+  return mutable;
 }
 
 function valueForKeyPath(keyPath, input) {
@@ -598,9 +599,19 @@ function stringify(json, rep, ind) {
 }
 
 function arrayify(val) {
-  return check(val, Array)
-    ? val
-    : [val];
+  if (check(val, Array)) {
+    return val;
+  } else if (check(val, Object)) {
+    if (Object.values !== undefined) {
+      return Object.values(val);
+    }
+    return Object
+      .keys(val)
+      .map((key) => {
+        return val[key];
+      });
+  }
+  return [val];
 }
 
 export default {
@@ -624,6 +635,7 @@ export default {
   containsAll,
   prune,
   clone,
+  extend,
   combine,
   groupReduce,
   okmap,
