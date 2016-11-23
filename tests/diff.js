@@ -60,7 +60,7 @@ describe('arrayify', () => {
   const string = 'hello';
 
   it('converts obj to array', () => {
-    assert.ok(diff.arrayify(obj)[1] === 'z');
+    objectEqual(diff.arrayify(obj)[0], obj);
   });
   it('leaves string to array', () => {
     assert.ok(diff.arrayify(string)[0] === 'hello');
