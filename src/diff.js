@@ -601,15 +601,6 @@ function stringify(json, rep, ind) {
 function arrayify(val) {
   if (check(val, Array)) {
     return val;
-  } else if (check(val, Object)) {
-    if (Object.values !== undefined) {
-      return Object.values(val);
-    }
-    return Object
-      .keys(val)
-      .map((key) => {
-        return val[key];
-      });
   }
   return [val];
 }
