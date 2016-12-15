@@ -1,12 +1,12 @@
-import _ from 'lodash';
+import * as _ from 'lodash';
 import diff from './diff';
 import isPlainObject from './isPlainObject';
 
-function isNumeric(n) {
+function isNumeric(n: any) {
   return !isNaN(parseFloat(n)) && isFinite(n);
 }
 
-function _c(val, type) {
+function _c(val: any, type: any): boolean {
   switch (type) {
     case Array:
     case 'Array':
@@ -46,12 +46,11 @@ function _c(val, type) {
     default:
       return val !== undefined && val.constructor === type;
   }
-  throw new Error(`checking unsupported type ${type}`);
 }
 
-function check(val, type) {
+function check(val: any, type: any) {
   if (_c(type, Array)) {
-    return diff.any(type, (sType) => {
+    return diff.any(type, (sType: any) => {
       return _c(val, sType);
     });
   }

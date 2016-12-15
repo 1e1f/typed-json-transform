@@ -20,7 +20,25 @@ module.exports = (grunt) ->
         src: ['*.js']
         dest: 'test/'
         ext: '.js'
+    ts:
+      dev:
+        src: ['src/**/*.ts', '!src/**/*.test.ts']
+        outDir: 'lib',
+      options:
+        noImplicitAny: true
+        moduleResolution: 'node'
+        target: 'es5'
+        module: 'commonjs'
+        noLib: false
+        removeComments: true
+        preserveConstEnums: true
+        allowSyntheticDefaultImports: true
+        allowJs: true
+        declaration: false
+        sourceMap: true
 
+  grunt.loadNpmTasks 'grunt-ts'
   grunt.loadNpmTasks 'grunt-babel'
-  grunt.registerTask 'build', ['babel']
-  grunt.registerTask 'default', ['babel']
+
+  grunt.registerTask 'build', ['ts', 'babel']
+  grunt.registerTask 'default', ['build']
