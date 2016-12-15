@@ -94,6 +94,7 @@ describe('boolean', () => {
 describe('combine', () => {
   const a = makeA();
   const b = makeB();
+  const d = makeD();
   it('can combine 2 objects into a new object', () => {
     const res = diff.combine(a, b);
     assert.deepEqual(res, {
@@ -102,9 +103,23 @@ describe('combine', () => {
       e: 'f'
     });
   });
+
   it('does not mutate original', () => {
     objectEqual(a, makeA());
     objectEqual(b, makeB());
+  });
+
+  it('can combine nested objects', () => {
+    const res = diff.combine(b, d);
+    assert.deepEqual(res, {
+      a: {
+        b: {
+          c: 'd'
+        }
+      },
+      c: 'd',
+      e: 'f'
+    });
   });
 });
 

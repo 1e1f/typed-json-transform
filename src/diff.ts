@@ -100,10 +100,11 @@ function mergeValueAtKeypath(value: string, keyPath: string,
 
 function extend(target: StringIndexableObject, source: StringIndexableObject) {
   const mutable = target;  // this function mutates original
-  for (const key in source) {
+  for (const key of Object.keys(source)) {
     if (source.hasOwnProperty(key)) {
       if ((check(source[key], Array) && check(target[key], Array))) {
-        extend(target[key], source[key]);
+        mutable[key] = clone(source[key]);
+        // extend(target[key], source[key]);
       } else if (check(source[key], Object) && check(target[key], Object)) {
         extend(target[key], source[key]);
       } else {
