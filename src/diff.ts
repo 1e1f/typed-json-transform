@@ -3,9 +3,7 @@ import * as _ from 'lodash';
 import jc = require('json-cycle');
 import check from './check';
 
-interface StringIndexableObject {
-  [index: string]: any
-}
+interface StringIndexableObject { [index: string]: any }
 
 function isEmpty(input: StringIndexableObject) {
   const ref = input;
@@ -48,7 +46,7 @@ function prune(obj: StringIndexableObject) {
 }
 
 function setValueForKeyPath(value: string, keyPath: string,
-                            input: StringIndexableObject) {
+  input: StringIndexableObject) {
   let current = input;
   const keys = keyPath.split('.');
   for (let i = 0; i < keys.length - 1; i += 1) {
@@ -65,11 +63,11 @@ function setValueForKeyPath(value: string, keyPath: string,
         }
       } else if (Array.isArray(current)) {
         if (!(current[parseInt(thisKey, 10)] !== null &&
-              typeof current[parseInt(thisKey, 10)] === 'object')) {
+          typeof current[parseInt(thisKey, 10)] === 'object')) {
           current[parseInt(thisKey, 10)] = {};
         }
       } else if (!(current[thisKey] !== null &&
-                   typeof current[thisKey] === 'object')) {
+        typeof current[thisKey] === 'object')) {
         current[thisKey] = {};
       }
     }
@@ -88,7 +86,7 @@ function setValueForKeyPath(value: string, keyPath: string,
 }
 
 function mergeValueAtKeypath(value: string, keyPath: string,
-                             obj: StringIndexableObject) {
+  obj: StringIndexableObject) {
   // this function mutates obj
   const existing = valueForKeyPath(keyPath, obj);
   let merged = value;
@@ -99,20 +97,17 @@ function mergeValueAtKeypath(value: string, keyPath: string,
 }
 
 function extend(target: StringIndexableObject, source: StringIndexableObject) {
-  const mutable = target;  // this function mutates original
+  if (!source){
+    return target;
+  }
   for (const key of Object.keys(source)) {
-    if (source.hasOwnProperty(key)) {
-      if ((check(source[key], Array) && check(target[key], Array))) {
-        mutable[key] = clone(source[key]);
-        // extend(target[key], source[key]);
-      } else if (check(source[key], Object) && check(target[key], Object)) {
-        extend(target[key], source[key]);
-      } else {
-        mutable[key] = clone(source[key]);
-      }
+    if (check(source[key], Object) && check(target[key], Object)) {
+      extend(target[key], source[key]);
+    } else {
+      target[key] = clone(source[key]);
     }
   }
-  return mutable;
+  return target;
 }
 
 function valueForKeyPath(keyPath: string, input: StringIndexableObject) {
@@ -222,7 +217,7 @@ interface keyPathOptions extends StringIndexableObject {
 }
 
 function keyPaths(obj: StringIndexableObject, _options?: keyPathOptions,
-                  _stack?: string[], parent?: string) {
+  _stack?: string[], parent?: string) {
   const stack = _stack || [];
   const options = <keyPathOptions>clone(_options || {});
   for (const el of Object.keys(obj)) {
@@ -266,14 +261,14 @@ function keyPaths(obj: StringIndexableObject, _options?: keyPathOptions,
 }
 
 function allKeyPaths(obj: StringIndexableObject) {
-  return keyPaths(obj, {allLevels: true});
+  return keyPaths(obj, { allLevels: true });
 }
 
 function forwardDiffToModifier(prev: StringIndexableObject,
-                               doc: StringIndexableObject,
-                               fieldsToIgnore?: string[]) {
+  doc: StringIndexableObject,
+  fieldsToIgnore?: string[]) {
   const filteredKeys = _.union
-  (_.difference(keyPaths(prev), keyPaths(doc)), fieldsToIgnore || []);
+    (_.difference(keyPaths(prev), keyPaths(doc)), fieldsToIgnore || []);
   return diffToModifier(prev, doc, filteredKeys);
 }
 
@@ -309,12 +304,12 @@ interface Modifier {
 }
 
 function diffToModifier(prev: StringIndexableObject, doc: StringIndexableObject,
-                        fieldsToIgnore?: string[],
-                        pruneEmptyObjects?: boolean): Modifier {
-  const delta: Modifier = {$set: {}, $unset: {}};
+  fieldsToIgnore?: string[],
+  pruneEmptyObjects?: boolean): Modifier {
+  const delta: Modifier = { $set: {}, $unset: {} };
   if (doc) {
     const forwardKeyPaths =
-        filteredKeyPaths(keyPaths(doc), fieldsToIgnore || []);
+      filteredKeyPaths(keyPaths(doc), fieldsToIgnore || []);
     for (const keyPath of forwardKeyPaths) {
       const val = valueForKeyPath(keyPath, doc);
       if (shouldSet(val, valueForKeyPath(keyPath, prev))) {
@@ -323,7 +318,7 @@ function diffToModifier(prev: StringIndexableObject, doc: StringIndexableObject,
     }
   }
   if (prev) {
-    const kps = keyPaths(prev, {allLevels: true});
+    const kps = keyPaths(prev, { allLevels: true });
     const existingKeyPaths = filteredKeyPaths(kps, fieldsToIgnore || []);
     for (const keyPath of existingKeyPaths) {
       const curVal = valueForKeyPath(keyPath, doc);
@@ -350,7 +345,7 @@ function diffToModifier(prev: StringIndexableObject, doc: StringIndexableObject,
   if (Object.keys(delta).length) {
     if (pruneEmptyObjects) {
       const newDelta =
-          diffToModifier(prev, (clone(prev), delta), fieldsToIgnore, false);
+        diffToModifier(prev, (clone(prev), delta), fieldsToIgnore, false);
       return newDelta || delta;
     }
     return delta;
@@ -362,7 +357,7 @@ interface FlatObjectOptions {
 }
 
 function flatObject(object: StringIndexableObject,
-                    options?: FlatObjectOptions) {
+  options?: FlatObjectOptions) {
   const flat: StringIndexableObject = {};
   const kpFunc = (options || {}).includeBranches ? allKeyPaths : keyPaths;
   for (const keyPath of kpFunc(object)) {
@@ -372,9 +367,9 @@ function flatObject(object: StringIndexableObject,
 }
 
 function groupReduce<T>(objOrArray: any, groupField: string,
-                        reduceFunction: Function, baseType?: T) {
+  reduceFunction: Function, baseType?: T) {
   if (!(Array.isArray(objOrArray) ||
-        (objOrArray !== null && typeof objOrArray === 'object'))) {
+    (objOrArray !== null && typeof objOrArray === 'object'))) {
     throw new Error('not reducing array or object');
   }
   const root: StringIndexableObject = {};
@@ -443,10 +438,12 @@ function $set(dest: StringIndexableObject, source: Modifier) {
   });
 }
 
-function combine(... args: Object[]) {
+function combine(...args: Object[]) {
   const result = {};
   for (const dict of args) {
-    extend(result, dict);
+    if (check(dict, Object)) {
+      extend(result, dict);
+    }
   }
   return result;
 }
@@ -475,7 +472,7 @@ function contains<T>(set: Array<T>, match: T) {
   }
   for (const val of set) {
     if (check(val, Object)) {
-      if (_.isEqual(val, set)){
+      if (_.isEqual(val, set)) {
         return true;
       }
     }
@@ -552,7 +549,7 @@ function update(doc: Document, options: UpdateOptions) {
   if (_.isFunction(options.get)) {
     model = options.get();
   } else if (doc._id && options.collection) {
-    model = options.collection.findOne({_id: doc._id});
+    model = options.collection.findOne({ _id: doc._id });
   }
   if (!model) {
     throw new Error('Diff: no doc to diff against');
@@ -570,7 +567,7 @@ function update(doc: Document, options: UpdateOptions) {
         throw new Error('Diff: not equal after update');
       }
     } else if (options.collection) {
-      options.collection.update({_id: model._id}, {$set: diff});
+      options.collection.update({ _id: model._id }, { $set: diff });
     }
   }
   return diff;
@@ -583,13 +580,13 @@ function clone<T>(input: T): T {
     throw new Error('can\'t clone null');
   } else if (input instanceof Date) {
     const newDate = new Date(<number>input.valueOf());
-    return <T><any> newDate;
+    return <T><any>newDate;
   } else if (input instanceof Array) {
     const array: Array<any> = [];
     for (let i = 0; i < input.length; i += 1) {
       array[i] = clone(input[i]);
     }
-    return <T><any> array;
+    return <T><any>array;
   } else if (typeof input === 'object') {
     const newObj: StringIndexableObject = {};
     for (const key of Object.keys(input)) {
@@ -605,7 +602,7 @@ function clone<T>(input: T): T {
     return input;
   }
   throw new Error(
-      `diff.clone is unable to copy input ${JSON.stringify(input)}`);
+    `diff.clone is unable to copy input ${JSON.stringify(input)}`);
 }
 
 function mapModifierToKey(modifier: Modifier, key: string) {
@@ -629,7 +626,7 @@ function mapModifierToKey(modifier: Modifier, key: string) {
 }
 
 function stringify(value: any, replacer?: (number | string)[],
-                   space?: string | number): string {
+  space?: string | number): string {
   return JSON.stringify(jc.decycle(value), replacer, space || 2);
 }
 
@@ -646,9 +643,9 @@ function arrayify(val: any) {
 
 export default {
   diffToModifier, forwardDiffToModifier, valueForKeyPath, keyPathContainsPath,
-      setValueForKeyPath, mergeValueAtKeypath, unsetKeyPath, keyPaths,
-      allKeyPaths, filteredKeyPaths, modifierToObj, objToModifier, flatObject,
-      any, every, contains, containsAny, containsAll, prune, plain, clone,
-      extend, combine, groupReduce, okmap, $set, $addToSet, $unset, update,
-      apply, mapModifierToKey, stringify, arrayify
+  setValueForKeyPath, mergeValueAtKeypath, unsetKeyPath, keyPaths,
+  allKeyPaths, filteredKeyPaths, modifierToObj, objToModifier, flatObject,
+  any, every, contains, containsAny, containsAll, prune, plain, clone,
+  extend, combine, groupReduce, okmap, $set, $addToSet, $unset, update,
+  apply, mapModifierToKey, stringify, arrayify
 };
