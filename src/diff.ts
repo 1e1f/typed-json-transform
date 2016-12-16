@@ -588,10 +588,12 @@ function clone<T>(input: T): T {
     }
     return <T><any>array;
   } else if (typeof input === 'object') {
+    const iObj = input as StringIndexableObject;
     const newObj: StringIndexableObject = {};
-    for (const key of Object.keys(input)) {
-      const iObj = input as StringIndexableObject;
-      newObj[key] = clone(iObj[key]);
+    for (const key of Object.keys(iObj)) {
+      if(iObj[key]){
+        newObj[key] = clone(iObj[key]);
+      }
     }
     return <T><any>newObj;
   } else if (typeof input === 'string') {
