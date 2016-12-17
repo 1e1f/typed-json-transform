@@ -27,7 +27,7 @@ function makeD() {
   return {
     a: {
       b: {
-        c: 'd'
+        c: 0
       }
     }
   };
@@ -37,9 +37,16 @@ function makeZ() {
   return {
     0: 'arrayLikeThing',
     a: {
-      b: 'c'
+      b: {
+        c: 0
+      }
     },
-    z: [7, 7, 7]
+    z: [
+      7,
+      7, {
+        seven: 7
+      }
+    ]
   };
 }
 
@@ -91,6 +98,25 @@ describe('boolean', () => {
   });
 });
 
+describe('extend', () => {
+  const a = makeA();
+  const b = makeB();
+  const d = makeD();
+  diff.extend(a, b, d);
+  it('can combine 2 objects into a new object', () => {
+    const res = diff.combine(a, b);
+    assert.deepEqual(res, {
+      a: {
+        b: {
+          c: 0
+        }
+      },
+      c: 'd',
+      e: 'f'
+    });
+  });
+});
+
 describe('combine', () => {
   const a = makeA();
   const b = makeB();
@@ -114,7 +140,7 @@ describe('combine', () => {
     assert.deepEqual(res, {
       a: {
         b: {
-          c: 'd'
+          c: 0
         }
       },
       c: 'd',
@@ -130,7 +156,7 @@ describe('keyPaths', () => {
         c: 'here\'s a thing'
       },
       b: {
-        d: 'here\'s another thing'
+        d: [1]
       }
     };
     const keypaths = diff.allKeyPaths(object);
@@ -142,14 +168,16 @@ describe('keyPaths', () => {
 
   it('valueForKeyPath', () => {
     const testObj = makeZ();
-    const res = diff.valueForKeyPath('a.b', testObj);
-    assert.equal(res, testObj.a.b);
+    const res = diff.valueForKeyPath('a.b.c', testObj);
+    assert.equal(res, testObj.a.b.c);
+    const seven = diff.valueForKeyPath('z.2.seven', testObj);
+    assert.equal(seven, testObj.z[2].seven);
   });
 
   it('setValueForKeyPath', () => {
     const obj = {};
-    diff.setValueForKeyPath('d', 'a.b.c', obj);
-    assert.equal('d', obj.a.b.c);
+    diff.setValueForKeyPath(0, 'a.b.c', obj);
+    assert.equal(0, obj.a.b.c);
     assert.deepEqual(obj, makeD());
   });
 
@@ -181,20 +209,29 @@ describe('diff', () => {
   });
 
   it('flatObject', () => {
+    // const alt = {
+    //   a: {
+    //     b: {
+    //       c: 'd'
+    //     }
+    //   }
+    // };
+    const keypaths = diff.allKeyPaths(makeD());
+    console.log('keypaths', keypaths);
     const flat = diff.flatObject(makeD());
-    objectEqual(flat, {'a.b.c': 'd'});
+    objectEqual(flat, {'a.b.c': 0});
   });
 
   it('flatObject {includeBranches: true}', () => {
     const flat = diff.flatObject(makeD(), {includeBranches: true});
     objectEqual(flat, {
-      'a.b.c': 'd',
+      'a.b.c': 0,
       'a.b': {
-        c: 'd'
+        c: 0
       },
       a: {
         b: {
-          c: 'd'
+          c: 0
         }
       }
     });

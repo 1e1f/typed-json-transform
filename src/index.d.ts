@@ -12,7 +12,7 @@ declare module 'js-object-tools' {
   function mergeValueAtKeypath(value: string, keyPath: string,
                                obj: StringIndexableObject): void;
   function extend(target: StringIndexableObject,
-                  source: StringIndexableObject): StringIndexableObject;
+                  ... sources: StringIndexableObject[]): StringIndexableObject;
   function valueForKeyPath(keyPath: string, input: StringIndexableObject): any;
   function unsetKeyPath(keyPath: string, obj: StringIndexableObject): void;
   function keyPathContainsPath(keyPath: string, ignorePath: string): boolean;

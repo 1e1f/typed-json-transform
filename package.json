@@ -1,6 +1,6 @@
 {
   "name": "js-object-tools",
-  "version": "0.9.7",
+  "version": "0.9.8",
   "description": "diff utils",
   "main": "lib/index.js",
   "scripts": {

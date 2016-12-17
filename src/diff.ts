@@ -96,15 +96,16 @@ function mergeValueAtKeypath(value: string, keyPath: string,
   return setValueForKeyPath(merged, keyPath, obj);
 }
 
-function extend(target: StringIndexableObject, source: StringIndexableObject) {
-  if (!source){
-    return target;
-  }
-  for (const key of Object.keys(source)) {
-    if (check(source[key], Object) && check(target[key], Object)) {
-      extend(target[key], source[key]);
-    } else {
-      target[key] = clone(source[key]);
+function extend(target: StringIndexableObject, ...sources: StringIndexableObject[]) {
+  for (const source of sources) {
+    if (check(source, Object)) {
+      for (const key of Object.keys(source)) {
+        if (check(source[key], Object) && check(target[key], Object)) {
+          extend(target[key], source[key]);
+        } else {
+          target[key] = clone(source[key]);
+        }
+      }
     }
   }
   return target;
@@ -221,40 +222,38 @@ function keyPaths(obj: StringIndexableObject, _options?: keyPathOptions,
   const stack = _stack || [];
   const options = <keyPathOptions>clone(_options || {});
   for (const el of Object.keys(obj)) {
-    if (obj[el]) {
-      if (Array.isArray(obj[el])) {
+    if (Array.isArray(obj[el])) {
+      if (options.diffArrays) {
         if (options.allLevels) {
           stack.push(parent ? `${parent}.${el}` : el);
         }
-        if (options.diffArrays) {
-          for (let i = 0; i < obj[el].length; i += 1) {
-            let p: string;
-            if (parent) {
-              p = `${parent}.${el}.${i}`;
-            } else {
-              p = `${el}.${i}`;
-            }
-            const s = obj[el][i];
-            if (Array.isArray(s) || (s !== null && typeof s === 'object')) {
-              keyPaths(s, options, stack, p);
-            } else {
-              stack.push(p);
-            }
+        for (let i = 0; i < obj[el].length; i += 1) {
+          let p: string;
+          if (parent) {
+            p = `${parent}.${el}.${i}`;
+          } else {
+            p = `${el}.${i}`;
           }
-        } else {
-          stack.push(parent ? `${parent}.${el}` : el);
+          const s = obj[el][i];
+          if (Array.isArray(s) || (s !== null && typeof s === 'object')) {
+            keyPaths(s, options, stack, p);
+          } else {
+            stack.push(p);
+          }
         }
-      } else if (obj[el] instanceof Date) {
-        const key = parent ? `${parent}.${el}` : el;
-        stack.push(key);
-      } else if (obj[el] !== null && typeof obj[el] === 'object') {
-        if (options.allLevels) {
-          stack.push(parent ? `${parent}.${el}` : el);
-        }
-        keyPaths(obj[el], options, stack, parent ? `${parent}.${el}` : el);
       } else {
         stack.push(parent ? `${parent}.${el}` : el);
       }
+    } else if (obj[el] instanceof Date) {
+      const key = parent ? `${parent}.${el}` : el;
+      stack.push(key);
+    } else if (obj[el] !== null && typeof obj[el] === 'object') {
+      if (options.allLevels) {
+        stack.push(parent ? `${parent}.${el}` : el);
+      }
+      keyPaths(obj[el], options, stack, parent ? `${parent}.${el}` : el);
+    } else {
+      stack.push(parent ? `${parent}.${el}` : el);
     }
   }
   return stack;
@@ -573,38 +572,24 @@ function update(doc: Document, options: UpdateOptions) {
   return diff;
 }
 
-function clone<T>(input: T): T {
-  if (input === undefined) {
-    throw new Error('can\'t clone undefined');
-  } else if (input === null) {
-    throw new Error('can\'t clone null');
-  } else if (input instanceof Date) {
+function clone(input: any): any {
+  if (check(input, Date)) {
     const newDate = new Date(<number>input.valueOf());
-    return <T><any>newDate;
-  } else if (input instanceof Array) {
-    const array: Array<any> = [];
-    for (let i = 0; i < input.length; i += 1) {
-      array[i] = clone(input[i]);
+    return newDate;
+  } else if (check(input, Array)) {
+    const array = [];
+    for (const elem of input) {
+      array.push(clone(elem));
     }
-    return <T><any>array;
-  } else if (typeof input === 'object') {
+    return array;
+  } else if (check(input, Object)) {
     const iObj = input as StringIndexableObject;
     const newObj: StringIndexableObject = {};
     for (const key of Object.keys(iObj)) {
-      if(iObj[key]){
-        newObj[key] = clone(iObj[key]);
-      }
+      newObj[key] = clone(iObj[key]);
     }
-    return <T><any>newObj;
-  } else if (typeof input === 'string') {
-    return input;
-  } else if (typeof input === 'number') {
-    return input;
-  } else if (typeof input === 'boolean') {
-    return input;
-  }
-  throw new Error(
-    `diff.clone is unable to copy input ${JSON.stringify(input)}`);
+    return newObj;
+  } return input;
 }
 
 function mapModifierToKey(modifier: Modifier, key: string) {
