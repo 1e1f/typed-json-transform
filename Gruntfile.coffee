@@ -20,6 +20,12 @@ module.exports = (grunt) ->
         src: ['*.js']
         dest: 'test/'
         ext: '.js'
+    copy:
+      defines:
+        expand: true
+        cwd: "#{__dirname}/src/"
+        src: ['*.d.ts']
+        dest: 'lib/'
     ts:
       dev:
         src: ['src/**/*.ts', '!src/**/*.test.ts']
@@ -37,8 +43,9 @@ module.exports = (grunt) ->
         declaration: false
         sourceMap: true
 
+  grunt.loadNpmTasks 'grunt-contrib-copy'
   grunt.loadNpmTasks 'grunt-ts'
   grunt.loadNpmTasks 'grunt-babel'
 
-  grunt.registerTask 'build', ['ts', 'babel']
+  grunt.registerTask 'build', ['ts', 'babel', 'copy']
   grunt.registerTask 'default', ['build']
