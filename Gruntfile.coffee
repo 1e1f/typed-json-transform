@@ -28,7 +28,7 @@ module.exports = (grunt) ->
         dest: 'lib/'
     ts:
       dev:
-        src: ['src/**/*.ts', '!src/**/*.test.ts']
+        src: ['src/**/*.ts', '!src/**/*.test.ts', '!*.d.ts']
         outDir: 'lib',
       options:
         noImplicitAny: true
