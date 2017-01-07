@@ -216,8 +216,8 @@ describe('diff', () => {
     //     }
     //   }
     // };
-    const keypaths = diff.allKeyPaths(makeD());
-    console.log('keypaths', keypaths);
+    // const keypaths = diff.allKeyPaths(makeD());
+    // console.log('keypaths', keypaths);
     const flat = diff.flatObject(makeD());
     objectEqual(flat, {'a.b.c': 0});
   });

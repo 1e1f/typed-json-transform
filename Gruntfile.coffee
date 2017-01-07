@@ -26,6 +26,11 @@ module.exports = (grunt) ->
         cwd: "#{__dirname}/src/"
         src: ['*.d.ts']
         dest: 'lib/'
+      yaml:
+        expand: true
+        cwd: "#{__dirname}/tests/"
+        src: ['*.yaml']
+        dest: 'test/'
     ts:
       dev:
         src: ['src/**/*.ts', '!src/**/*.test.ts', '!*.d.ts']

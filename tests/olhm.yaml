@@ -1,0 +1,43 @@
+---
+inputs:
+    a: simpleValue
+
+    b:
+        objectValue:
+            anyKeyExeptRequireAndValue: null
+    c:
+        namedItemA: value
+        namedItemB: 123
+    d:
+        namedItemA:
+            require: namedItemB
+            value: valueA
+        namedItemB: valueB
+        namedItemC:
+            require: namedItemA
+            value: valueC
+    e:
+        namedItemA:
+            require: namedItemB
+            value:
+                nestedA: null
+                nestedB: simpleValue
+        namedItemB:
+            nestedA: simpleValue
+results:
+    a:
+    - simpleValue
+    b:
+    - objectValue:
+        anyKeyExeptRequireAndValue: null
+    c:
+    - value
+    - 123
+    d:
+    - valueB
+    - valueA
+    - valueC
+    e:
+    - nestedA: simpleValue
+    - nestedA: null
+      nestedB: simpleValue
