@@ -1,5 +1,5 @@
 import check from './check';
-import diff from './diff';
+import { arrayify, containsAll } from './containers';
 import { NodeGraph } from './graph';
 
 class OLHV<T> {
@@ -28,7 +28,7 @@ function parseOLHM(object: any): OLHM<any> {
 function safeOLHM<T>(olhm: OLHM<T>): T[] {
     if (!olhm) return [];
     if (!check(olhm, Object)) {
-        return diff.arrayify(olhm);
+        return arrayify(olhm);
     }
     const keys = Object.keys(olhm);
     if (keys.length === 0) {
@@ -59,7 +59,7 @@ function safeOLHM<T>(olhm: OLHM<T>): T[] {
 function isOLHV(obj: any): boolean {
     if (check(obj, Object)) {
         const keys = Object.keys(obj);
-        return keys.length === 2 && diff.containsAll(keys, ['require', 'value']);
+        return keys.length === 2 && containsAll(keys, ['require', 'value']);
     }
     return false;
 }

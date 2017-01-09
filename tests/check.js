@@ -1,5 +1,5 @@
-import {assert} from 'chai';
-import {isPlainObject, check} from '../lib';
+import { assert } from 'chai';
+import { isPlainObject, check } from '../lib';
 
 class CustomType {
   constructor(_options = {
@@ -30,21 +30,35 @@ const data = {
   customObject: new CustomType({
     customOption: 'not the default'
   }, ['someData']),
-  undefined: undefined
+  undefined: undefined,
+  function: () => {
+    return '';
+  }
 };
 
 describe('check', () => {
   it('object', () => {
-    assert.ok(check(data.object, Object));
-    assert.ok(!check(data.object, Array));
-    assert.ok(!check(data.object, String));
-    assert.ok(isPlainObject(data.object));
-    assert.ok(!check(data.object, Number));
+    assert.ok(check(data.object, Object), 'object is Object');
+    assert.ok(!check(data.object, Array), 'object is not Array');
+    assert.ok(!check(data.object, Function), 'object is not Function');
+    assert.ok(!check(data.object, String), 'object is not String');
+    assert.ok(isPlainObject(data.object), 'object is plain Object');
+    assert.ok(!check(data.object, Number), 'object is not Number');
+  });
+
+  it('function', () => {
+    assert.ok(check(data.function, Function), 'function is Function');
+    assert.ok(!check(data.function, Object), 'function is Object');
+    assert.ok(!check(data.function, Array), 'function is not Array');
+    assert.ok(!check(data.function, String), 'function is not String');
+    assert.ok(!isPlainObject(data.function), 'function is not Plain Object');
+    assert.ok(!check(data.function, Number), 'function is not Number');
   });
 
   it('array', () => {
-    assert.ok(!check(data.array, Object));
     assert.ok(check(data.array, Array));
+    assert.ok(!check(data.array, Object));
+    assert.ok(!check(data.array, Function));
     assert.ok(!check(data.array, String));
     assert.ok(!check(data.array, Number));
     assert.ok(!check(data.objectArray, Array));
@@ -92,6 +106,7 @@ describe('check', () => {
     assert.ok(check(data.number, 'any'));
     assert.ok(check(data.object, 'any'));
     assert.ok(check(data.array, 'any'));
+    assert.ok(check(data.function, 'any'));
     assert.ok(check(data.date, 'any'));
     assert.ok(check(data.boolean, 'any'));
   });

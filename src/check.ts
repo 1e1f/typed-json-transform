@@ -1,5 +1,3 @@
-import * as _ from 'lodash';
-import diff from './diff';
 import isPlainObject from './isPlainObject';
 
 function isNumeric(n: any) {
@@ -25,7 +23,7 @@ function _c(val: any, type: any): boolean {
       return isNumeric(val);
     case Function:
     case 'Function':
-      return _.isFunction(val);
+      return (val !== null && typeof val === 'function');
     case Boolean:
     case 'Boolean':
       return typeof val === 'boolean';
@@ -50,9 +48,12 @@ function _c(val: any, type: any): boolean {
 
 function check(val: any, type: any) {
   if (_c(type, Array)) {
-    return diff.any(type, (sType: any) => {
-      return _c(val, sType);
-    });
+    for (const sType of type) {
+      if (_c(val, sType)) {
+        return true;
+      }
+    }
+    return false;
   }
   return _c(val, type);
 }
