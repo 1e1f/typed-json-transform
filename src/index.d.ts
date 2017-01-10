@@ -28,58 +28,66 @@ declare module 'js-object-tools' {
     reduceFunction: Function, baseType?: T): T;
   function okmap(iterable: Object | Array<any>,
     fn: Function): StringIndexableObject;
-    
+
   /*
     * Diff / Mongo Method
   */
-  namespace diff {
-    interface keyPathOptions extends StringIndexableObject {
-      allLevels?: boolean;
-      diffArrays?: boolean;
-    }
-    interface Modifier {
-      $set?: StringIndexableObject;
-      $unset?: StringIndexableObject;
-    }
-    interface Document extends StringIndexableObject { _id: string; }
-    interface Collection {
-      findOne: Function;
-      find: Function;
-      update: Function;
-    }
-    interface UpdateOptions {
-      collection?: Collection;
-      get?: Function;
-      set?: Function;
-      ignore?: string[];
-    }
-    function setValueForKeyPath(value: string, keyPath: string,
-      input: StringIndexableObject): void;
-    function mergeValueAtKeypath(value: string, keyPath: string,
-      obj: StringIndexableObject): void;
-    function valueForKeyPath(keyPath: string, input: StringIndexableObject): any;
-    function unsetKeyPath(keyPath: string, obj: StringIndexableObject): void;
-    function keyPathContainsPath(keyPath: string, ignorePath: string): boolean;
-    function filteredKeyPaths(_keyPaths: string[], ignore?: string[]): string[];
-    function keyPaths(obj: StringIndexableObject, _options?: keyPathOptions,
-      _stack?: string[], parent?: string): string[];
-    function allKeyPaths(obj: StringIndexableObject): string[];
-    function forwardDiffToModifier(prev: StringIndexableObject,
-      doc: StringIndexableObject,
-      fieldsToIgnore?: string[]): Modifier;
-    function diffToModifier(prev: StringIndexableObject,
-      doc: StringIndexableObject, fieldsToIgnore?: string[],
-      pruneEmptyObjects?: boolean): Modifier;
-    function modifierToObj(modifier: Modifier): StringIndexableObject;
-    function objToModifier(obj: StringIndexableObject): Modifier;
-    function apply(dest: StringIndexableObject,
-      source: Modifier): StringIndexableObject;
-    function $set(dest: StringIndexableObject, source: Modifier): void;
-    function $addToSet(dest: Array<any>, src: Object): void;
-    function $unset(dest: Object, source: Modifier): void;
-    function update(doc: Document, options: UpdateOptions): void;
-    function mapModifierToKey(modifier: Modifier, key: string): Modifier;
+  interface keyPathOptions extends StringIndexableObject {
+    allLevels?: boolean;
+    diffArrays?: boolean;
   }
+  interface Modifier {
+    $set?: StringIndexableObject;
+    $unset?: StringIndexableObject;
+  }
+  interface Document extends StringIndexableObject { _id: string; }
+  interface Collection {
+    findOne: Function;
+    find: Function;
+    update: Function;
+  }
+  interface UpdateOptions {
+    collection?: Collection;
+    get?: Function;
+    set?: Function;
+    ignore?: string[];
+  }
+  function setValueForKeyPath(value: string, keyPath: string,
+    input: StringIndexableObject): void;
+  function mergeValueAtKeypath(value: string, keyPath: string,
+    obj: StringIndexableObject): void;
+  function valueForKeyPath(keyPath: string, input: StringIndexableObject): any;
+  function unsetKeyPath(keyPath: string, obj: StringIndexableObject): void;
+  function keyPathContainsPath(keyPath: string, ignorePath: string): boolean;
+  function filteredKeyPaths(_keyPaths: string[], ignore?: string[]): string[];
+  function keyPaths(obj: StringIndexableObject, _options?: keyPathOptions,
+    _stack?: string[], parent?: string): string[];
+  function allKeyPaths(obj: StringIndexableObject): string[];
+  function forwardDiffToModifier(prev: StringIndexableObject,
+    doc: StringIndexableObject,
+    fieldsToIgnore?: string[]): Modifier;
+  function diffToModifier(prev: StringIndexableObject,
+    doc: StringIndexableObject, fieldsToIgnore?: string[],
+    pruneEmptyObjects?: boolean): Modifier;
+  function modifierToObj(modifier: Modifier): StringIndexableObject;
+  function objToModifier(obj: StringIndexableObject): Modifier;
+  function apply(dest: StringIndexableObject,
+    source: Modifier): StringIndexableObject;
+  function $set(dest: StringIndexableObject, source: Modifier): void;
+  function $addToSet(dest: Array<any>, src: Object): void;
+  function $unset(dest: Object, source: Modifier): void;
+  function update(doc: Document, options: UpdateOptions): void;
+  function mapModifierToKey(modifier: Modifier, key: string): Modifier;
+
+  class OLHV<T> {
+    require?: string;
+    value: T
+  }
+  class OLHM<T> {
+    [index: string]: OLHV<T>;
+  }
+  function parseOLHM(object: any): OLHM<any>;
+  function safeOLHM<T>(olhm: OLHM<T>): T[];
 
   /**
   * The following is a typescript re-implementation of DepGraph, originally authored by jriecken
