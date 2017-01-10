@@ -3,7 +3,7 @@ inputs:
     a: simpleValue
 
     b:
-        objectValue:
+        namedItem:
             anyKeyExeptRequireAndValue: null
     c:
         namedItemA: value
@@ -28,8 +28,7 @@ results:
     a:
     - simpleValue
     b:
-    - objectValue:
-        anyKeyExeptRequireAndValue: null
+    - anyKeyExeptRequireAndValue: null
     c:
     - value
     - 123

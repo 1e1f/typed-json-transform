@@ -36,7 +36,7 @@ function safeOLHM<T>(olhm: OLHM<T>): T[] {
     }
     // single key optimization
     if (keys.length === 1) {
-        return [safeOLHV(<any>olhm)];
+        return [safeOLHV(<any>olhm[keys[0]])];
     }
     // 2 or more keys, scan for dependencies
     const graph = new NodeGraph();

@@ -95,6 +95,8 @@ declare module 'js-object-tools' {
   */
 
   class NodeGraph<T> {
+    [index: string]: any;
+
     addNode(node: string, data?: T): void;
     /**
      * Remove a node from the dependency graph. If a node does not exist, this method will do nothing.
