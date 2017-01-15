@@ -23,7 +23,7 @@
   "main": "lib/index.js",
   "types": "./lib/index.d.ts",
   "scripts": {
-    "test": "mocha"
+    "test": "grunt && mocha"
   },
   "devDependencies": {
     "babel-eslint": "^7.1.0",

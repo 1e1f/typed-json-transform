@@ -24,6 +24,12 @@ inputs:
                 nestedB: simpleValue
         namedItemB:
             nestedA: simpleValue
+    map:
+        c:
+            value: 30
+            require: a
+        a: 10
+        b: 20
 results:
     a:
     - simpleValue
@@ -40,3 +46,7 @@ results:
     - nestedA: simpleValue
     - nestedA: null
       nestedB: simpleValue
+    map:
+    - 20
+    - 60
+    - 40

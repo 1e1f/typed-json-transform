@@ -26,15 +26,17 @@ function each<T>(iter: { [index: string]: T } | T[], fn: Function): void {
     }
 }
 
-function map<T>(iter: { [index: string]: T } | T[], fn: Function): T[] {
+function map<T>(iter: { [index: string]: T } | T[], fn: (val: any, index: any) => any): T[] {
     const res: T[] = [];
     if (check(iter, Array)) {
+        let i = 0;
         for (const v of <T[]>iter) {
-            res.push(fn(v));
+            res.push(fn(v, i));
+            i++;
         }
     } if (check(iter, Object)) {
         for (const k of Object.keys(iter)) {
-            res.push(fn((<{ [index: string]: T }>iter)[k]));
+            res.push(fn((<{ [index: string]: T }>iter)[k], k));
         }
     }
     return res;
@@ -297,7 +299,7 @@ function clone(input: any): any {
     } return input;
 }
 
-function arrayify(val: any) {
+function arrayify(val: any): any[] {
     if (check(val, Array)) {
         return val;
     }
