@@ -52,9 +52,9 @@ declare module 'js-object-tools' {
     set?: Function;
     ignore?: string[];
   }
-  function setValueForKeyPath(value: string, keyPath: string,
+  function setValueForKeyPath(value: any, keyPath: string,
     input: StringIndexableObject): void;
-  function mergeValueAtKeypath(value: string, keyPath: string,
+  function mergeValueAtKeypath(value: any, keyPath: string,
     obj: StringIndexableObject): void;
   function valueForKeyPath(keyPath: string, input: StringIndexableObject): any;
   function unsetKeyPath(keyPath: string, obj: StringIndexableObject): void;
@@ -86,6 +86,8 @@ declare module 'js-object-tools' {
   class OLHM<T> {
     [index: string]: OLHV<T>;
   }
+  function map<T>(olhm: OLHM<T>, fn: (v: any, k?: string) => T): T[];
+  function okmap<T>(olhm: OLHM<T>, fn: (v: any, k?: string) => OLHV<T> | T): OLHM<T>;
   function parseOLHM(object: any): OLHM<any>;
   function safeOLHM<T>(olhm: OLHM<T>): T[];
 

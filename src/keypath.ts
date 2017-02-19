@@ -3,7 +3,7 @@ import { isEqual, each, map, every, any, contains, containsAny, containsAll, ext
 
 interface StringIndexableObject { [index: string]: any }
 
-function setValueForKeyPath(value: string, keyPath: string,
+function setValueForKeyPath(value: any, keyPath: string,
     input: StringIndexableObject) {
     let current = input;
     const keys = keyPath.split('.');

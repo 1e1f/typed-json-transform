@@ -2,16 +2,16 @@ import check from './check';
 import { arrayify, containsAll, map as _map } from './containers';
 import { NodeGraph } from './graph';
 
-class OLHV<T> {
+export class OLHV<T> {
     require?: string;
     value: T
 }
 
-class OLHM<T> {
+export class OLHM<T> {
     [index: string]: OLHV<T>;
 }
 
-function parseOLHM(object: any): OLHM<any> {
+export function parseOLHM(object: any): OLHM<any> {
     const map = new OLHM();
     for (const k of Object.keys(object)) {
         if (isOLHV(object(k))) {
@@ -25,7 +25,7 @@ function parseOLHM(object: any): OLHM<any> {
     return map;
 }
 
-function safeOLHM<T>(olhm: OLHM<T>): T[] {
+export function safeOLHM<T>(olhm: OLHM<T>): T[] {
     if (!olhm) return [];
     if (!check(olhm, Object)) {
         throw new Error('OLHM expects an object as input')
@@ -56,7 +56,35 @@ function safeOLHM<T>(olhm: OLHM<T>): T[] {
     return final;
 }
 
-function map<T>(olhm: OLHM<T>, fn: (v: any, k?: string) => any): T[] {
+export function okmap<T>(olhm: OLHM<T>, fn: (v: any, k?: string) => OLHV<T> | T): OLHM<T> {
+    if (!check(olhm, Object)) {
+        throw new Error('OLHM expects an object as input')
+    }
+    const keys = Object.keys(olhm);
+    if (keys.length === 0) {
+        return {};
+    }
+    const final: OLHM<T> = {};
+    for (const k of keys) {
+        const olhv = olhm[k];
+        if (isOLHV(olhv)) {
+            const ret = <OLHV<T>>fn(olhv.value, k);
+            if (isOLHV(ret)) {
+                final[k] = ret;
+            } else {
+                final[k] = {
+                    value: <T><any>ret,
+                    require: olhv.require
+                }
+            }
+        } else {
+            final[k] = <OLHV<T>>fn(olhv, k);
+        }
+    }
+    return final;
+}
+
+export function map<T>(olhm: OLHM<T>, fn: (v: any, k?: string) => T): T[] {
     if (!olhm) return [];
     if (!check(olhm, Object)) {
         throw new Error('OLHM expects an object as input')
@@ -67,7 +95,7 @@ function map<T>(olhm: OLHM<T>, fn: (v: any, k?: string) => any): T[] {
     }
     // single key optimization
     if (keys.length === 1) {
-        return fn(safeOLHV(<any>olhm[keys[0]]), keys[0]);
+        return [fn(safeOLHV(<any>olhm[keys[0]]), keys[0])];
     }
     // 2 or more keys, scan for dependencies
     const graph = new NodeGraph();
@@ -88,7 +116,7 @@ function map<T>(olhm: OLHM<T>, fn: (v: any, k?: string) => any): T[] {
     return final;
 }
 
-function reduce<T>(olhm: OLHM<T>, fn: (memo: any, value: any, index: number) => any, iv: any): T[] {
+export function reduce<T>(olhm: OLHM<T>, fn: (memo: any, value: any, index: number) => any, iv: any): T[] {
     const iterable = safeOLHM(olhm);
     let i = 0;
     for (const v of iterable) {
@@ -98,7 +126,7 @@ function reduce<T>(olhm: OLHM<T>, fn: (memo: any, value: any, index: number) => 
     return iv;
 }
 
-function isOLHV(obj: any): boolean {
+export function isOLHV(obj: any): boolean {
     if (check(obj, Object)) {
         const keys = Object.keys(obj);
         return keys.length === 2 && containsAll(keys, ['require', 'value']);
@@ -106,13 +134,9 @@ function isOLHV(obj: any): boolean {
     return false;
 }
 
-function safeOLHV<T>(objOrVal: OLHV<T> | T): T {
+export function safeOLHV<T>(objOrVal: OLHV<T> | T): T {
     if (isOLHV(objOrVal)) {
         return (<OLHV<T>>objOrVal).value;
     }
     return <T>objOrVal;
-}
-
-export {
-    isOLHV, safeOLHM, safeOLHV, parseOLHM, map, reduce
 }

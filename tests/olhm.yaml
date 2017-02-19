@@ -50,3 +50,9 @@ results:
     - 20
     - 60
     - 40
+    okmap:
+      a: 20
+      b: 40
+      c:
+        value: 60
+        require: a

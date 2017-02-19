@@ -1,3 +1,5 @@
+import { stringify } from './containers';
+
 class NodeGraph<T> {
     nodes: any;
     outgoingEdges: any;
@@ -53,15 +55,15 @@ class NodeGraph<T> {
         if (this.hasNode(node)) {
             this.nodes[node] = data;
         } else {
-            throw new Error('Node does not exist: ' + node);
+            throw new Error('Node does not exist: ' + stringify(node));
         }
     }
     addDependency(from: string, to: string) {
         if (!this.hasNode(from)) {
-            throw new Error('Node does not exist: ' + from);
+            throw new Error('Node does not exist: ' + stringify(from));
         }
         if (!this.hasNode(to)) {
-            throw new Error('Node does not exist: ' + to);
+            throw new Error('Node does not exist: ' + stringify(to));
         }
         if (this.outgoingEdges[from].indexOf(to) === -1) {
             this.outgoingEdges[from].push(to);
@@ -99,7 +101,7 @@ class NodeGraph<T> {
             return result;
         }
         else {
-            throw new Error('Node does not exist: ' + node);
+            throw new Error('Node does not exist: ' + stringify(node));
         }
     }
     dependantsOf(node: string, leavesOnly?: boolean) {
@@ -113,7 +115,7 @@ class NodeGraph<T> {
             }
             return result;
         } else {
-            throw new Error('Node does not exist: ' + node);
+            throw new Error('Node does not exist: ' + stringify(node));
         }
     }
     overallOrder(leavesOnly?: boolean) {

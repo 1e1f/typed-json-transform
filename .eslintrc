@@ -24,7 +24,7 @@
     "flowtype-errors/show-errors": 2,
     // 1e1f
     "new-cap": ["error", { "capIsNewExceptions": ["Map", "List", "Record"]}],
-    "object-curly-spacing": ['error', 'never'],
+    "object-curly-spacing": ["off"],
     "arrow-body-style": ["error", "always"],
     "no-underscore-dangle": ["off"]
   },
