@@ -1,4 +1,4 @@
-import check from './check';
+import { check } from './check';
 import { isEqual, each, map, every, any, contains, containsAny, containsAll, extend, combine, prune, plain, clone, arrayify, union, difference } from './containers';
 
 import {

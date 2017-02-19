@@ -1,4 +1,4 @@
-import check from './check';
+import { check } from './check';
 import { arrayify, containsAll, map as _map } from './containers';
 import { NodeGraph } from './graph';
 

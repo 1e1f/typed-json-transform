@@ -1,9 +1,12 @@
 import { assert } from 'chai';
-import { isPlainObject, check } from '../lib';
+import { check } from '../src';
 
 class CustomType {
+  options: any;
+  _data: any;
+  data: any;
   constructor(_options = {
-    isCustom: true
+    isCustom: 'default'
   }, _data = [0, 'xyz']) {
     this.options = _options;
     this.data = _data;
@@ -19,18 +22,18 @@ const data = {
     0: 'value'
   },
   date: new Date(),
-  array: [],
+  array: <any>[],
   number: 1,
-  null: null,
+  null: <any>null,
   stringNumber: '1',
   complexStringNumber: '1.0.1',
   string: 'hello',
   error: new SyntaxError(),
   boolean: true,
   customObject: new CustomType({
-    customOption: 'not the default'
+    isCustom: 'not the default'
   }, ['someData']),
-  undefined: undefined,
+  undefined: <any>undefined,
   function: () => {
     return '';
   }
@@ -42,7 +45,6 @@ describe('check', () => {
     assert.ok(!check(data.object, Array), 'object is not Array');
     assert.ok(!check(data.object, Function), 'object is not Function');
     assert.ok(!check(data.object, String), 'object is not String');
-    assert.ok(isPlainObject(data.object), 'object is plain Object');
     assert.ok(!check(data.object, Number), 'object is not Number');
   });
 
@@ -51,7 +53,6 @@ describe('check', () => {
     assert.ok(!check(data.function, Object), 'function is Object');
     assert.ok(!check(data.function, Array), 'function is not Array');
     assert.ok(!check(data.function, String), 'function is not String');
-    assert.ok(!isPlainObject(data.function), 'function is not Plain Object');
     assert.ok(!check(data.function, Number), 'function is not Number');
   });
 
@@ -133,9 +134,8 @@ describe('check', () => {
   });
 
   it('custom class', () => {
-    assert.ok(check(data.customObject, Object, 'is an object'));
-    assert.ok(check(data.customObject, CustomType, 'matches class constructor'));
-    assert.ok(!isPlainObject(data.customObject, 'is not a plain object'));
+    assert.ok(check(data.customObject, Object), 'is an object');
+    assert.ok(check(data.customObject, CustomType), 'matches class constructor');
   });
 
   return it('error', () => {

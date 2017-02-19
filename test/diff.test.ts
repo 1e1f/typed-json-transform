@@ -1,17 +1,22 @@
 import { assert } from 'chai';
-import { check, modifierToObj, diffToModifier, forwardDiffToModifier, apply} from '../lib';
+import { check, modifierToObj, diffToModifier, forwardDiffToModifier, apply} from '../src';
 import { makeA, makeB, makeC, makeD, makeZ } from './fixtures';
+
+interface Modifier {
+  $set?: any,
+  $unset?: any
+}
 
 describe('diff', () => {
   it('modifierToObj', () => {
-    const modifier = {};
+    const modifier: Modifier = {};
     modifier.$set = {
       'array.4': '5th element'
     };
     modifier.$unset = {
       emptyObject: undefined
     };
-    const obj = modifierToObj(modifier);
+    const obj: any = modifierToObj(modifier);
     assert.equal(obj.array[4], '5th element');
     assert.equal(obj.emptyObject, undefined);
   });
@@ -123,6 +128,6 @@ describe('diff', () => {
 
     const modifier = diffToModifier(messA, messB);
     apply(messA, modifier);
-    assert.deepEqual(messA, messB, `failed with modifier ${JSON.stringify(modifier, 0, 2)}`);
+    assert.deepEqual(messA, messB, `failed with modifier ${JSON.stringify(modifier, [], 2)}`);
   });
 });

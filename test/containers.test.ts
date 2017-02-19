@@ -1,8 +1,7 @@
 import { assert } from 'chai';
 import { makeA, makeB, makeC, makeD, makeZ } from './fixtures';
 
-import { isEqual, check, combine, any, every, contains, extend, clone, arrayify, union, difference } from '../lib';
-
+import { isEqual, check, combine, any, every, contains, extend, clone, arrayify, union, difference } from '../src';
 
 describe('isEqual', () => {
     it('isEqual', () => {
@@ -42,15 +41,13 @@ describe('isEqual', () => {
 
     it('arguments class', () => {
         assert.ok(isEqual(
-            (() => { return arguments })(1, 2, 3),
-            (() => { return arguments })(1, 2, 3),
-            'compares arguments'
-        ));
+            function (a, b, c) { return arguments }(1, 2, 3),
+            function (a, b, c) { return arguments }(1, 2, 3),
+        ), 'compares arguments');
         assert.notOk(isEqual(
-            (() => { return arguments })(1, 2, 3),
-            [1, 2, 3],
-            'differenciates array and arguments'
-        ));
+            function (a, b, c) { return arguments }(1, 2, 3),
+            [1, 2, 3]
+        ), 'differenciates array and arguments');
     });
 
     it('dates', () => {
@@ -61,8 +58,7 @@ describe('isEqual', () => {
     });
 
     it('buffers', () => {
-        assert.ok(isEqual(Buffer('xyz'), Buffer('xyz')));
-
+        assert.ok(isEqual(new Buffer('xyz'), new Buffer('xyz')));
     });
 
     it('booleans and arrays', () => {
@@ -108,7 +104,7 @@ describe('every, any', () => {
     const some = [1, 0, 1, 1];
     const none = [0, 0, 0];
 
-    function posInt(input) {
+    function posInt(input: number) {
         return check(input, Number) && input > 0;
     }
     it('every', () => {
@@ -192,7 +188,7 @@ describe('collections', () => {
         for (const s of list) {
             assert.ok(contains(sameList, s), `contains ${s}`);
         }
-        assert.ok(every(list, (s) => {
+        assert.ok(every(list, (s: string) => {
             return contains(sameList, s);
         }));
     });

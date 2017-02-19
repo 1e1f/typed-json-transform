@@ -3,7 +3,7 @@
  retrocycle, stringify, test, toString
  */
 
-function decycle(object: Object) {
+export function decycle(object: Object) {
 
     const objects: Object[] = [];   // Keep a reference to each unique object or array
     const paths: string[] = [];     // Keep the path to each unique object or array
@@ -61,7 +61,7 @@ function decycle(object: Object) {
     } (object, '$'));
 }
 
-function retrocycle($: any) {
+export function retrocycle($: any) {
 
     var px = /^\$(?:\[(?:\d+|\"(?:[^\\\"\u0000-\u001f]|\\([\\\"\/bfnrt]|u[0-9a-zA-Z]{4}))*\")\])*$/;
 
@@ -106,5 +106,3 @@ function retrocycle($: any) {
     } ($));
     return $;
 }
-
-export { decycle, retrocycle }

@@ -1,6 +1,4 @@
-import isPlainObject from './isPlainObject';
-
-function isNumeric(n: any) {
+export function isNumeric(n: any) {
   return !isNaN(parseFloat(n)) && isFinite(n);
 }
 
@@ -46,7 +44,7 @@ function _c(val: any, type: any): boolean {
   }
 }
 
-function check(val: any, type: any) {
+export function check(val: any, type: any) {
   if (_c(type, Array)) {
     for (const sType of type) {
       if (_c(val, sType)) {
@@ -57,5 +55,3 @@ function check(val: any, type: any) {
   }
   return _c(val, type);
 }
-
-export default check;
