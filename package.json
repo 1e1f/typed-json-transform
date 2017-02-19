@@ -1,6 +1,6 @@
 {
   "name": "js-object-tools",
-  "version": "0.12.2",
+  "version": "0.12.3",
   "description": "various json utils",
   "homepage": "https://github.com/structuresound/js-object-tools",
   "author": {
@@ -19,7 +19,7 @@
     "url": "https://github.com/structuresound/js-object-tools/blob/master/LICENSE-MIT"
   }],
   "main": "dist/index.js",
-  "types": "src/@types/index.d.ts",
+  "types": "index.d.ts",
   "scripts": {
     "build": "gulp scripts",
     "test": "mocha --reporter spec --compilers ts:ts-node/register test/**/*.test.ts"
