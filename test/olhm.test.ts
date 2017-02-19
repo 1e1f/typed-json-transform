@@ -1,12 +1,11 @@
 import { assert } from 'chai';
 import { load } from 'js-yaml';
-import fs from 'fs';
+import * as fs from 'fs';
 
-import { check } from '../lib';
+import { check, safeOLHM, mapOLHM, okmapOLHM, reduceOLHM} from '../src';
+import { isOLHV, safeOLHV } from '../src/olhm';
 
-import { isOLHV, safeOLHM, safeOLHV, map, reduce, okmap } from '../lib/olhm';
-
-const yamlFile = fs.readFileSync('test/olhm.yaml');
+const yamlFile = fs.readFileSync('test/olhm.yaml', 'utf8');
 const o = load(yamlFile);
 const inputs = o.inputs;
 const results = o.results;
@@ -56,21 +55,21 @@ describe('olhm', () => {
     assert.deepEqual(res, results.e);
   });
   it('correctly maps and ordered list to an array with a supplied function', () => {
-    const res = map(inputs.map, (v, k) => {
+    const res = mapOLHM(inputs.map, (v, k) => {
       assert.ok(check(k, String));
       return v * 2;
     });
     assert.deepEqual(res, results.map);
   });
   it('correctly okmaps and ordered list to different values', () => {
-    const res = okmap(inputs.map, (v, k) => {
+    const res = okmapOLHM(inputs.map, (v, k) => {
       assert.ok(check(k, String));
       return v * 2;
     });
     assert.deepEqual(res, results.okmap);
   });
   it('correctly reduces and ordered list to a sum with a supplied function', () => {
-    const res = reduce(inputs.map, (memo, v, i) => {
+    const res = reduceOLHM(inputs.map, (memo, v, i) => {
       assert.ok(check(i, Number));
       return memo + (v * 2);
     }, 0);

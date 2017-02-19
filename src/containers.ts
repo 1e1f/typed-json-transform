@@ -1,4 +1,4 @@
-import check from './check';
+import { check } from './check';
 import { decycle } from './decycle';
 
 interface StringIndexableObject { [index: string]: any }

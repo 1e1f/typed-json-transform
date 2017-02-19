@@ -1,7 +1,6 @@
 import { assert } from 'chai';
-import { check } from '../lib';
 
-import { contains, valueForKeyPath, flatObject, allKeyPaths, setValueForKeyPath, unsetKeyPath } from '../lib';
+import { check, contains, valueForKeyPath, flatObject, allKeyPaths, setValueForKeyPath, unsetKeyPath } from '../src';
 
 import { makeA, makeB, makeC, makeD, makeZ } from './fixtures';
 
@@ -27,11 +26,11 @@ describe('keyPaths', () => {
         const res = valueForKeyPath('a.b.c', testObj);
         assert.equal(res, testObj.a.b.c);
         const seven = valueForKeyPath('z.2.seven', testObj);
-        assert.equal(seven, testObj.z[2].seven);
+        assert.equal(seven, (<any>testObj.z[2]).seven);
     });
 
     it('setValueForKeyPath', () => {
-        const obj = {};
+        const obj: any = {};
         setValueForKeyPath(0, 'a.b.c', obj);
         assert.equal(0, obj.a.b.c);
         assert.deepEqual(obj, makeD());

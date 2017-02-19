@@ -1,7 +1,12 @@
-import check from './check';
+import { check } from './check';
+export { check };
+
 import { NodeGraph } from './graph';
-import isPlainObject from './isPlainObject';
-import { safeOLHM, map as mapOLHM } from './olhm';
+export { NodeGraph };
+
+
+import { safeOLHM, map as mapOLHM, okmap as okmapOLHM, reduce as reduceOLHM } from './olhm';
+export { safeOLHM, mapOLHM, okmapOLHM, reduceOLHM };
 
 import {
     valueForKeyPath, _keyPathContainsPath, keyPathContainsPath,
@@ -37,5 +42,4 @@ export {
     apply, mapModifierToKey
 };
 
-export { NodeGraph, check, isPlainObject, safeOLHM, mapOLHM };
 
