@@ -81,7 +81,17 @@ describe('clone', () => {
     it('does not mutate original', () => {
         assert.deepEqual(test, makeZ());
     });
+    it('can clone an object with a recursive reference', () => {
+        const a = {
+            num: 1,
+            self: {}
+        }
+        a.self = a;
+        const cloned = clone(a);
+        assert.deepEqual(cloned, a);
+    });
 });
+
 
 describe('arrayify', () => {
     const array = [1, 1];

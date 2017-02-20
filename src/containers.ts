@@ -1,5 +1,5 @@
 import { check } from './check';
-import { decycle } from './decycle';
+import { decycle, retrocycle } from './decycle';
 
 interface StringIndexableObject { [index: string]: any }
 
@@ -280,23 +280,24 @@ function plain(obj: any) {
 }
 
 function clone(input: any): any {
-    if (check(input, Date)) {
-        const newDate = new Date(<number>input.valueOf());
-        return newDate;
-    } else if (check(input, Array)) {
-        const array = [];
-        for (const elem of input) {
-            array.push(clone(elem));
-        }
-        return array;
-    } else if (check(input, Object)) {
-        const iObj = input as StringIndexableObject;
-        const newObj: StringIndexableObject = {};
-        for (const key of Object.keys(iObj)) {
-            newObj[key] = clone(iObj[key]);
-        }
-        return newObj;
-    } return input;
+    return retrocycle(decycle(input));
+    // if (check(input, Date)) {
+    //     const newDate = new Date(<number>input.valueOf());
+    //     return newDate;
+    // } else if (check(input, Array)) {
+    //     const array = [];
+    //     for (const elem of input) {
+    //         array.push(clone(elem));
+    //     }
+    //     return array;
+    // } else if (check(input, Object)) {
+    //     const iObj = input as StringIndexableObject;
+    //     const newObj: StringIndexableObject = {};
+    //     for (const key of Object.keys(iObj)) {
+    //         newObj[key] = clone(iObj[key]);
+    //     }
+    //     return newObj;
+    // } return input;
 }
 
 function arrayify(val: any): any[] {
