@@ -1,4 +1,4 @@
-## js-object-tools [![Build Status](https://secure.travis-ci.org/structuresound/js-object-tools.png?branch=master)](http://travis-ci.org/structuresound/js-object-tools) [![COVERALLS](https://img.shields.io/coveralls/structuresound/js-object-tools.svg)]()
+## js-object-tools [![Build Status](https://secure.travis-ci.org/structuresound/js-object-tools.png?branch=master)](http://travis-ci.org/structuresound/js-object-tools) [![Coverage Status](https://coveralls.io/repos/github/structuresound/js-object-tools/badge.svg?branch=master)](https://coveralls.io/github/structuresound/js-object-tools?branch=master)
 [![NPM](https://nodei.co/npm/js-object-tools.png?downloads=true)](https://nodei.co/npm/js-object-tools/)
 
 ## check
