@@ -44,7 +44,7 @@ export function safeOLHM<T>(olhm: OLHM<T>): T[] {
         graph.addNode(k);
     }
     for (const k of keys) {
-        if (olhm[k] && olhm[k].require) {
+        if (isOLHV(olhm[k])) {
             graph.addDependency(k, olhm[k].require);
         }
     }
@@ -103,7 +103,7 @@ export function map<T>(olhm: OLHM<T>, fn: (v: any, k?: string) => T): T[] {
         graph.addNode(k);
     }
     for (const k of keys) {
-        if (olhm[k] && olhm[k].require) {
+        if (isOLHV(olhm[k])) {
             graph.addDependency(k, olhm[k].require);
         }
     }
