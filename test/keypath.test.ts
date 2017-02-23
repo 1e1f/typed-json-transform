@@ -1,6 +1,6 @@
 import { assert } from 'chai';
 
-import { check, contains, valueForKeyPath, flatObject, allKeyPaths, setValueForKeyPath, unsetKeyPath } from '../src';
+import { check, contains, valueForKeyPath, mergeValueAtKeypath, flatObject, allKeyPaths, setValueForKeyPath, unsetKeyPath } from '../src';
 
 import { makeA, makeB, makeC, makeD, makeZ } from './fixtures';
 
@@ -34,6 +34,20 @@ describe('keyPaths', () => {
         setValueForKeyPath(0, 'a.b.c', obj);
         assert.equal(0, obj.a.b.c);
         assert.deepEqual(obj, makeD());
+    });
+
+    it('mergeValueAtKeypath', () => {
+        const obj: any = makeD();
+        mergeValueAtKeypath({ d: 1 }, 'a.b', obj);
+        assert.equal(1, obj.a.b.d);
+        assert.deepEqual(obj, {
+            a: {
+                b: {
+                    d: 1,
+                    c: 0
+                }
+            }
+        });
     });
 
     it('unsetKeyPath mutates', () => {

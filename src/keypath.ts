@@ -47,11 +47,11 @@ function mergeValueAtKeypath(value: any, keyPath: string,
     obj: StringIndexableObject) {
     // this function mutates obj
     const existing = valueForKeyPath(keyPath, obj);
-    let merged = value;
     if (check(value, Object) && check(existing, Object)) {
         extend(existing, value);
+    } else {
+        setValueForKeyPath(value, keyPath, obj);
     }
-    return setValueForKeyPath(merged, keyPath, obj);
 }
 
 function valueForKeyPath(keyPath: string, input: StringIndexableObject) {
