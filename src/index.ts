@@ -20,6 +20,9 @@ export {
     allKeyPaths, filteredKeyPaths, flatObject
 }
 
+import { select, cascadeShallow, cascade } from './cascade';
+export { select, cascadeShallow, cascade };
+
 import {
     isEqual, each, map, every, any, contains, containsAny, containsAll,
     extend, combine, prune, plain, clone, arrayify, union, difference,

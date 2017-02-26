@@ -14,10 +14,12 @@ interface Opts {
     strict: boolean;
 }
 
-function each<T>(iter: { [index: string]: T } | T[], fn: Function): void {
+function each<T>(iter: { [index: string]: T } | T[], fn: (val: T, index: string | number) => void): void {
     if (check(iter, Array)) {
+        let index = 0;
         for (const v of <T[]>iter) {
-            fn(v);
+            fn(v, index);
+            index++;
         }
     } if (check(iter, Object)) {
         for (const k of Object.keys(iter)) {
@@ -97,16 +99,17 @@ function union(...args: any[][]) {
     return res;
 }
 
-function intersect<T>(a: any[], b: any[]) {
+function intersect<T>(...args: any[][]) {
     const res = [];
-    for (const v of a) {
-        if (contains(b, v)) {
-            res.push(v);
-        }
-    }
-    for (const v of b) {
-        if (contains(a, v)) {
-            res.push(v);
+    for (const a of args) {
+        for (const v of a) {
+            if (!contains(res, v)) {
+                for (const b of args) {
+                    if (contains(b, v)) {
+                        res.push(v);
+                    }
+                }
+            }
         }
     }
     return res;

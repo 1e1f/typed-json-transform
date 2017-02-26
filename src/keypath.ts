@@ -49,6 +49,8 @@ function mergeValueAtKeypath(value: any, keyPath: string,
     const existing = valueForKeyPath(keyPath, obj);
     if (check(value, Object) && check(existing, Object)) {
         extend(existing, value);
+    } else if (check(value, Array) && check(existing, Array)) {
+        setValueForKeyPath(union(existing, value), keyPath, obj);
     } else {
         setValueForKeyPath(value, keyPath, obj);
     }
