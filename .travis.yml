@@ -15,6 +15,7 @@ deploy:
   provider: npm
   on:
     branch: master
+  skip_cleanup: true
   email: structuresound@gmail.com
   api_key:
     secure: gXlghpEK2gThtEtreAMn0dYq5s1604XOPaqhTWUoSp3TR938UAdHJspc1QyGczfvXElG7XqfCOmH5c5qjucaR97GbFVdBezcnWJ/dRktkyvSqjl7kSWeHyWb0ZO1dhQLlYyH5fe3cgqf62UJt1vCVxQvOgFeiOKPna/ldvtvj2Anlq/6Nw0OBHd8SYaIWSlMMGMwkeTZaigQubFx1m1mafxJt8F+UESyYSLH+5T6k0d5Knzo/wZx5bntZ2TY+kY+ou7znceMuyhfcaUmpz8rxDs20MHWECKvuSCAix4oJjF+qvsbkslbSVvElZgkIPwdK1rnExoEEnuDs13m+UrLEYhL6imnf8Pw2buu2Z2n9Osa3G27DpIysO5jsV7DsAyn5LVKLr8MvjoxE+i8/XtVYNz2nc9Wu3FP7XY83LlQqk9ULhEVWGCu0jRho4NAhTI+C+2q0QO9Ic7ZzUTkI0bcHYrsSVhFH///+lf59K7xlASfkoDggemdgca3EX+UDrUEORoVlifkPsU2eFfKB0t2w8O+A85EiDUnJmi8jlY2XmKpjnlTgKuDqzbyPrnYVp/xkoUUvjkPF+oFSTKjWr1engNcFmExhU1jj8raeauGVxq5/jwfyeTHAwjHhydPLojvdbdlgg/SvJE49msrJUi/w4E9/QUhN6ISM9Bad0cPeoM=
