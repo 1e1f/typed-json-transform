@@ -3,6 +3,12 @@ declare module 'js-object-tools' {
   function check(value: any, type: any): boolean;
 
   /*
+    * Cascade
+  */
+  function cascadeShallow(tree: any, keywords: string[], selectors: string[]);
+  function cascade(tree: any, keywords: string[], selectors: string[]);
+  function select(input: string[], cssString: string): boolean;
+  /*
     * Container Methods
   */
   function stringify(value: any, replacer?: (number | string)[],
