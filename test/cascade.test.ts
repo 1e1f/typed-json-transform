@@ -192,23 +192,28 @@ describe('cascade', () => {
     }
     assert.deepEqual(result, expected);
   });
-  it(`merges objects, nested arrays`, () => {
+  it(`merges objects, more specific selector wins`, () => {
     const conf = {
       build: {
         with: 'ninja',
-        sources: ['main.c'],
+        sources: {
+          "mac x64": ['main.c'],
+          mac: ['mac.c'],
+        }
       },
-      mac: {
+      x64: {
         build: {
-          sources: ['mac.c']
+          sources: {
+            mac: ['x64.c']
+          }
         }
       }
     }
-    const result = cascade(conf, ['mac'], ['mac']);
+    const result = cascade(conf, ['mac', 'x64'], ['mac', 'x64']);
     const expected = {
       build: {
         with: 'ninja',
-        sources: ['main.c', 'mac.c']
+        sources: ['main.c', 'x64.c']
       }
     }
     assert.deepEqual(result, expected);

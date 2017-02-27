@@ -1,36 +1,52 @@
 import { check } from './check';
-import { every, each, extend, any, contains } from './containers';
+import { every, tally, each, extend, any, contains } from './containers';
 import { valueForKeyPath, mergeValueAtKeypath, keyPaths } from './keypath';
 import { startsWith, replaceAll } from './string';
 
-function deepSearch(object: any, keywords: string[], selectors: string[], stack: any) {
+interface MatchedSelection<T> {
+  priority: number
+  value: T
+}
+
+interface Level<T> {
+  [index: string]: MatchedSelection<T>
+}
+
+type Stack<T> = Level<T>[]
+
+
+function deepSearch(object: any, keywords: string[], selectors: string[], stack: Stack<any>) {
   for (const key of keyPaths(object)) {
-    let priority = 0;
     let filtered = key;
     const unfiltered = key.split('.');
-    let valid = true;
+    let height = 0;
+    let matchingSelectorsAtLevel = 0;
     for (const kp of unfiltered) {
       if (select(keywords, kp)) {
-        if (select(selectors, kp)) {
-          priority += 1;
+        matchingSelectorsAtLevel = select(selectors, kp);
+        if (matchingSelectorsAtLevel > 0) {
+          height += 1;
           filtered = filtered.replace(`${kp}.`, '');
           filtered = filtered.replace(`.${kp}`, '');
-        } else {
-          valid = false;
         }
       }
     }
-    if (valid) {
-      if (stack[priority] == null) {
-        stack[priority] = {};
+    if (matchingSelectorsAtLevel) {
+      if (stack[height] == null) {
+        stack[height] = {};
       }
-      const val = valueForKeyPath(key, object);
-      stack[priority][filtered] = val;
+      if (!stack[height][filtered] || (stack[height][filtered] && stack[height][filtered].priority <= matchingSelectorsAtLevel)) {
+        const val = valueForKeyPath(key, object);
+        stack[height][filtered] = {
+          priority: matchingSelectorsAtLevel,
+          value: val
+        }
+      }
     }
   }
   const flat = {};
-  each(stack, (priority: Object[]) => {
-    each(priority, (v: any, k: string) => { mergeValueAtKeypath(v, k, flat); });
+  each(stack, (priority) => {
+    each(priority, (v: MatchedSelection<any>, k: string) => { mergeValueAtKeypath(v.value, k, flat); });
   });
   return flat;
 }
@@ -64,30 +80,36 @@ function flatten(stack: any) {
   return flat;
 }
 
-function parseAnd(input: string[], cssString: string): boolean {
+function parseAnd(input: string[], cssString: string): number {
   if (cssString.indexOf(' ') !== -1) {
-    return every(cssString.split(' '), (subCssString: string) => {
+    return tally(cssString.split(' '), (subCssString: string) => {
       if (startsWith(subCssString, '!')) {
-        return !contains(input, subCssString);
+        if (!contains(input, subCssString)) {
+          return 1;
+        }
       } else {
-        return contains(input, subCssString);
+        if (contains(input, subCssString)) {
+          return 1;
+        }
       }
     });
   }
-  return contains(input, cssString);
+  if (contains(input, cssString)) {
+    return 1;
+  }
 }
 
-function parseOr(input: string[], cssString: string): boolean {
+function parseOr(input: string[], cssString: string): number {
   const repl = replaceAll(cssString, ', ', ',');
   if (repl.indexOf(',') !== -1) {
-    return any(repl.split(','), (subCssString: string) => {
+    return tally(repl.split(','), (subCssString: string) => {
       return parseAnd(input, subCssString);
     });
   }
   return parseAnd(input, repl);
 }
 
-export function select(input: string[], cssString: string): boolean {
+export function select(input: string[], cssString: string): number {
   return parseOr(input, cssString);
 }
 

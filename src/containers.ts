@@ -87,6 +87,15 @@ function every<T>(iterable: any[], fn: Function) {
     return true;
 }
 
+function tally<T>(input: Array<T>, fn: (input: T, memo: number) => number): number
+function tally<T>(input: { [index: string]: T }, fn: (input: T, memo: number) => number): number {
+    let sum = 0;
+    each(input, (value: T) => {
+        sum += fn(value, sum) || 0
+    });
+    return sum;
+}
+
 function union(...args: any[][]) {
     const res: any[] = [];
     for (const arr of args) {
@@ -162,6 +171,7 @@ function containsAll<T>(set: any[], match: any[]) {
 }
 
 function isEqual(actual: any, expected: any, opts?: Opts): boolean {
+    // http://wiki.commonjs.org/wiki/Unit_Testing/1.0
     if (!opts) opts = <Opts>{};
     // 7.1. All identical values are equivalent, as determined by ===.
     if (actual === expected) {
@@ -284,23 +294,6 @@ function plain(obj: any) {
 
 function clone(input: any): any {
     return retrocycle(decycle(input));
-    // if (check(input, Date)) {
-    //     const newDate = new Date(<number>input.valueOf());
-    //     return newDate;
-    // } else if (check(input, Array)) {
-    //     const array = [];
-    //     for (const elem of input) {
-    //         array.push(clone(elem));
-    //     }
-    //     return array;
-    // } else if (check(input, Object)) {
-    //     const iObj = input as StringIndexableObject;
-    //     const newObj: StringIndexableObject = {};
-    //     for (const key of Object.keys(iObj)) {
-    //         newObj[key] = clone(iObj[key]);
-    //     }
-    //     return newObj;
-    // } return input;
 }
 
 function arrayify(val: any): any[] {
@@ -324,18 +317,13 @@ function isEmpty(input: StringIndexableObject) {
     return !containsValid;
 }
 
-function groupReduce<T>(objOrArray: any, groupField: string,
-    reduceFunction: Function, baseType?: T) {
-    if (!(Array.isArray(objOrArray) ||
-        (objOrArray !== null && typeof objOrArray === 'object'))) {
-        throw new Error('not reducing array or object');
-    }
-    const root: StringIndexableObject = {};
-    each(objOrArray, (value: any) => {
-        const key = value[groupField];
-        root[key] = reduceFunction(root[key] || baseType || {}, value, key);
+function reduce<T, S>(input: Array<T>, fn: (input: T, memo: S) => S, base?: S): S
+function reduce<T, S>(input: { [index: string]: T }, fn: (input: T, memo: S) => S, base?: S): S {
+    let sum: S = base;
+    each(input, (value: T) => {
+        sum = fn(value, sum)
     });
-    return root;
+    return sum;
 }
 
 function okmap(iterable: Object | Array<any>, fn: Function) {
@@ -354,4 +342,4 @@ function stringify(value: any, replacer?: (number | string)[],
     return JSON.stringify(decycle(value), replacer, space || 2);
 }
 
-export { isEqual, each, map, every, any, contains, containsAny, containsAll, extend, combine, prune, plain, clone, arrayify, union, intersect, difference, groupReduce, okmap, stringify };
+export { isEqual, each, map, every, tally, any, contains, containsAny, containsAll, extend, combine, prune, plain, clone, arrayify, union, intersect, difference, reduce, okmap, stringify };
