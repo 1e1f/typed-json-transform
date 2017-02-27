@@ -1,5 +1,5 @@
 import { check } from './check';
-import { every, tally, each, extend, any, contains } from './containers';
+import { every, sum, sumIfEvery, each, extend, any, contains } from './containers';
 import { valueForKeyPath, mergeValueAtKeypath, keyPaths } from './keypath';
 import { startsWith, replaceAll } from './string';
 
@@ -80,33 +80,36 @@ function flatten(stack: any) {
   return flat;
 }
 
-function parseAnd(input: string[], cssString: string): number {
-  if (cssString.indexOf(' ') !== -1) {
-    return tally(cssString.split(' '), (subCssString: string) => {
-      if (startsWith(subCssString, '!')) {
-        if (!contains(input, subCssString)) {
-          return 1;
-        }
-      } else {
-        if (contains(input, subCssString)) {
-          return 1;
-        }
-      }
-    });
-  }
-  if (contains(input, cssString)) {
+function match(selectors: string[], selectable: string) {
+  if (startsWith(selectable, '!')) {
+    if (contains(selectors, selectable.slice(1))) {
+      return 0;
+    }
+    return 1;
+  } else if (contains(selectors, selectable)) {
     return 1;
   }
+  return 0;
 }
 
-function parseOr(input: string[], cssString: string): number {
-  const repl = replaceAll(cssString, ', ', ',');
-  if (repl.indexOf(',') !== -1) {
-    return tally(repl.split(','), (subCssString: string) => {
-      return parseAnd(input, subCssString);
+function parseAnd(selectors: string[], cssString: string): number {
+  if (cssString.indexOf(' ') !== -1) {
+    const selectables = cssString.split(' ');
+    return sumIfEvery(selectables, (selectable: string) => {
+      return match(selectors, selectable);
     });
   }
-  return parseAnd(input, repl);
+  return match(selectors, cssString);
+}
+
+function parseOr(selectors: string[], cssString: string): number {
+  const repl = replaceAll(cssString, ', ', ',');
+  if (repl.indexOf(',') !== -1) {
+    return sum(repl.split(','), (subCssString: string) => {
+      return parseAnd(selectors, subCssString);
+    });
+  }
+  return parseAnd(selectors, repl);
 }
 
 export function select(input: string[], cssString: string): number {

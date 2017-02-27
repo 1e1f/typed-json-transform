@@ -14,34 +14,27 @@ interface Opts {
     strict: boolean;
 }
 
-function each<T>(iter: { [index: string]: T } | T[], fn: (val: T, index: string | number) => void): void {
+function each<T>(iter: { [index: string]: T } | T[], fn: (val: T, index?: string | number, breakLoop?: () => void) => void): void {
+    let broken = 0;
+    const breakLoop = (() => { broken = 1; })
+
     if (check(iter, Array)) {
         let index = 0;
         for (const v of <T[]>iter) {
-            fn(v, index);
+            fn(v, index, breakLoop);
+            if (broken) {
+                return;
+            }
             index++;
         }
     } if (check(iter, Object)) {
         for (const k of Object.keys(iter)) {
-            fn((<{ [index: string]: T }>iter)[k], k);
+            fn((<{ [index: string]: T }><any>iter)[k], k, breakLoop);
+            if (broken) {
+                return;
+            }
         }
     }
-}
-
-function map<T>(iter: { [index: string]: T } | T[], fn: (val: any, index: any) => any): T[] {
-    const res: T[] = [];
-    if (check(iter, Array)) {
-        let i = 0;
-        for (const v of <T[]>iter) {
-            res.push(fn(v, i));
-            i++;
-        }
-    } if (check(iter, Object)) {
-        for (const k of Object.keys(iter)) {
-            res.push(fn((<{ [index: string]: T }>iter)[k], k));
-        }
-    }
-    return res;
 }
 
 function extend(target: StringIndexableObject, ...sources: StringIndexableObject[]) {
@@ -87,11 +80,58 @@ function every<T>(iterable: any[], fn: Function) {
     return true;
 }
 
-function tally<T>(input: Array<T>, fn: (input: T, memo: number) => number): number
-function tally<T>(input: { [index: string]: T }, fn: (input: T, memo: number) => number): number {
+function map<T>(iter: { [index: string]: T } | T[], fn: (val: any, index: any) => any): T[] {
+    const res: T[] = [];
+    if (check(iter, Array)) {
+        let i = 0;
+        for (const v of <T[]>iter) {
+            res.push(fn(v, i));
+            i++;
+        }
+    } if (check(iter, Object)) {
+        for (const k of Object.keys(iter)) {
+            res.push(fn((<{ [index: string]: T }>iter)[k], k));
+        }
+    }
+    return res;
+}
+
+function reduce<T, S>(input: Array<T>, fn: (input: T, memo: S) => S, base?: S): S
+function reduce<T, S>(input: { [index: string]: T }, fn: (input: T, memo: S) => S, base?: S): S {
+    let sum: S = base;
+    each(input, (value: T) => {
+        sum = fn(value, sum)
+    });
+    return sum;
+}
+
+function sum<T>(input: { [index: string]: T } | Array<T>, fn: (input: T) => number): number {
     let sum = 0;
     each(input, (value: T) => {
-        sum += fn(value, sum) || 0
+        sum = sum + fn(value);
+    });
+    return sum;
+}
+
+function sumIfEvery<T>(input: { [index: string]: T } | Array<T>, fn: (input: T) => number): number {
+    let sum = 0;
+    each(input, (value: T, index: any, breakLoop: Function) => {
+        const res = fn(value);
+        if (res > 0) {
+            sum = sum + (0 + <number><any>value);
+        }
+        else {
+            sum = 0;
+            breakLoop();
+        }
+    });
+    return sum;
+}
+
+function geoSum<T>(input: { [index: string]: T } | Array<T>, fn: (input: T, memo: number) => number): number {
+    let sum = 1;
+    each(input, (value: T, key: any, breakLoop: Function) => {
+        sum *= fn(value, sum)
     });
     return sum;
 }
@@ -317,15 +357,6 @@ function isEmpty(input: StringIndexableObject) {
     return !containsValid;
 }
 
-function reduce<T, S>(input: Array<T>, fn: (input: T, memo: S) => S, base?: S): S
-function reduce<T, S>(input: { [index: string]: T }, fn: (input: T, memo: S) => S, base?: S): S {
-    let sum: S = base;
-    each(input, (value: T) => {
-        sum = fn(value, sum)
-    });
-    return sum;
-}
-
 function okmap(iterable: Object | Array<any>, fn: Function) {
     const sum: StringIndexableObject = {};
     each(iterable, (v: any, k: any) => {
@@ -342,4 +373,4 @@ function stringify(value: any, replacer?: (number | string)[],
     return JSON.stringify(decycle(value), replacer, space || 2);
 }
 
-export { isEqual, each, map, every, tally, any, contains, containsAny, containsAll, extend, combine, prune, plain, clone, arrayify, union, intersect, difference, reduce, okmap, stringify };
+export { isEqual, each, map, every, geoSum, sumIfEvery, any, contains, containsAny, containsAll, extend, combine, prune, plain, clone, arrayify, union, intersect, difference, reduce, sum, okmap, stringify };
