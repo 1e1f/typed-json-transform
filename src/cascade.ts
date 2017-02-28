@@ -1,52 +1,44 @@
 import { check } from './check';
-import { every, sum, sumIfEvery, each, extend, any, contains } from './containers';
-import { valueForKeyPath, mergeValueAtKeypath, keyPaths } from './keypath';
+import { every, sum, sumIfEvery, greatestResult, each, extend, any, contains } from './containers';
+import { valueForKeyPath, mergeValueAtKeypath, keyPaths, unsetKeyPath } from './keypath';
 import { startsWith, replaceAll } from './string';
 
-interface MatchedSelection<T> {
-  priority: number
-  value: T
-}
-
 interface Level<T> {
-  [index: string]: MatchedSelection<T>
+  [index: string]: T
 }
 
 type Stack<T> = Level<T>[]
 
-
-function deepSearch(object: any, keywords: string[], selectors: string[], stack: Stack<any>) {
-  for (const key of keyPaths(object)) {
+function deepSearch<T>(object: any, keywords: string[], selectors: string[], stack: Stack<T>) {
+  each(keyPaths(object), (key) => {
     let filtered = key;
     const unfiltered = key.split('.');
-    let height = 0;
-    let matchingSelectorsAtLevel = 0;
-    for (const kp of unfiltered) {
-      if (select(keywords, kp)) {
-        matchingSelectorsAtLevel = select(selectors, kp);
-        if (matchingSelectorsAtLevel > 0) {
-          height += 1;
-          filtered = filtered.replace(`${kp}.`, '');
-          filtered = filtered.replace(`.${kp}`, '');
+    let level = 0;
+    for (const k of unfiltered) {
+      if (select(keywords, k)) {
+        const precedence = select(selectors, k);
+        if (precedence > 0) {
+          filtered = filtered.replace(`${k}.`, '').replace(`.${k}`, '');
+          level += precedence;
+        } else {
+          // console.log('remove non match', filtered)
+          unsetKeyPath(filtered, object);
+          return;
         }
       }
+    };
+    if (!stack[level]) {
+      stack[level] = {};
     }
-    if (matchingSelectorsAtLevel) {
-      if (stack[height] == null) {
-        stack[height] = {};
-      }
-      if (!stack[height][filtered] || (stack[height][filtered] && stack[height][filtered].priority <= matchingSelectorsAtLevel)) {
-        const val = valueForKeyPath(key, object);
-        stack[height][filtered] = {
-          priority: matchingSelectorsAtLevel,
-          value: val
-        }
-      }
-    }
-  }
+    stack[level][filtered] = valueForKeyPath(key, object);
+  });
   const flat = {};
-  each(stack, (priority) => {
-    each(priority, (v: MatchedSelection<any>, k: string) => { mergeValueAtKeypath(v.value, k, flat); });
+  each(stack, (level, height) => {
+    if (level) {
+      each(level, (v: T, kp: string) => {
+        if (v) mergeValueAtKeypath(v, kp, flat);
+      });
+    }
   });
   return flat;
 }
@@ -82,17 +74,12 @@ function flatten(stack: any) {
 
 function match(selectors: string[], selectable: string) {
   if (startsWith(selectable, '!')) {
-    if (contains(selectors, selectable.slice(1))) {
-      return 0;
-    }
-    return 1;
-  } else if (contains(selectors, selectable)) {
-    return 1;
+    return 1 * <any>!contains(selectors, selectable.slice(1));
   }
-  return 0;
+  return 1 * <any>contains(selectors, selectable);
 }
 
-function parseAnd(selectors: string[], cssString: string): number {
+function matchEvery(selectors: string[], cssString: string): number {
   if (cssString.indexOf(' ') !== -1) {
     const selectables = cssString.split(' ');
     return sumIfEvery(selectables, (selectable: string) => {
@@ -102,18 +89,18 @@ function parseAnd(selectors: string[], cssString: string): number {
   return match(selectors, cssString);
 }
 
-function parseOr(selectors: string[], cssString: string): number {
-  const repl = replaceAll(cssString, ', ', ',');
-  if (repl.indexOf(',') !== -1) {
-    return sum(repl.split(','), (subCssString: string) => {
-      return parseAnd(selectors, subCssString);
+function matchCssString(selectors: string[], cssString: string): number {
+  const selectables = replaceAll(cssString, ', ', ',');
+  if (selectables.indexOf(',') !== -1) {
+    return greatestResult(selectables.split(','), (subCssString: string) => {
+      return matchEvery(selectors, subCssString);
     });
   }
-  return parseAnd(selectors, repl);
+  return matchEvery(selectors, selectables);
 }
 
 export function select(input: string[], cssString: string): number {
-  return parseOr(input, cssString);
+  return matchCssString(input, cssString);
 }
 
 function search(tree: any, keywords: string[], selectors: string[], searchFn: Function) {

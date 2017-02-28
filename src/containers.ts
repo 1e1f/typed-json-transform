@@ -113,12 +113,21 @@ function sum<T>(input: { [index: string]: T } | Array<T>, fn: (input: T) => numb
     return sum;
 }
 
+function greatestResult<T>(input: { [index: string]: T } | Array<T>, fn: (input: T) => number): number {
+    let greatestResult = 0;
+    each(input, (value: T) => {
+        const res = fn(value)
+        if (res > greatestResult) greatestResult = res;
+    });
+    return greatestResult;
+}
+
 function sumIfEvery<T>(input: { [index: string]: T } | Array<T>, fn: (input: T) => number): number {
     let sum = 0;
     each(input, (value: T, index: any, breakLoop: Function) => {
         const res = fn(value);
         if (res > 0) {
-            sum = sum + (0 + <number><any>value);
+            sum = sum + res;
         }
         else {
             sum = 0;
@@ -373,4 +382,4 @@ function stringify(value: any, replacer?: (number | string)[],
     return JSON.stringify(decycle(value), replacer, space || 2);
 }
 
-export { isEqual, each, map, every, geoSum, sumIfEvery, any, contains, containsAny, containsAll, extend, combine, prune, plain, clone, arrayify, union, intersect, difference, reduce, sum, okmap, stringify };
+export { isEqual, each, map, every, geoSum, greatestResult, sumIfEvery, any, contains, containsAny, containsAll, extend, combine, prune, plain, clone, arrayify, union, intersect, difference, reduce, sum, okmap, stringify };
