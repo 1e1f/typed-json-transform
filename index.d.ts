@@ -1,52 +1,55 @@
 declare module 'js-object-tools' {
-  interface StringIndexableObject { [index: string]: any }
+  interface SIO { [index: string]: any }
   function check(value: any, type: any): boolean;
 
   /*
-    * Cascade
+  * Cascade
   */
   function cascadeShallow(tree: any, keywords: string[], selectors: string[]);
   function cascade(tree: any, keywords: string[], selectors: string[]);
   function select(input: string[], cssString: string): boolean;
   /*
-    * Container Methods
+  * Container Methods
   */
-  function stringify(value: any, replacer?: (number | string)[],
-    space?: string | number): string;
-  function plain(obj: any): StringIndexableObject;
-  function arrayify(val: any): Array<any>;
-  function clone<T>(input: T): T;
-  function isEmpty(input: StringIndexableObject): boolean;
-  function prune(obj: StringIndexableObject): void;
-  function extend(target: StringIndexableObject,
-    ...sources: StringIndexableObject[]): StringIndexableObject;
-  function combine(...args: Object[]): StringIndexableObject;
-  function any(iterable: Array<any>, fn: Function): boolean;
-  function every(iterable: Array<any>, fn: Function): boolean;
-  function contains<T>(set: Array<T>, match: T): boolean;
-  function containsAny<T>(set: Array<T>, match: Array<T>): boolean;
-  function containsAll<T>(set: Array<T>, match: Array<T>): boolean;
 
-  interface FlatObjectOptions { includeBranches?: boolean; }
-  function flatObject(object: StringIndexableObject,
-    options?: FlatObjectOptions): StringIndexableObject;
-  function groupReduce<T>(objOrArray: T, groupField: string,
-    reduceFunction: Function, baseType?: T): T;
-  function okmap(iterable: Object | Array<any>,
-    fn: Function): StringIndexableObject;
+  function each<T>(iter: { [index: string]: T } | T[], fn: (val: T, index?: string | number, breakLoop?: () => void) => void): void;
+  function extend(target: SIO, ...sources: SIO[]);
+  function combine(...args: Object[]);
+  function any(iterable: Array<any>, fn: Function);
+  function every<T>(iterable: any[], fn: Function);
+  function map<T>(iter: { [index: string]: T } | T[], fn: (val: any, index: any) => any): T[];
+  function reduce<T, S>(input: Array<T> | { [index: string]: T }, fn: (input: T, memo: S) => S, base?: S): S;
+  function sum<T>(input: { [index: string]: T } | Array<T>, fn: (input: T) => number): number;
+  function greatestResult<T>(input: { [index: string]: T } | Array<T>, fn: (input: T) => number): number;
+  function sumIfEvery<T>(input: { [index: string]: T } | Array<T>, fn: (input: T) => number): number;
+  function geoSum<T>(input: { [index: string]: T } | Array<T>, fn: (input: T, memo: number) => number): number;
+  function union(...args: any[][]);
+  function intersect<T>(...args: any[][]);
+  function difference<T>(a: any[], b: any[]);
+  function contains<T>(set: any[], match: T);
+  function containsAny<T>(set: any[], match: any[]);
+  function containsAll<T>(set: any[], match: any[]);
+  function isEqual(actual: any, expected: any, opts?: Opts);
+  function prune(obj: SIO);
+  function plain(obj: any);
+  function clone(input: any);
+  function arrayify(val: any);
+  function isEmpty(input: SIO);
+  function okmap(iterable: Object | Array<any>, fn: Function);
+  function stringify(value: any, replacer?: (number | string);
 
   /*
-    * Diff / Mongo Method
+  * Diff / Mongo Method
   */
-  interface keyPathOptions extends StringIndexableObject {
+  interface keyPathOptions extends SIO {
     allLevels?: boolean;
     diffArrays?: boolean;
   }
   interface Modifier {
-    $set?: StringIndexableObject;
-    $unset?: StringIndexableObject;
+    $set?: SIO;
+    $unset?: SIO;
   }
-  interface Document extends StringIndexableObject { _id: string; }
+  interface Document extends SIO { _id: string; }
   interface Collection {
     findOne: Function;
     find: Function;
@@ -58,32 +61,24 @@ declare module 'js-object-tools' {
     set?: Function;
     ignore?: string[];
   }
-  function setValueForKeyPath(value: any, keyPath: string,
-    input: StringIndexableObject): void;
-  function mergeValueAtKeypath(value: any, keyPath: string,
-    obj: StringIndexableObject): void;
-  function valueForKeyPath(keyPath: string, input: StringIndexableObject): any;
-  function unsetKeyPath(keyPath: string, obj: StringIndexableObject): void;
-  function keyPathContainsPath(keyPath: string, ignorePath: string): boolean;
-  function filteredKeyPaths(_keyPaths: string[], ignore?: string[]): string[];
-  function keyPaths(obj: StringIndexableObject, _options?: keyPathOptions,
-    _stack?: string[], parent?: string): string[];
-  function allKeyPaths(obj: StringIndexableObject): string[];
-  function forwardDiffToModifier(prev: StringIndexableObject,
-    doc: StringIndexableObject,
-    fieldsToIgnore?: string[]): Modifier;
-  function diffToModifier(prev: StringIndexableObject,
-    doc: StringIndexableObject, fieldsToIgnore?: string[],
+  function forwardDiffToModifier(prev: SIO, doc: SIO, fieldsToIgnore?: string[]);
+  function shouldSet(val: any, prev: any);
+  function shouldUnset(val: any, prev: any);
+  function diffToModifier(prev: SIO, doc: SIO,
+    fieldsToIgnore?: string[],
     pruneEmptyObjects?: boolean): Modifier;
-  function modifierToObj(modifier: Modifier): StringIndexableObject;
-  function objToModifier(obj: StringIndexableObject): Modifier;
-  function apply(dest: StringIndexableObject,
-    source: Modifier): StringIndexableObject;
-  function $set(dest: StringIndexableObject, source: Modifier): void;
-  function $addToSet(dest: Array<any>, src: Object): void;
-  function $unset(dest: Object, source: Modifier): void;
-  function update(doc: Document, options: UpdateOptions): void;
-  function mapModifierToKey(modifier: Modifier, key: string): Modifier;
+  function modifierToObj(modifier: Modifier);
+  function objToModifier(obj: SIO);
+  function apply(dest: SIO, source: Modifier);
+  function $set(dest: SIO, source: Modifier);
+  function $addToSet(dest: Array<any>, src: Object);
+  function $unset(dest: Object, source: Modifier);
+  function update(doc: Document, options: UpdateOptions);
+  function mapModifierToKey(modifier: Modifier, key: string);
+
+  /*
+  Optionally Linked Hash Maps
+  */
 
   class OLHV<T> {
     require?: string;
@@ -97,64 +92,22 @@ declare module 'js-object-tools' {
   function parseOLHM(object: any): OLHM<any>;
   function safeOLHM<T>(olhm: OLHM<T>): T[];
 
-  /**
-  * The following is a typescript re-implementation of DepGraph, originally authored by jriecken
-  * original license and source code may be found @ https://github.com/jriecken/dependency-graph
+  /*
+  Graph
   */
 
-  class NodeGraph<T> {
+  class Graph<T> {
     [index: string]: any;
 
     addNode(node: string, data?: T): void;
-    /**
-     * Remove a node from the dependency graph. If a node does not exist, this method will do nothing.
-     */
     removeNode(node: string): void;
-    /**
-     * Check if a node exists in the graph
-     */
     hasNode(node: string): boolean;
-    /**
-     * Get the data associated with a node name
-     */
     getNodeData(node: string): any;
-    /**
-     * Set the associated data for a given node name. If the node does not exist, this method will throw an error
-     */
     setNodeData(node: string, data?: T): void;
-    /**
-     * Add a dependency between two nodes. If either of the nodes does not exist,
-     * an Error will be thrown.
-     */
     addDependency(from: string, to: string): void;
-    /**
-     * Remove a dependency between two nodes.
-     */
     removeDependency(from: string, to: string): void;
-    /**
-     * Get an array containing the nodes that the specified node depends on (transitively).
-     *
-     * Throws an Error if the graph has a cycle, or the specified node does not exist.
-     *
-     * If `leavesOnly` is true, only nodes that do not depend on any other nodes will be returned
-     * in the array.
-     */
     dependenciesOf(node: string, leavesOnly: boolean): any[];
-    /**
-     * get an array containing the nodes that depend on the specified node (transitively).
-     *
-     * Throws an Error if the graph has a cycle, or the specified node does not exist.
-     *
-     * If `leavesOnly` is true, only nodes that do not have any dependants will be returned in the array.
-     */
     dependantsOf(node: string, leavesOnly: boolean): any[];
-    /**
-     * Construct the overall processing order for the dependency graph.
-     *
-     * Throws an Error if the graph has a cycle.
-     *
-     * If `leavesOnly` is true, only nodes that do not depend on any other nodes will be returned.
-     */
     overallOrder(leavesOnly: boolean): any[];
   }
 }

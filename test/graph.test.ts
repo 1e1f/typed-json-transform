@@ -4,11 +4,11 @@ https://github.com/jriecken/dependency-graph
 */
 
 import { assert } from 'chai';
-import { NodeGraph } from '../src';
+import { Graph } from '../src';
 
-describe('NodeGraph', function () {
+describe('Graph', function () {
   it('should be able to add/remove nodes', function () {
-    const graph = new NodeGraph();
+    const graph = new Graph();
 
     graph.addNode('Foo');
     graph.addNode('Bar');
@@ -23,7 +23,7 @@ describe('NodeGraph', function () {
   });
 
   it('should treat the node data parameter as optional and use the node name as data if node data was not given', function () {
-    const graph = new NodeGraph();
+    const graph = new Graph();
 
     graph.addNode('Foo');
 
@@ -31,7 +31,7 @@ describe('NodeGraph', function () {
   });
 
   it('should be able to associate a node name with data on node add', function () {
-    const graph = new NodeGraph();
+    const graph = new Graph();
 
     graph.addNode('Foo', 'data');
 
@@ -39,7 +39,7 @@ describe('NodeGraph', function () {
   });
 
   it('should be able to add undefined as node data', function () {
-    const graph = new NodeGraph();
+    const graph = new Graph();
 
     graph.addNode('Foo', undefined);
 
@@ -47,7 +47,7 @@ describe('NodeGraph', function () {
   });
 
   it('should return true when using hasNode with a node which has falsy data', function () {
-    const graph = new NodeGraph();
+    const graph = new Graph();
 
     const falsyData = ['', 0, null, undefined, false];
     graph.addNode('Foo');
@@ -63,7 +63,7 @@ describe('NodeGraph', function () {
   });
 
   it('should be able to set data after a node was added', function () {
-    const graph = new NodeGraph();
+    const graph = new Graph();
 
     graph.addNode('Foo', 'data');
     graph.setNodeData('Foo', 'data2');
@@ -72,21 +72,21 @@ describe('NodeGraph', function () {
   });
 
   it('should throw an error if we try to set data for a non-existing node', function () {
-    const graph = new NodeGraph();
+    const graph = new Graph();
     assert.throws(function () {
       graph.setNodeData('Foo', 'data');
     }, `Node does not exist: Foo`);
   });
 
   it('should throw an error if the node does not exists and we try to get data', function () {
-    const graph = new NodeGraph();
+    const graph = new Graph();
     assert.throws(function () {
       graph.getNodeData('Foo');
     }, `Node does not exist: Foo`);
   });
 
   it('should do nothing if creating a node that already exists', function () {
-    const graph = new NodeGraph();
+    const graph = new Graph();
 
     graph.addNode('a');
     graph.addNode('b');
@@ -99,7 +99,7 @@ describe('NodeGraph', function () {
   });
 
   it('should do nothing if removing a node that does not exist', function () {
-    const graph = new NodeGraph();
+    const graph = new Graph();
 
     graph.addNode('a');
     assert.equal(graph.hasNode('a'), true);
@@ -112,7 +112,7 @@ describe('NodeGraph', function () {
   });
 
   it('should be able to add dependencies between nodes', function () {
-    const graph = new NodeGraph();
+    const graph = new Graph();
 
     graph.addNode('a');
     graph.addNode('b');
@@ -125,7 +125,7 @@ describe('NodeGraph', function () {
   });
 
   it('should throw an error if a node does not exist and a dependency is added', function () {
-    const graph = new NodeGraph();
+    const graph = new Graph();
 
     graph.addNode('a');
 
@@ -135,7 +135,7 @@ describe('NodeGraph', function () {
   });
 
   it('should detect cycles', function () {
-    const graph = new NodeGraph();
+    const graph = new Graph();
 
     graph.addNode('a');
     graph.addNode('b');
@@ -153,7 +153,7 @@ describe('NodeGraph', function () {
   });
 
   it('should detect cycles in overall order', function () {
-    const graph = new NodeGraph();
+    const graph = new Graph();
 
     graph.addNode('a');
     graph.addNode('b');
@@ -171,7 +171,7 @@ describe('NodeGraph', function () {
   });
 
   it('should detect cycles in overall order when all nodes have dependants (incoming edges)', function () {
-    const graph = new NodeGraph();
+    const graph = new Graph();
 
     graph.addNode('a');
     graph.addNode('b');
@@ -188,7 +188,7 @@ describe('NodeGraph', function () {
 
   it('should detect cycles in overall order when there are several ' +
     'disconnected subgraphs (with one that does not have a cycle', function () {
-      const graph = new NodeGraph();
+      const graph = new Graph();
 
       graph.addNode('a_1');
       graph.addNode('a_2');
@@ -207,7 +207,7 @@ describe('NodeGraph', function () {
     });
 
   it('should retrieve dependencies and dependants in the correct order', function () {
-    const graph = new NodeGraph();
+    const graph = new Graph();
 
     graph.addNode('a');
     graph.addNode('b');
@@ -231,7 +231,7 @@ describe('NodeGraph', function () {
   });
 
   it('should be able to resolve the overall order of things', function () {
-    const graph = new NodeGraph();
+    const graph = new Graph();
 
     graph.addNode('a');
     graph.addNode('b');
@@ -248,7 +248,7 @@ describe('NodeGraph', function () {
   });
 
   it('should be able to only retrieve the "leaves" in the overall order', function () {
-    const graph = new NodeGraph();
+    const graph = new Graph();
 
     graph.addNode('a');
     graph.addNode('b');
@@ -265,7 +265,7 @@ describe('NodeGraph', function () {
   });
 
   it('should be able to give the overall order for a graph with several disconnected subgraphs', function () {
-    const graph = new NodeGraph();
+    const graph = new Graph();
 
     graph.addNode('a_1');
     graph.addNode('a_2');
@@ -281,13 +281,13 @@ describe('NodeGraph', function () {
   });
 
   it('should give an empty overall order for an empty graph', function () {
-    const graph = new NodeGraph();
+    const graph = new Graph();
 
     assert.deepEqual(graph.overallOrder(), []);
   });
 
   it('should still work after nodes are removed', function () {
-    const graph = new NodeGraph();
+    const graph = new Graph();
 
     graph.addNode('a');
     graph.addNode('b');

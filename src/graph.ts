@@ -5,7 +5,7 @@ https://github.com/jriecken/dependency-graph
 
 import { stringify } from './containers';
 
-class NodeGraph<T> {
+class Graph<T> {
     nodes: { [index: string]: T };
     outgoingEdges: { [index: string]: string[] };
     incomingEdges: { [index: string]: string[] };
@@ -18,7 +18,6 @@ class NodeGraph<T> {
 
     addNode(node: string, data?: T) {
         if (!this.hasNode(node)) {
-            // Checking the arguments length allows the user to add a node with undefined data
             if (arguments.length === 2) {
                 this.nodes[node] = data;
             } else {
@@ -28,9 +27,6 @@ class NodeGraph<T> {
             this.incomingEdges[node] = [];
         }
     }
-    /**
-     * Remove a node from the dependency graph. If a node does not exist, this method will do nothing.
-     */
     removeNode(node: string) {
         if (this.hasNode(node)) {
             delete this.nodes[node];
@@ -173,4 +169,4 @@ function createDFS(edges: any, leavesOnly: boolean, result: any) {
 }
 
 
-export { NodeGraph }
+export { Graph }

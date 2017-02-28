@@ -1,9 +1,8 @@
 import { check } from './check';
 export { check };
 
-import { NodeGraph } from './graph';
-export { NodeGraph };
-
+import { Graph } from './graph';
+export { Graph };
 
 import { safeOLHM, map as mapOLHM, okmap as okmapOLHM, reduce as reduceOLHM } from './olhm';
 export { safeOLHM, mapOLHM, okmapOLHM, reduceOLHM };

@@ -1,6 +1,6 @@
 import { check } from './check';
 import { arrayify, containsAll, map as _map } from './containers';
-import { NodeGraph } from './graph';
+import { Graph } from './graph';
 
 export class OLHV<T> {
     require?: string;
@@ -39,7 +39,7 @@ export function safeOLHM<T>(olhm: OLHM<T>): T[] {
         return [safeOLHV(<any>olhm[keys[0]])];
     }
     // 2 or more keys, scan for dependencies
-    const graph = new NodeGraph();
+    const graph = new Graph();
     for (const k of keys) {
         graph.addNode(k);
     }
@@ -98,7 +98,7 @@ export function map<T>(olhm: OLHM<T>, fn: (v: any, k?: string) => T): T[] {
         return [fn(safeOLHV(<any>olhm[keys[0]]), keys[0])];
     }
     // 2 or more keys, scan for dependencies
-    const graph = new NodeGraph();
+    const graph = new Graph();
     for (const k of keys) {
         graph.addNode(k);
     }
