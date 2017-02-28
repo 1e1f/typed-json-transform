@@ -29,14 +29,14 @@ declare module 'js-object-tools' {
   function contains<T>(set: any[], match: T);
   function containsAny<T>(set: any[], match: any[]);
   function containsAll<T>(set: any[], match: any[]);
-  function isEqual(actual: any, expected: any, opts?: Opts);
+  function isEqual(actual: any, expected: any, opts?: any);
   function prune(obj: SIO);
   function plain(obj: any);
   function clone(input: any);
   function arrayify(val: any);
   function isEmpty(input: SIO);
   function okmap(iterable: Object | Array<any>, fn: Function);
-  function stringify(value: any, replacer?: (number | string);
+  function stringify(value: any, replacer?: (number | string));
 
   /*
   * Diff / Mongo Method
