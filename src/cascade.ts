@@ -22,7 +22,7 @@ function deepSearch<T>(object: any, keywords: string[], selectors: string[], sta
           level += precedence;
         } else {
           // console.log('remove non match', filtered)
-          unsetKeyPath(filtered, object);
+          // unsetKeyPath(filtered, object);
           return;
         }
       }
