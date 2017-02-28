@@ -1,17 +1,22 @@
 declare module 'js-object-tools' {
-  interface SIO { [index: string]: any }
+  /*
+  * Check
+  */
+
   function check(value: any, type: any): boolean;
 
   /*
   * Cascade
   */
+
   function cascadeShallow(tree: any, keywords: string[], selectors: string[]);
   function cascade(tree: any, keywords: string[], selectors: string[]);
   function select(input: string[], cssString: string): boolean;
-  /*
+
+  /* 
   * Container Methods
   */
-
+  interface SIO { [index: string]: any }
   function each<T>(iter: { [index: string]: T } | T[], fn: (val: T, index?: string | number, breakLoop?: () => void) => void): void;
   function extend(target: SIO, ...sources: SIO[]);
   function combine(...args: Object[]);
@@ -33,14 +38,36 @@ declare module 'js-object-tools' {
   function prune(obj: SIO);
   function plain(obj: any);
   function clone(input: any);
-  function arrayify(val: any);
+  function arrayify<T>(val: T | T[]): T[];
   function isEmpty(input: SIO);
   function okmap(iterable: Object | Array<any>, fn: Function);
   function stringify(value: any, replacer?: (number | string));
 
   /*
+  * Keypath
+  */
+
+  function setValueForKeyPath(value: any, keyPath: string, input: SIO);
+  function mergeValueAtKeypath(value: any, keyPath: string, obj: SIO);
+  function valueForKeyPath(keyPath: string, input: SIO);
+  function unsetKeyPath(keyPath: string, obj: SIO);
+  function keyPathContainsPath(keyPath: string, ignorePath: string);
+  function filteredKeyPaths(_keyPaths: string[], ignore?: string[]);
+  interface keyPathOptions extends SIO {
+      allLevels?: boolean;
+      diffArrays?: boolean;
+  }
+  function keyPaths(obj: SIO, _options?: keyPathOptions, _stack?: string[], parent?: string);
+  function allKeyPaths(obj: SIO);
+  interface FlatObjectOptions {
+      includeBranches?: boolean;
+  }
+  function flatObject(object: SIO, options?: FlatObjectOptions);
+
+  /*
   * Diff / Mongo Method
   */
+
   interface keyPathOptions extends SIO {
     allLevels?: boolean;
     diffArrays?: boolean;

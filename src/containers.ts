@@ -345,7 +345,7 @@ function clone(input: any): any {
     return retrocycle(decycle(input));
 }
 
-function arrayify(val: any): any[] {
+function arrayify<T>(val: T | T[]): T[] {
     if (check(val, Array)) {
         return val;
     }
