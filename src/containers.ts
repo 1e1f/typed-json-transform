@@ -14,34 +14,27 @@ interface Opts {
     strict: boolean;
 }
 
-function each<T>(iter: { [index: string]: T } | T[], fn: (val: T, index: string | number) => void): void {
+function each<T>(iter: { [index: string]: T } | T[], fn: (val: T, index?: string | number, breakLoop?: () => void) => void): void {
+    let broken = 0;
+    const breakLoop = (() => { broken = 1; })
+
     if (check(iter, Array)) {
         let index = 0;
         for (const v of <T[]>iter) {
-            fn(v, index);
+            fn(v, index, breakLoop);
+            if (broken) {
+                return;
+            }
             index++;
         }
     } if (check(iter, Object)) {
         for (const k of Object.keys(iter)) {
-            fn((<{ [index: string]: T }>iter)[k], k);
+            fn((<{ [index: string]: T }><any>iter)[k], k, breakLoop);
+            if (broken) {
+                return;
+            }
         }
     }
-}
-
-function map<T>(iter: { [index: string]: T } | T[], fn: (val: any, index: any) => any): T[] {
-    const res: T[] = [];
-    if (check(iter, Array)) {
-        let i = 0;
-        for (const v of <T[]>iter) {
-            res.push(fn(v, i));
-            i++;
-        }
-    } if (check(iter, Object)) {
-        for (const k of Object.keys(iter)) {
-            res.push(fn((<{ [index: string]: T }>iter)[k], k));
-        }
-    }
-    return res;
 }
 
 function extend(target: StringIndexableObject, ...sources: StringIndexableObject[]) {
@@ -85,6 +78,71 @@ function every<T>(iterable: any[], fn: Function) {
         }
     }
     return true;
+}
+
+function map<T>(iter: { [index: string]: T } | T[], fn: (val: any, index: any) => any): T[] {
+    const res: T[] = [];
+    if (check(iter, Array)) {
+        let i = 0;
+        for (const v of <T[]>iter) {
+            res.push(fn(v, i));
+            i++;
+        }
+    } if (check(iter, Object)) {
+        for (const k of Object.keys(iter)) {
+            res.push(fn((<{ [index: string]: T }>iter)[k], k));
+        }
+    }
+    return res;
+}
+
+function reduce<T, S>(input: Array<T>, fn: (input: T, memo: S) => S, base?: S): S
+function reduce<T, S>(input: { [index: string]: T }, fn: (input: T, memo: S) => S, base?: S): S {
+    let sum: S = base;
+    each(input, (value: T) => {
+        sum = fn(value, sum)
+    });
+    return sum;
+}
+
+function sum<T>(input: { [index: string]: T } | Array<T>, fn: (input: T) => number): number {
+    let sum = 0;
+    each(input, (value: T) => {
+        sum = sum + fn(value);
+    });
+    return sum;
+}
+
+function greatestResult<T>(input: { [index: string]: T } | Array<T>, fn: (input: T) => number): number {
+    let greatestResult = 0;
+    each(input, (value: T) => {
+        const res = fn(value)
+        if (res > greatestResult) greatestResult = res;
+    });
+    return greatestResult;
+}
+
+function sumIfEvery<T>(input: { [index: string]: T } | Array<T>, fn: (input: T) => number): number {
+    let sum = 0;
+    each(input, (value: T, index: any, breakLoop: Function) => {
+        const res = fn(value);
+        if (res > 0) {
+            sum = sum + res;
+        }
+        else {
+            sum = 0;
+            breakLoop();
+        }
+    });
+    return sum;
+}
+
+function geoSum<T>(input: { [index: string]: T } | Array<T>, fn: (input: T, memo: number) => number): number {
+    let sum = 1;
+    each(input, (value: T, key: any, breakLoop: Function) => {
+        sum *= fn(value, sum)
+    });
+    return sum;
 }
 
 function union(...args: any[][]) {
@@ -162,6 +220,7 @@ function containsAll<T>(set: any[], match: any[]) {
 }
 
 function isEqual(actual: any, expected: any, opts?: Opts): boolean {
+    // http://wiki.commonjs.org/wiki/Unit_Testing/1.0
     if (!opts) opts = <Opts>{};
     // 7.1. All identical values are equivalent, as determined by ===.
     if (actual === expected) {
@@ -284,23 +343,6 @@ function plain(obj: any) {
 
 function clone(input: any): any {
     return retrocycle(decycle(input));
-    // if (check(input, Date)) {
-    //     const newDate = new Date(<number>input.valueOf());
-    //     return newDate;
-    // } else if (check(input, Array)) {
-    //     const array = [];
-    //     for (const elem of input) {
-    //         array.push(clone(elem));
-    //     }
-    //     return array;
-    // } else if (check(input, Object)) {
-    //     const iObj = input as StringIndexableObject;
-    //     const newObj: StringIndexableObject = {};
-    //     for (const key of Object.keys(iObj)) {
-    //         newObj[key] = clone(iObj[key]);
-    //     }
-    //     return newObj;
-    // } return input;
 }
 
 function arrayify(val: any): any[] {
@@ -324,20 +366,6 @@ function isEmpty(input: StringIndexableObject) {
     return !containsValid;
 }
 
-function groupReduce<T>(objOrArray: any, groupField: string,
-    reduceFunction: Function, baseType?: T) {
-    if (!(Array.isArray(objOrArray) ||
-        (objOrArray !== null && typeof objOrArray === 'object'))) {
-        throw new Error('not reducing array or object');
-    }
-    const root: StringIndexableObject = {};
-    each(objOrArray, (value: any) => {
-        const key = value[groupField];
-        root[key] = reduceFunction(root[key] || baseType || {}, value, key);
-    });
-    return root;
-}
-
 function okmap(iterable: Object | Array<any>, fn: Function) {
     const sum: StringIndexableObject = {};
     each(iterable, (v: any, k: any) => {
@@ -354,4 +382,4 @@ function stringify(value: any, replacer?: (number | string)[],
     return JSON.stringify(decycle(value), replacer, space || 2);
 }
 
-export { isEqual, each, map, every, any, contains, containsAny, containsAll, extend, combine, prune, plain, clone, arrayify, union, intersect, difference, groupReduce, okmap, stringify };
+export { isEqual, each, map, every, geoSum, greatestResult, sumIfEvery, any, contains, containsAny, containsAll, extend, combine, prune, plain, clone, arrayify, union, intersect, difference, reduce, sum, okmap, stringify };

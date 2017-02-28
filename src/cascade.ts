@@ -1,36 +1,44 @@
 import { check } from './check';
-import { every, each, extend, any, contains } from './containers';
-import { valueForKeyPath, mergeValueAtKeypath, keyPaths } from './keypath';
+import { every, sum, sumIfEvery, greatestResult, each, extend, any, contains } from './containers';
+import { valueForKeyPath, mergeValueAtKeypath, keyPaths, unsetKeyPath } from './keypath';
 import { startsWith, replaceAll } from './string';
 
-function deepSearch(object: any, keywords: string[], selectors: string[], stack: any) {
-  for (const key of keyPaths(object)) {
-    let priority = 0;
+interface Level<T> {
+  [index: string]: T
+}
+
+type Stack<T> = Level<T>[]
+
+function deepSearch<T>(object: any, keywords: string[], selectors: string[], stack: Stack<T>) {
+  each(keyPaths(object), (key) => {
     let filtered = key;
     const unfiltered = key.split('.');
-    let valid = true;
-    for (const kp of unfiltered) {
-      if (select(keywords, kp)) {
-        if (select(selectors, kp)) {
-          priority += 1;
-          filtered = filtered.replace(`${kp}.`, '');
-          filtered = filtered.replace(`.${kp}`, '');
+    let level = 0;
+    for (const k of unfiltered) {
+      if (select(keywords, k)) {
+        const precedence = select(selectors, k);
+        if (precedence > 0) {
+          filtered = filtered.replace(`${k}.`, '').replace(`.${k}`, '');
+          level += precedence;
         } else {
-          valid = false;
+          // console.log('remove non match', filtered)
+          // unsetKeyPath(filtered, object);
+          return;
         }
       }
+    };
+    if (!stack[level]) {
+      stack[level] = {};
     }
-    if (valid) {
-      if (stack[priority] == null) {
-        stack[priority] = {};
-      }
-      const val = valueForKeyPath(key, object);
-      stack[priority][filtered] = val;
-    }
-  }
+    stack[level][filtered] = valueForKeyPath(key, object);
+  });
   const flat = {};
-  each(stack, (priority: Object[]) => {
-    each(priority, (v: any, k: string) => { mergeValueAtKeypath(v, k, flat); });
+  each(stack, (level, height) => {
+    if (level) {
+      each(level, (v: T, kp: string) => {
+        if (v) mergeValueAtKeypath(v, kp, flat);
+      });
+    }
   });
   return flat;
 }
@@ -64,31 +72,35 @@ function flatten(stack: any) {
   return flat;
 }
 
-function parseAnd(input: string[], cssString: string): boolean {
+function match(selectors: string[], selectable: string) {
+  if (startsWith(selectable, '!')) {
+    return 1 * <any>!contains(selectors, selectable.slice(1));
+  }
+  return 1 * <any>contains(selectors, selectable);
+}
+
+function matchEvery(selectors: string[], cssString: string): number {
   if (cssString.indexOf(' ') !== -1) {
-    return every(cssString.split(' '), (subCssString: string) => {
-      if (startsWith(subCssString, '!')) {
-        return !contains(input, subCssString);
-      } else {
-        return contains(input, subCssString);
-      }
+    const selectables = cssString.split(' ');
+    return sumIfEvery(selectables, (selectable: string) => {
+      return match(selectors, selectable);
     });
   }
-  return contains(input, cssString);
+  return match(selectors, cssString);
 }
 
-function parseOr(input: string[], cssString: string): boolean {
-  const repl = replaceAll(cssString, ', ', ',');
-  if (repl.indexOf(',') !== -1) {
-    return any(repl.split(','), (subCssString: string) => {
-      return parseAnd(input, subCssString);
+function matchCssString(selectors: string[], cssString: string): number {
+  const selectables = replaceAll(cssString, ', ', ',');
+  if (selectables.indexOf(',') !== -1) {
+    return greatestResult(selectables.split(','), (subCssString: string) => {
+      return matchEvery(selectors, subCssString);
     });
   }
-  return parseAnd(input, repl);
+  return matchEvery(selectors, selectables);
 }
 
-export function select(input: string[], cssString: string): boolean {
-  return parseOr(input, cssString);
+export function select(input: string[], cssString: string): number {
+  return matchCssString(input, cssString);
 }
 
 function search(tree: any, keywords: string[], selectors: string[], searchFn: Function) {

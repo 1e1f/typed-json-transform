@@ -26,13 +26,13 @@ export { select, cascadeShallow, cascade };
 import {
     isEqual, each, map, every, any, contains, containsAny, containsAll,
     extend, combine, prune, plain, clone, arrayify, union, difference,
-    groupReduce, okmap, stringify
+    reduce, okmap, stringify, geoSum, greatestResult, sum
 } from './containers';
 
 export {
     isEqual, each, map, every, any, contains, containsAny, containsAll,
     extend, combine, prune, plain, clone, arrayify, union, difference,
-    groupReduce, okmap, stringify
+    reduce, okmap, stringify, geoSum, greatestResult, sum
 };
 
 import {

@@ -69,7 +69,7 @@ const testObjB = {
       with: 'cmake'
     }
   },
-  'x64': {
+  x64: {
     build: {
       with: 'error C',
       'mac': {
@@ -80,11 +80,11 @@ const testObjB = {
       }
     }
   },
-  'win': {
+  win: {
     build: {
       with: {
-        'x64': 'clang',
-        'x86': 'gcc'
+        x64: 'clang',
+        x86: 'gcc'
       }
     }
   }
@@ -151,64 +151,138 @@ const testCExpected = [
   }, {}
 ];
 
-describe('select', () => {
-  it('matches', () => {
-    assert.ok(select(['apple'], 'apple'));
+describe('should return 1 if', () => {
+  it('a match a', () => {
+    assert.equal(select(['a'], 'a'), 1);
   });
-  it('matches OR', () => {
-    assert.ok(select([
-      'ios', 'mac', 'win'
-    ], 'x86, mac, win'));
+  it(`a match !b`, () => {
+    assert.equal(select([
+      'a',
+    ], '!b'), 1);
   });
-  it('matches AND', () => {
-    assert.ok(select([
-      'apple', 'bananna'
-    ], 'apple bananna'));
+  it('a match a || b', () => {
+    assert.equal(select([
+      'a'
+    ], 'a, b'), 1);
   });
-  it('fails', () => {
-    assert.ok(!select([
-      'apple', 'bananna'
-    ], 'x86'));
-  });
-  it('fails AND', () => {
-    assert.ok(!select(['apple'], 'apple bananna'));
-  });
-  it('fails OR/AND', () => {
-    assert.ok(!select(['bananna'], 'apple, bananna orange'));
+  it('[a, b, c] match a || b || !c', () => {
+    assert.equal(select([
+      'a', 'b', 'c'
+    ], 'a, b, !c'), 1);
   });
 });
 
-describe('cascade', () => {
-  it(`merges arrays`, () => {
+describe('should return 2 if', () => {
+  it('[a] match a && !c', () => {
+    assert.equal(select([
+      'a',
+    ], 'a !c'), 2);
+  });
+
+  it('[a, b] match a && b', () => {
+    assert.equal(select([
+      'a', 'b'
+    ], 'a b'), 2);
+  });
+
+  it('[a, b, c] match (a && b) || c', () => {
+    assert.equal(select([
+      'a', 'b', 'c'
+    ], 'a b, c'), 2);
+  });
+});
+
+describe('should return 3 if', () => {
+  it('[a, b] match a && b && !c', () => {
+    assert.equal(select([
+      'a', 'b'
+    ], 'a b !c'), 3);
+  });
+});
+
+describe(`should return 0 if`, () => {
+  it(`a match b`, () => {
+    assert.equal(select([
+      'a',
+    ], 'b'), 0);
+  });
+  it(`a match !a`, () => {
+    assert.equal(select([
+      'a'
+    ], '!a'), 0);
+  });
+  it('a match a && b', () => {
+    assert.equal(select([
+      'a'
+    ], 'c, a b'), 0);
+  });
+  it('[a, b] match a && !b', () => {
+    assert.equal(select([
+      'a', 'b'
+    ], 'c, a !b'), 0);
+  });
+  it('[a, b, c] match (a && !b) || (b && !c) || (c && !a)', () => {
+    assert.equal(select([
+      'a', 'b', 'c'
+    ], 'a !b, b !c, c !a'), 0);
+  });
+});
+
+
+describe('arrays', () => {
+  it(`ignores unmatched keywords`, () => {
+    const selectors = ['mac']
     const conf = {
+      build: {
+        with: 'ninja',
+        sources: {
+          "mac x64": ['main.c'],
+          mac: ['mac.c']
+        }
+      }
+    }
+    const result = cascade(conf, keywords, selectors);
+    const expected = {
+      build: {
+        with: 'ninja',
+        sources: ['mac.c']
+      }
+    }
+    assert.deepEqual(result, expected);
+  });
+  it(`merges arrays`, () => {
+    const selectors = ['mac'];
+    const tree = {
       sources: ['main.c'],
       mac: {
         sources: ['mac.c']
       }
     }
-    const result = cascade(conf, ['mac'], ['mac']);
+    const result = cascade(tree, keywords, selectors);
     const expected = {
       sources: ['main.c', 'mac.c']
     }
     assert.deepEqual(result, expected);
   });
-  it(`merges objects, nested arrays`, () => {
+});
+
+describe('objects', () => {
+  it(`more specific operates last`, () => {
+    const selectors = ['mac', 'x64']
     const conf = {
       build: {
         with: 'ninja',
-        sources: ['main.c'],
-      },
-      mac: {
-        build: {
-          sources: ['mac.c']
+        sources: {
+          "mac x64": ['main.c'],
+          mac: ['mac.c']
         }
       }
     }
-    const result = cascade(conf, ['mac'], ['mac']);
+    const result = cascade(conf, selectors, selectors);
     const expected = {
       build: {
         with: 'ninja',
-        sources: ['main.c', 'mac.c']
+        sources: ['mac.c', 'main.c']
       }
     }
     assert.deepEqual(result, expected);
