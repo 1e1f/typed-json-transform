@@ -1,9 +1,14 @@
+/*
+this libary is a TypeScript port of a js library written by Jim Riecken
+https://github.com/jriecken/dependency-graph
+*/
+
 import { stringify } from './containers';
 
 class NodeGraph<T> {
-    nodes: any;
-    outgoingEdges: any;
-    incomingEdges: any;
+    nodes: { [index: string]: T };
+    outgoingEdges: { [index: string]: string[] };
+    incomingEdges: { [index: string]: string[] };
 
     constructor() {
         this.nodes = {};
@@ -17,7 +22,7 @@ class NodeGraph<T> {
             if (arguments.length === 2) {
                 this.nodes[node] = data;
             } else {
-                this.nodes[node] = node;
+                this.nodes[node] = <T><any>node;
             }
             this.outgoingEdges[node] = [];
             this.incomingEdges[node] = [];
@@ -48,22 +53,22 @@ class NodeGraph<T> {
         if (this.hasNode(node)) {
             return this.nodes[node];
         } else {
-            throw new Error('Node does not exist: ' + node);
+            throw new Error(`Node does not exist: ${node}`);
         }
     }
     setNodeData(node: string, data?: T) {
         if (this.hasNode(node)) {
             this.nodes[node] = data;
         } else {
-            throw new Error('Node does not exist: ' + stringify(node));
+            throw new Error(`Node does not exist: ${node}`);
         }
     }
     addDependency(from: string, to: string) {
         if (!this.hasNode(from)) {
-            throw new Error('Node does not exist: ' + stringify(from));
+            throw new Error(`Node does not exist: ${from}`);
         }
         if (!this.hasNode(to)) {
-            throw new Error('Node does not exist: ' + stringify(to));
+            throw new Error(`Node does not exist: ${to}`);
         }
         if (this.outgoingEdges[from].indexOf(to) === -1) {
             this.outgoingEdges[from].push(to);
