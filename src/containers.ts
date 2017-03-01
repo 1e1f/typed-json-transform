@@ -347,9 +347,9 @@ function clone(input: any): any {
 
 function arrayify<T>(val: T | T[]): T[] {
     if (check(val, Array)) {
-        return val;
+        return val as T[];
     }
-    return [val];
+    return [val as T];
 }
 
 function isEmpty(input: StringIndexableObject) {
