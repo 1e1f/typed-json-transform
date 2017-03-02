@@ -16,23 +16,23 @@ const keywords = [
 ];
 
 const testAObject = {
-  useAccel: 0,
+  useAccel: -1,
   'win, linux': {
-    useAccel: 1,
+    useAccel: 0,
     x86: {
-      useAccel: 2
+      useAccel: 1
     },
     x64: {
-      useAccel: 3
+      useAccel: 2
     }
   },
   'mac, ios': {
-    useAccel: 4,
+    useAccel: 3,
     x86: {
-      useAccel: 5
+      useAccel: 4
     },
     x64: {
-      useAccel: 6
+      useAccel: 5
     }
   }
 };
@@ -47,11 +47,11 @@ const testASelectors = [
 
 const testAExpected = [
   {
-    useAccel: 6
+    useAccel: 5
   }, {
-    useAccel: 1
+    useAccel: 0
   }, {
-    useAccel: 3
+    useAccel: 2
   }
 ];
 
@@ -63,7 +63,7 @@ const testObjB = {
   build: {
     with: 'error A',
     'mac, ios': {
-      sources: ['apple.c']
+      matching: ['apple.c']
     },
     'mac': {
       with: 'cmake'
@@ -107,14 +107,14 @@ const testBExpected = [
     other: 'setting',
     build: {
       with: 'ninja',
-      sources: ['apple.c']
+      matching: ['apple.c']
     }
   }, {
     flag: true,
     other: 'setting',
     build: {
       with: 'cmake',
-      sources: ['apple.c']
+      matching: ['apple.c']
     }
   }, {
     build: {
@@ -235,7 +235,7 @@ describe('arrays', () => {
     const conf = {
       build: {
         with: 'ninja',
-        sources: {
+        matching: {
           "mac x64": ['main.c'],
           mac: ['mac.c']
         }
@@ -245,7 +245,7 @@ describe('arrays', () => {
     const expected = {
       build: {
         with: 'ninja',
-        sources: ['mac.c']
+        matching: ['mac.c']
       }
     }
     assert.deepEqual(result, expected);
@@ -253,14 +253,14 @@ describe('arrays', () => {
   it(`merges arrays`, () => {
     const selectors = ['mac'];
     const tree = {
-      sources: ['main.c'],
+      matching: ['main.c'],
       mac: {
-        sources: ['mac.c']
+        matching: ['mac.c']
       }
     }
     const result = cascade(tree, keywords, selectors);
     const expected = {
-      sources: ['main.c', 'mac.c']
+      matching: ['main.c', 'mac.c']
     }
     assert.deepEqual(result, expected);
   });
@@ -272,7 +272,7 @@ describe('objects', () => {
     const conf = {
       build: {
         with: 'ninja',
-        sources: {
+        matching: {
           "mac x64": ['main.c'],
           mac: ['mac.c']
         }
@@ -282,7 +282,30 @@ describe('objects', () => {
     const expected = {
       build: {
         with: 'ninja',
-        sources: ['mac.c', 'main.c']
+        matching: ['mac.c', 'main.c']
+      }
+    }
+    assert.deepEqual(result, expected);
+  });
+  it(`merges empty values`, () => {
+    const selectors = ['mac', 'x64']
+    const conf = {
+      build: {
+        with: 'ninja',
+        matching: {
+          "mac x64": 1,
+          mac: ['mac.c']
+        },
+        "mac x64": {
+          matching: 0
+        }
+      }
+    }
+    const result = cascade(conf, selectors, selectors);
+    const expected = {
+      build: {
+        with: 'ninja',
+        matching: 0
       }
     }
     assert.deepEqual(result, expected);

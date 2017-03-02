@@ -36,7 +36,7 @@ function deepSearch<T>(object: any, keywords: string[], selectors: string[], sta
   each(stack, (level, height) => {
     if (level) {
       each(level, (v: T, kp: string) => {
-        if (v) mergeValueAtKeypath(v, kp, flat);
+        mergeValueAtKeypath(v, kp, flat);
       });
     }
   });
