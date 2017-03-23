@@ -1,4 +1,4 @@
-declare module 'js-object-tools' {
+declare module 'typed-json-transform' {
   /* 
   * Container Methods
   */

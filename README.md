@@ -1,11 +1,11 @@
-## typed-json-transform [![Build Status](https://travis-ci.org/1e1f/js-object-tools.svg?branch=master)](https://travis-ci.org/1e1f/js-object-tools) [![Coverage Status](https://coveralls.io/repos/github/1e1f/js-object-tools/badge.svg?branch=master)](https://coveralls.io/github/1e1f/js-object-tools?branch=master)
-[![NPM](https://nodei.co/npm/js-object-tools.png?downloads=true)](https://nodei.co/npm/js-object-tools/)
+## typed-json-transform [![Build Status](https://travis-ci.org/1e1f/typed-json-transform.svg?branch=master)](https://travis-ci.org/1e1f/typed-json-transform) [![Coverage Status](https://coveralls.io/repos/github/1e1f/typed-json-transform/badge.svg?branch=master)](https://coveralls.io/github/1e1f/typed-json-transform?branch=master)
+[![NPM](https://nodei.co/npm/typed-json-transform.png?downloads=true)](https://nodei.co/npm/typed-json-transform/)
 
 ## _ like library written in typescript using templated generics where reasonable
 
 usage
 ```typescript
-import { map } from 'hidash';
+import { map } from 'typed-json-transform';
 
 const strings = ['apple', 'bannana'];
 const lengths = map(strings, (str: string) => {

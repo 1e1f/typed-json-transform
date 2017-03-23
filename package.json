@@ -2,21 +2,21 @@
   "name": "typed-json-transform",
   "version": "0.14.8",
   "description": "_ like library written in typescript using templated generics where reasonable",
-  "homepage": "https://github.com/structuresound/js-object-tools",
+  "homepage": "https://github.com/structuresound/typed-json-transform",
   "author": {
     "name": "Leif Shackelford",
     "email": "leif@chroma.io"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/structuresound/js-object-tools.git"
+    "url": "https://github.com/structuresound/typed-json-transform.git"
   },
   "bugs": {
-    "url": "https://github.com/structuresound/js-object-tools/issues"
+    "url": "https://github.com/structuresound/typed-json-transform/issues"
   },
   "licenses": [{
     "type": "MIT",
-    "url": "https://github.com/structuresound/js-object-tools/blob/master/LICENSE-MIT"
+    "url": "https://github.com/structuresound/typed-json-transform/blob/master/LICENSE-MIT"
   }],
   "main": "dist/index.js",
   "types": "index.d.ts",
