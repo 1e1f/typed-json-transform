@@ -1,21 +1,8 @@
 declare module 'js-object-tools' {
-  /*
-  * Check
-  */
-
-  function check(value: any, type: any): boolean;
-
-  /*
-  * Cascade
-  */
-
-  function cascadeShallow(tree: any, keywords: string[], selectors: string[]);
-  function cascade(tree: any, keywords: string[], selectors: string[]);
-  function select(input: string[], cssString: string): boolean;
-
   /* 
   * Container Methods
   */
+  
   interface SIO { [index: string]: any }
   function each<T>(iter: { [index: string]: T } | T[], fn: (val: T, index?: string | number, breakLoop?: () => void) => void): void;
   function extend(target: SIO, ...sources: SIO[]);
@@ -54,13 +41,13 @@ declare module 'js-object-tools' {
   function keyPathContainsPath(keyPath: string, ignorePath: string);
   function filteredKeyPaths(_keyPaths: string[], ignore?: string[]);
   interface keyPathOptions extends SIO {
-      allLevels?: boolean;
-      diffArrays?: boolean;
+    allLevels?: boolean;
+    diffArrays?: boolean;
   }
   function keyPaths(obj: SIO, _options?: keyPathOptions, _stack?: string[], parent?: string);
   function allKeyPaths(obj: SIO);
   interface FlatObjectOptions {
-      includeBranches?: boolean;
+    includeBranches?: boolean;
   }
   function flatObject(object: SIO, options?: FlatObjectOptions);
 
@@ -104,20 +91,18 @@ declare module 'js-object-tools' {
   function mapModifierToKey(modifier: Modifier, key: string);
 
   /*
-  Optionally Linked Hash Maps
+  * Check
   */
 
-  class OLHV<T> {
-    require?: string;
-    value: T
-  }
-  class OLHM<T> {
-    [index: string]: OLHV<T>;
-  }
-  function map<T>(olhm: OLHM<T>, fn: (v: any, k?: string) => T): T[];
-  function okmap<T>(olhm: OLHM<T>, fn: (v: any, k?: string) => OLHV<T> | T): OLHM<T>;
-  function parseOLHM(object: any): OLHM<any>;
-  function safeOLHM<T>(olhm: OLHM<T>): T[];
+  function check(value: any, type: any): boolean;
+
+  /*
+  * Cascade
+  */
+
+  function cascadeShallow(tree: any, keywords: string[], selectors: string[]);
+  function cascade(tree: any, keywords: string[], selectors: string[]);
+  function select(input: string[], cssString: string): boolean;
 
   /*
   Graph
@@ -137,4 +122,21 @@ declare module 'js-object-tools' {
     dependantsOf(node: string, leavesOnly: boolean): any[];
     overallOrder(leavesOnly: boolean): any[];
   }
+
+  /*
+  Optionally Linked Hash Maps
+  */
+
+  class OLHV<T> {
+    require?: string;
+    value: T
+  }
+  class OLHM<T> {
+    [index: string]: OLHV<T>;
+  }
+  function map<T>(olhm: OLHM<T>, fn: (v: any, k?: string) => T): T[];
+  function okmap<T>(olhm: OLHM<T>, fn: (v: any, k?: string) => OLHV<T> | T): OLHM<T>;
+  function parseOLHM(object: any): OLHM<any>;
+  function safeOLHM<T>(olhm: OLHM<T>): T[];
+
 }
