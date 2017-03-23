@@ -3,8 +3,7 @@ import { isEqual, each, map, every, any, contains, containsAny, containsAll, ext
 
 interface StringIndexableObject { [index: string]: any }
 
-function setValueForKeyPath(value: any, keyPath: string,
-    input: StringIndexableObject) {
+function setValueForKeyPath(value: any, keyPath: string, input: StringIndexableObject) {
     let current = input;
     const keys = keyPath.split('.');
     for (let i = 0; i < keys.length - 1; i += 1) {
@@ -67,15 +66,11 @@ function valueForKeyPath(keyPath: string, input: StringIndexableObject) {
         if (Array.isArray(current)) {
             if (!current[parseInt(key, 10)]) {
                 return undefined;
-                // throw new Error(`no value at array position ${key} while enumerating
-                // valueForKeyPath`);
             }
             current = current[parseInt(key, 10)];
         } else if (current !== null && typeof current === 'object') {
             if (!current[key]) {
                 return undefined;
-                // throw new Error(`no key: ${key} in subobject while enumerating
-                // valueForKeyPath`);
             }
             current = current[key];
         }
@@ -162,45 +157,46 @@ interface keyPathOptions extends StringIndexableObject {
     diffArrays?: boolean;
 }
 
-function keyPaths(obj: StringIndexableObject, _options?: keyPathOptions,
-    _stack?: string[], parent?: string) {
+function keyPaths(obj: StringIndexableObject, _options?: keyPathOptions, _stack?: string[], parent?: string) {
     const stack = _stack || [];
     const options = <keyPathOptions>clone(_options || {});
-    for (const el of Object.keys(obj)) {
-        if (Array.isArray(obj[el])) {
-            if (options.diffArrays) {
+    const keys = Object.keys(obj);
+    if (keys.length > 0) {
+        for (const el of keys) {
+            const val = obj[el];
+            if (Array.isArray(val)) {
+                if (options.diffArrays) {
+                    if (options.allLevels) {
+                        stack.push(parent ? `${parent}.${el}` : el);
+                    }
+                    for (let i = 0; i < val.length; i += 1) {
+                        const p = parent ? `${parent}.${el}.${i}` : `${el}.${i}`;
+                        const s = val[i];
+                        if (Array.isArray(s) || (s !== null && typeof s === 'object')) {
+                            keyPaths(s, options, stack, p);
+                        } else {
+                            stack.push(p);
+                        }
+                    }
+                } else {
+                    stack.push(parent ? `${parent}.${el}` : el);
+                }
+            } else if (val instanceof Date) {
+                const key = parent ? `${parent}.${el}` : el;
+                stack.push(key);
+            } else if (val !== null && typeof val === 'object') {
                 if (options.allLevels) {
                     stack.push(parent ? `${parent}.${el}` : el);
                 }
-                for (let i = 0; i < obj[el].length; i += 1) {
-                    let p: string;
-                    if (parent) {
-                        p = `${parent}.${el}.${i}`;
-                    } else {
-                        p = `${el}.${i}`;
-                    }
-                    const s = obj[el][i];
-                    if (Array.isArray(s) || (s !== null && typeof s === 'object')) {
-                        keyPaths(s, options, stack, p);
-                    } else {
-                        stack.push(p);
-                    }
-                }
+                keyPaths(val, options, stack, parent ? `${parent}.${el}` : el);
             } else {
                 stack.push(parent ? `${parent}.${el}` : el);
             }
-        } else if (obj[el] instanceof Date) {
-            const key = parent ? `${parent}.${el}` : el;
-            stack.push(key);
-        } else if (obj[el] !== null && typeof obj[el] === 'object') {
-            if (options.allLevels) {
-                stack.push(parent ? `${parent}.${el}` : el);
-            }
-            keyPaths(obj[el], options, stack, parent ? `${parent}.${el}` : el);
-        } else {
-            stack.push(parent ? `${parent}.${el}` : el);
         }
+    } else {
+        stack.push(parent ? `${parent}` : '');
     }
+
     return stack;
 }
 

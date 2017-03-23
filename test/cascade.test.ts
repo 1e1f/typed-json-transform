@@ -287,7 +287,8 @@ describe('objects', () => {
     }
     assert.deepEqual(result, expected);
   });
-  it(`merges empty values`, () => {
+
+  it(`merges falsey values`, () => {
     const selectors = ['mac', 'x64']
     const conf = {
       build: {
@@ -310,6 +311,19 @@ describe('objects', () => {
     }
     assert.deepEqual(result, expected);
   });
+
+  it(`merges empty objects`, () => {
+    const selectors = ['mac', 'x64']
+    const conf = {
+      matching: {}
+    }
+    const result = cascade(conf, selectors, selectors);
+    const expected = {
+      matching: {}
+    }
+    assert.deepEqual(result, expected);
+  });
+
   for (const i in testASelectors) {
     it(`selects A${i} ${testASelectors[i]}`, () => {
       const result = cascadeShallow(testAObject, keywords, testASelectors[i]);
