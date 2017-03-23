@@ -1,7 +1,7 @@
 {
-  "name": "js-object-tools",
+  "name": "typed-json-transform",
   "version": "0.14.8",
-  "description": "various json utils",
+  "description": "_ like library written in typescript using templated generics where reasonable",
   "homepage": "https://github.com/structuresound/js-object-tools",
   "author": {
     "name": "Leif Shackelford",

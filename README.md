@@ -1,7 +1,25 @@
-## double_bottom_line [![Build Status](https://travis-ci.org/1e1f/js-object-tools.svg?branch=master)](https://travis-ci.org/1e1f/js-object-tools) [![Coverage Status](https://coveralls.io/repos/github/1e1f/js-object-tools/badge.svg?branch=master)](https://coveralls.io/github/1e1f/js-object-tools?branch=master)
+## typed-json-transform [![Build Status](https://travis-ci.org/1e1f/js-object-tools.svg?branch=master)](https://travis-ci.org/1e1f/js-object-tools) [![Coverage Status](https://coveralls.io/repos/github/1e1f/js-object-tools/badge.svg?branch=master)](https://coveralls.io/github/1e1f/js-object-tools?branch=master)
 [![NPM](https://nodei.co/npm/js-object-tools.png?downloads=true)](https://nodei.co/npm/js-object-tools/)
 
-## _ like library written in typescript using templated generics where possible
+## _ like library written in typescript using templated generics where reasonable
+
+usage
+```typescript
+import { map } from 'hidash';
+
+const strings = ['apple', 'bannana'];
+const lengths = map(strings, (str: string) => {
+    return str.length;
+})
+```
+'lengths' is typed as Array<number> because map() is templated to return an array of types deduced by the map function
+
+its value is as expected:
+```
+[ 5, 7 ]
+```
+
+this library is NOT a drop-in replacement for underscore ot lodash, however functions with similiar names should do the same thing.
 
 the documentation IS index.d.ts so here is a copy:
 

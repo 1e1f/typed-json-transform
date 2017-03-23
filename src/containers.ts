@@ -80,17 +80,17 @@ function every<T>(iterable: any[], fn: Function) {
     return true;
 }
 
-function map<T>(iter: { [index: string]: T } | T[], fn: (val: any, index: any) => any): T[] {
-    const res: T[] = [];
+function map<R, I>(iter: { [index: string]: I } | I[], fn: (val: I, index: any) => R): R[] {
+    const res: R[] = [];
     if (check(iter, Array)) {
         let i = 0;
-        for (const v of <T[]>iter) {
+        for (const v of <I[]>iter) {
             res.push(fn(v, i));
             i++;
         }
     } if (check(iter, Object)) {
         for (const k of Object.keys(iter)) {
-            res.push(fn((<{ [index: string]: T }>iter)[k], k));
+            res.push(fn((<{ [index: string]: I }>iter)[k], k));
         }
     }
     return res;
@@ -375,7 +375,6 @@ function okmap(iterable: Object | Array<any>, fn: Function) {
     });
     return sum;
 }
-
 
 function stringify(value: any, replacer?: (number | string)[],
     space?: string | number): string {
