@@ -1,5 +1,5 @@
-import { check } from './check';
-export { check };
+import { check, isNumeric, isArguments, isEmpty, isUndefinedOrNull } from './check';
+export { check, isNumeric, isArguments, isEmpty, isUndefinedOrNull };
 
 import { Graph } from './graph';
 export { Graph };

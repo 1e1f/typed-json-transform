@@ -1,20 +1,9 @@
-import { check } from './check';
+import { check, isArguments, isEmpty, isUndefinedOrNull, isBuffer } from './check';
 import { decycle, retrocycle } from './decycle';
 
-interface StringIndexableObject { [index: string]: any }
+interface SIO { [index: string]: any }
 
-
-var pSlice = Array.prototype.slice;
-function isArguments(object: any) {
-    return Object.prototype.toString.call(object) == '[object Arguments]';
-};
-
-interface Opts {
-    [index: string]: boolean;
-    strict: boolean;
-}
-
-function each<T>(iter: { [index: string]: T } | T[], fn: (val: T, index?: string | number, breakLoop?: () => void) => void): void {
+export function each<T>(iter: { [index: string]: T } | T[], fn: (val: T, index?: string | number, breakLoop?: () => void) => void): void {
     let broken = 0;
     const breakLoop = (() => { broken = 1; })
 
@@ -37,7 +26,7 @@ function each<T>(iter: { [index: string]: T } | T[], fn: (val: T, index?: string
     }
 }
 
-function extend(target: StringIndexableObject, ...sources: StringIndexableObject[]) {
+export function extend(target: SIO, ...sources: SIO[]) {
     for (const source of sources) {
         if (check(source, Object)) {
             for (const key of Object.keys(source)) {
@@ -52,8 +41,8 @@ function extend(target: StringIndexableObject, ...sources: StringIndexableObject
     return target;
 }
 
-function combine(...args: Object[]) {
-    const result = {};
+export function combine<T, U>(retType: T, ...args: U[]): T {
+    const result = clone(retType);
     for (const dict of args) {
         if (check(dict, Object)) {
             extend(result, dict);
@@ -62,7 +51,7 @@ function combine(...args: Object[]) {
     return result;
 }
 
-function any(iterable: Array<any>, fn: Function) {
+export function any(iterable: Array<any>, fn: Function): boolean {
     for (const v of iterable) {
         if (fn(v) !== false) {
             return true;
@@ -71,7 +60,7 @@ function any(iterable: Array<any>, fn: Function) {
     return false;
 }
 
-function every<T>(iterable: any[], fn: Function) {
+export function every<T>(iterable: any[], fn: Function): boolean {
     for (const v of iterable) {
         if (fn(v) === false) {
             return false;
@@ -80,7 +69,7 @@ function every<T>(iterable: any[], fn: Function) {
     return true;
 }
 
-function map<R, I>(iter: { [index: string]: I } | I[], fn: (val: I, index: any) => R): R[] {
+export function map<R, I>(iter: { [index: string]: I } | I[], fn: (val: I, index: any) => R): R[] {
     const res: R[] = [];
     if (check(iter, Array)) {
         let i = 0;
@@ -96,8 +85,8 @@ function map<R, I>(iter: { [index: string]: I } | I[], fn: (val: I, index: any) 
     return res;
 }
 
-function reduce<T, S>(input: Array<T>, fn: (input: T, memo: S) => S, base?: S): S
-function reduce<T, S>(input: { [index: string]: T }, fn: (input: T, memo: S) => S, base?: S): S {
+export function reduce<T, S>(input: Array<T>, fn: (input: T, memo: S) => S, base?: S): S
+export function reduce<T, S>(input: { [index: string]: T }, fn: (input: T, memo: S) => S, base?: S): S {
     let sum: S = base;
     each(input, (value: T) => {
         sum = fn(value, sum)
@@ -105,7 +94,7 @@ function reduce<T, S>(input: { [index: string]: T }, fn: (input: T, memo: S) => 
     return sum;
 }
 
-function sum<T>(input: { [index: string]: T } | Array<T>, fn: (input: T) => number): number {
+export function sum<T>(input: { [index: string]: T } | Array<T>, fn: (input: T) => number): number {
     let sum = 0;
     each(input, (value: T) => {
         sum = sum + fn(value);
@@ -113,7 +102,7 @@ function sum<T>(input: { [index: string]: T } | Array<T>, fn: (input: T) => numb
     return sum;
 }
 
-function greatestResult<T>(input: { [index: string]: T } | Array<T>, fn: (input: T) => number): number {
+export function greatestResult<T>(input: { [index: string]: T } | Array<T>, fn: (input: T) => number): number {
     let greatestResult = 0;
     each(input, (value: T) => {
         const res = fn(value)
@@ -122,7 +111,7 @@ function greatestResult<T>(input: { [index: string]: T } | Array<T>, fn: (input:
     return greatestResult;
 }
 
-function sumIfEvery<T>(input: { [index: string]: T } | Array<T>, fn: (input: T) => number): number {
+export function sumIfEvery<T>(input: { [index: string]: T } | Array<T>, fn: (input: T) => number): number {
     let sum = 0;
     each(input, (value: T, index: any, breakLoop: Function) => {
         const res = fn(value);
@@ -137,7 +126,7 @@ function sumIfEvery<T>(input: { [index: string]: T } | Array<T>, fn: (input: T) 
     return sum;
 }
 
-function geoSum<T>(input: { [index: string]: T } | Array<T>, fn: (input: T, memo: number) => number): number {
+export function geoSum<T>(input: { [index: string]: T } | Array<T>, fn: (input: T, memo: number) => number): number {
     let sum = 1;
     each(input, (value: T, key: any, breakLoop: Function) => {
         sum *= fn(value, sum)
@@ -145,8 +134,8 @@ function geoSum<T>(input: { [index: string]: T } | Array<T>, fn: (input: T, memo
     return sum;
 }
 
-function union(...args: any[][]) {
-    const res: any[] = [];
+export function union<T>(...args: T[][]): T[] {
+    const res: T[] = [];
     for (const arr of args) {
         for (const v of arr) {
             if (!contains(res, v)) {
@@ -157,8 +146,8 @@ function union(...args: any[][]) {
     return res;
 }
 
-function intersect<T>(...args: any[][]) {
-    const res = [];
+export function intersect<T>(...args: T[][]): T[] {
+    const res = <T[]>[];
     for (const a of args) {
         for (const v of a) {
             if (!contains(res, v)) {
@@ -173,8 +162,8 @@ function intersect<T>(...args: any[][]) {
     return res;
 }
 
-function difference<T>(a: any[], b: any[]) {
-    const res = [];
+export function difference<T>(a: T[], b: T[]): T[] {
+    const res = <T[]>[];
     for (const v of a) {
         if (!contains(b, v)) {
             res.push(v);
@@ -183,7 +172,7 @@ function difference<T>(a: any[], b: any[]) {
     return res;
 }
 
-function contains<T>(set: any[], match: T) {
+export function contains<T>(set: any[], match: T): boolean {
     if (check(match, Array)) {
         return containsAny(set, match as any);
     }
@@ -195,7 +184,7 @@ function contains<T>(set: any[], match: T) {
     return false;
 }
 
-function containsAny<T>(set: any[], match: any[]) {
+export function containsAny<T>(set: any[], match: any[]): boolean {
     if (!check(match, Array)) {
         throw new Error('contains all takes a list to match');
     }
@@ -207,7 +196,7 @@ function containsAny<T>(set: any[], match: any[]) {
     return false;
 }
 
-function containsAll<T>(set: any[], match: any[]) {
+export function containsAll<T>(set: any[], match: any[]): boolean {
     if (!check(match, Array)) {
         throw new Error('contains all takes a list to match');
     }
@@ -219,9 +208,15 @@ function containsAll<T>(set: any[], match: any[]) {
     return true;
 }
 
-function isEqual(actual: any, expected: any, opts?: Opts): boolean {
+
+interface ComparisonOptions {
+    [index: string]: boolean;
+    strict: boolean;
+}
+
+export function isEqual(actual: any, expected: any, opts?: ComparisonOptions): boolean {
     // http://wiki.commonjs.org/wiki/Unit_Testing/1.0
-    if (!opts) opts = <Opts>{};
+    if (!opts) opts = <ComparisonOptions>{};
     // 7.1. All identical values are equivalent, as determined by ===.
     if (actual === expected) {
         return true;
@@ -241,24 +236,13 @@ function isEqual(actual: any, expected: any, opts?: Opts): boolean {
         // corresponding key, and an identical 'prototype' property. Note: this
         // accounts for both named and indexed properties on Arrays.
     } else {
-        return objEquiv(actual, expected, opts);
+        return _objEquiv(actual, expected, opts);
     }
 }
 
-function isUndefinedOrNull(value: any) {
-    return value === null || value === undefined;
-}
+const pSlice = Array.prototype.slice;
 
-function isBuffer(x: any) {
-    if (!x || typeof x !== 'object' || typeof x.length !== 'number') return false;
-    if (typeof x.copy !== 'function' || typeof x.slice !== 'function') {
-        return false;
-    }
-    if (x.length > 0 && typeof x[0] !== 'number') return false;
-    return true;
-}
-
-function objEquiv(a: any, b: any, opts?: Opts) {
+function _objEquiv(a: any, b: any, opts?: ComparisonOptions): boolean {
     var i, key;
     if (isUndefinedOrNull(a) || isUndefinedOrNull(b))
         return false;
@@ -311,7 +295,7 @@ function objEquiv(a: any, b: any, opts?: Opts) {
     return typeof a === typeof b;
 }
 
-function _prune(input: StringIndexableObject) {
+function _prune(input: SIO): boolean {
     if (!check(input, Object)) {
         throw new Error('attempting to _prune undefined object');
     }
@@ -332,42 +316,28 @@ function _prune(input: StringIndexableObject) {
     return pruned;
 }
 
-function prune(obj: StringIndexableObject) {
+export function prune<T>(obj: T): T {
     _prune(obj);
     return obj;
 }
 
-function plain(obj: any) {
+export function plain<T>(obj: T): T {
     return JSON.parse(JSON.stringify(obj));
 }
 
-function clone(input: any): any {
-    return retrocycle(decycle(input));
+export function clone<T>(input: T): T {
+    return <T>retrocycle(decycle(input));
 }
 
-function arrayify<T>(val: T | T[]): T[] {
+export function arrayify<T>(val: T | T[]): T[] {
     if (check(val, Array)) {
         return val as T[];
     }
     return [val as T];
 }
 
-function isEmpty(input: StringIndexableObject) {
-    const ref = input;
-    if (!check(input, Object)) {
-        throw new Error('checking non object for non-empty keys');
-    }
-    let containsValid = false;
-    for (const k of Object.keys(ref)) {
-        if (check(ref[k], 'any')) {
-            containsValid = true;
-        }
-    }
-    return !containsValid;
-}
-
-function okmap(iterable: Object | Array<any>, fn: Function) {
-    const sum: StringIndexableObject = {};
+export function okmap<T>(iterable: Object | Array<any>, fn: (v: any, k: string) => { [index: string]: T }): { [index: string]: T } {
+    const sum = <{ [index: string]: T }>{};
     each(iterable, (v: any, k: any) => {
         const res = fn(v, k);
         const key = Object.keys(res)[0];
@@ -376,9 +346,6 @@ function okmap(iterable: Object | Array<any>, fn: Function) {
     return sum;
 }
 
-function stringify(value: any, replacer?: (number | string)[],
-    space?: string | number): string {
+export function stringify(value: any, replacer?: (number | string)[], space?: string | number): string {
     return JSON.stringify(decycle(value), replacer, space || 2);
 }
-
-export { isEqual, each, map, every, geoSum, greatestResult, sumIfEvery, any, contains, containsAny, containsAll, extend, combine, prune, plain, clone, arrayify, union, intersect, difference, reduce, sum, okmap, stringify };
