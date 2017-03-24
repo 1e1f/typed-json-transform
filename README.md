@@ -21,7 +21,7 @@ its value is as expected:
 
 this library is NOT a drop-in replacement for underscore ot lodash, however functions with similiar names should do the same thing.
 
-the documentation IS index.d.ts so here is a copy:
+documentation = index.d.ts:
 
 ```typescript
  declare module 'typed-json-transform' {
@@ -30,120 +30,103 @@ the documentation IS index.d.ts so here is a copy:
   */
 
   interface SIO { [index: string]: any }
-
   function each<T>(iter: { [index: string]: T } | T[], fn: (val: T, index?: string | number, breakLoop?: () => void) => void): void
   function extend(target: SIO, ...sources: SIO[])
   function combine<T, U>(retType: T, ...args: U[]): T
-
   function any(iterable: Array<any>, fn: Function): boolean
   function every<T>(iterable: any[], fn: Function): boolean
-
   function map<R, I>(iter: { [index: string]: I } | I[], fn: (val: I, index: any) => R): R[]
-
   function reduce<T, S>(input: Array<T>, fn: (input: T, memo: S) => S, base?: S): S
   function reduce<T, S>(input: { [index: string]: T }, fn: (input: T, memo: S) => S, base?: S): S
-
   function sum<T>(input: { [index: string]: T } | Array<T>, fn: (input: T) => number): number
-
   function greatestResult<T>(input: { [index: string]: T } | Array<T>, fn: (input: T) => number): number
   function sumIfEvery<T>(input: { [index: string]: T } | Array<T>, fn: (input: T) => number): number
   function geoSum<T>(input: { [index: string]: T } | Array<T>, fn: (input: T, memo: number) => number): number
   function union<T>(...args: T[][]): T[]
-
   function intersect<T>(...args: T[][]): T[]
   function difference<T>(a: T[], b: T[]): T[]
   function contains<T>(set: any[], match: T): boolean
-
   function containsAny<T>(set: any[], match: any[]): boolean
-
   function containsAll<T>(set: any[], match: any[]): boolean
-
-
   interface ComparisonOptions {
     [index: string]: boolean;
     strict: boolean;
   }
-
   function isEqual(actual: any, expected: any, opts?: ComparisonOptions): boolean
-
-
-
   function prune<T>(obj: T): T
   function plain<T>(obj: T): T
-
   function clone<T>(input: T): T
-
   function arrayify<T>(val: T | T[]): T[]
   function okmap<T>(iterable: Object | Array<any>, fn: (v: any, k: string) => { [index: string]: T }): { [index: string]: T }
-
   function stringify(value: any, replacer?: (number | string)[], space?: string | number): string
 
   /*
   * Keypath
   */
+  namespace Keypath {
+    interface Options extends SIO {
+      allLevels?: boolean;
+      diffArrays?: boolean;
+    }
+  }
 
-  function setValueForKeyPath(value: any, keyPath: string, input: SIO);
-  function mergeValueAtKeypath(value: any, keyPath: string, obj: SIO);
-  function valueForKeyPath(keyPath: string, input: SIO);
-  function unsetKeyPath(keyPath: string, obj: SIO);
-  function keyPathContainsPath(keyPath: string, ignorePath: string);
-  function filteredKeyPaths(_keyPaths: string[], ignore?: string[]);
-  interface keyPathOptions extends SIO {
-    allLevels?: boolean;
-    diffArrays?: boolean;
-  }
-  function keyPaths(obj: SIO, _options?: keyPathOptions, _stack?: string[], parent?: string);
-  function allKeyPaths(obj: SIO);
-  interface FlatObjectOptions {
-    includeBranches?: boolean;
-  }
-  function flatObject(object: SIO, options?: FlatObjectOptions);
+  function setValueForKeyPath(value: any, keyPath: string, input: SIO): void
+  function mergeValueAtKeypath(value: any, keyPath: string, obj: SIO): void
+  function valueForKeyPath(keyPath: string, input: SIO): any
+  function unsetKeyPath(keyPath: string, obj: SIO): boolean
+  function keyPathContainsPath(keyPath: string, ignorePath: string): boolean
+  function filteredKeyPaths(_keyPaths: string[], ignore?: string[]): string[]
+  function keyPaths(obj: SIO, _options?: Keypath.Options, _stack?: string[], parent?: string): string[]
+  function allKeyPaths(obj: SIO): string[]
+  function flatObject(object: any, options?: { includeBranches?: boolean }): SIO
 
   /*
   * Diff / Mongo Method
   */
 
-  interface keyPathOptions extends SIO {
-    allLevels?: boolean;
-    diffArrays?: boolean;
+  namespace Mongo {
+    interface Document extends SIO {
+      _id: string;
+    }
+
+    interface Collection {
+      findOne: Function;
+      find: Function;
+      update: Function;
+    }
+
+    interface UpdateOptions {
+      collection?: Collection;
+      get?: Function;
+      set?: Function;
+      ignore?: string[];
+    }
+
+    interface Modifier {
+      $set?: SIO;
+      $unset?: SIO;
+    }
   }
-  interface Modifier {
-    $set?: SIO;
-    $unset?: SIO;
-  }
-  interface Document extends SIO { _id: string; }
-  interface Collection {
-    findOne: Function;
-    find: Function;
-    update: Function;
-  }
-  interface UpdateOptions {
-    collection?: Collection;
-    get?: Function;
-    set?: Function;
-    ignore?: string[];
-  }
-  function forwardDiffToModifier(prev: SIO, doc: SIO, fieldsToIgnore?: string[]);
-  function shouldSet(val: any, prev: any);
-  function shouldUnset(val: any, prev: any);
-  function diffToModifier(prev: SIO, doc: SIO,
-    fieldsToIgnore?: string[],
-    pruneEmptyObjects?: boolean): Modifier;
-  function modifierToObj(modifier: Modifier);
-  function objToModifier(obj: SIO);
-  function apply(dest: SIO, source: Modifier);
-  function $set(dest: SIO, source: Modifier);
-  function $addToSet(dest: Array<any>, src: Object);
-  function $unset(dest: Object, source: Modifier);
-  function update(doc: Document, options: UpdateOptions);
-  function mapModifierToKey(modifier: Modifier, key: string);
+
+  function forwardDiffToModifier(prev: SIO, doc: SIO, fieldsToIgnore?: string[]): Mongo.Modifier
+  function shouldSet(val: any, prev: any): boolean
+  function shouldUnset(val: any, prev: any): boolean
+  function diffToModifier(prev: SIO, doc: SIO, fieldsToIgnore?: string[], pruneEmptyObjects?: boolean): Mongo.Modifier
+  function modifierToObj(modifier: Mongo.Modifier): SIO
+  function objToModifier(obj: SIO): Mongo.Modifier
+  function apply<T>(dest: T, source: Mongo.Modifier): T
+  function $set(dest: SIO, source: Mongo.Modifier): void
+  function $addToSet<T>(dest: T[], src: T): T[]
+  function $unset(dest: Object, source: Mongo.Modifier): void
+  function update(doc: Mongo.Document, options: Mongo.UpdateOptions): Mongo.Modifier
+  function mapModifierToKey(modifier: Mongo.Modifier, key: string): Mongo.Modifier
 
   /*
   * Check
   */
 
   function check(value: any, type: any): boolean
-  function isNumeric(n: any)
+  function isNumeric(n: any): boolean
   function isArguments(object: any): boolean
   function isEmpty(input: { [index: string]: string }): boolean
   function isUndefinedOrNull(value: any): boolean
@@ -191,5 +174,4 @@ the documentation IS index.d.ts so here is a copy:
   function safeOLHM<T>(olhm: OLHM<T>): T[];
 
 }
-
 ```

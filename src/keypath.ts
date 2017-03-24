@@ -1,9 +1,7 @@
 import { check } from './check';
 import { isEqual, each, map, every, any, contains, containsAny, containsAll, extend, combine, prune, plain, clone, arrayify, union, difference } from './containers';
 
-interface StringIndexableObject { [index: string]: any }
-
-function setValueForKeyPath(value: any, keyPath: string, input: StringIndexableObject) {
+export function setValueForKeyPath(value: any, keyPath: string, input: SIO): void {
     let current = input;
     const keys = keyPath.split('.');
     for (let i = 0; i < keys.length - 1; i += 1) {
@@ -42,8 +40,7 @@ function setValueForKeyPath(value: any, keyPath: string, input: StringIndexableO
     }
 }
 
-function mergeValueAtKeypath(value: any, keyPath: string,
-    obj: StringIndexableObject) {
+export function mergeValueAtKeypath(value: any, keyPath: string, obj: SIO): void {
     // this function mutates obj
     const existing = valueForKeyPath(keyPath, obj);
     if (check(value, Object) && check(existing, Object)) {
@@ -55,7 +52,7 @@ function mergeValueAtKeypath(value: any, keyPath: string,
     }
 }
 
-function valueForKeyPath(keyPath: string, input: StringIndexableObject) {
+export function valueForKeyPath(keyPath: string, input: SIO): any {
     if (!input) {
         throw new Error('attempting to get valueForKeyPath on undefined object');
     }
@@ -82,7 +79,7 @@ function valueForKeyPath(keyPath: string, input: StringIndexableObject) {
     return current[lastKey];
 }
 
-function unsetKeyPath(keyPath: string, obj: StringIndexableObject) {
+export function unsetKeyPath(keyPath: string, obj: SIO): boolean {
     // this function mutates obj
     const keys = keyPath.split('.');
     let current = obj;
@@ -90,12 +87,12 @@ function unsetKeyPath(keyPath: string, obj: StringIndexableObject) {
         const key = keys[i];
         if (Array.isArray(current)) {
             if (!current[parseInt(key, 10)]) {
-                return 0;
+                return false;
             }
             current = current[parseInt(key, 10)];
         } else if (current !== null && typeof current === 'object') {
             if (!current[key]) {
-                return 0;
+                return false;
             }
             current = current[key];
         }
@@ -105,18 +102,18 @@ function unsetKeyPath(keyPath: string, obj: StringIndexableObject) {
         const index = parseInt(lastKey, 10);
         if (current[index] !== undefined) {
             delete current[index];
-            return 1;
+            return true;
         }
-        return 0;
+        return false;
     }
     if (current[lastKey] !== undefined) {
         delete current[lastKey];
-        return 1;
+        return true;
     }
-    return 0;
+    return false;
 }
 
-function _keyPathContainsPath(keyPath: string, ignorePath: string) {
+export function _keyPathContainsPath(keyPath: string, ignorePath: string): boolean {
     const p = keyPath.split('.');
     const t = ignorePath.split('.');
     if (!(p.length > t.length)) {
@@ -130,14 +127,14 @@ function _keyPathContainsPath(keyPath: string, ignorePath: string) {
     return true;
 }
 
-function keyPathContainsPath(keyPath: string, ignorePath: string) {
+export function keyPathContainsPath(keyPath: string, ignorePath: string): boolean {
     if (keyPath === ignorePath) {
         return true;
     }
     return _keyPathContainsPath(keyPath, ignorePath);
 }
 
-function filteredKeyPaths(_keyPaths: string[], ignore?: string[]) {
+export function filteredKeyPaths(_keyPaths: string[], ignore?: string[]): string[] {
     if (!ignore.length) {
         return _keyPaths;
     }
@@ -152,14 +149,10 @@ function filteredKeyPaths(_keyPaths: string[], ignore?: string[]) {
     return difference(_keyPaths, toFilter);
 }
 
-interface keyPathOptions extends StringIndexableObject {
-    allLevels?: boolean;
-    diffArrays?: boolean;
-}
 
-function keyPaths(obj: StringIndexableObject, _options?: keyPathOptions, _stack?: string[], parent?: string) {
+export function keyPaths(obj: SIO, _options?: Keypath.Options, _stack?: string[], parent?: string): string[] {
     const stack = _stack || [];
-    const options = <keyPathOptions>clone(_options || {});
+    const options = <Keypath.Options>clone(_options || {});
     const keys = Object.keys(obj);
     if (keys.length > 0) {
         for (const el of keys) {
@@ -200,26 +193,15 @@ function keyPaths(obj: StringIndexableObject, _options?: keyPathOptions, _stack?
     return stack;
 }
 
-function allKeyPaths(obj: StringIndexableObject) {
+export function allKeyPaths(obj: SIO): string[] {
     return keyPaths(obj, { allLevels: true });
 }
 
-interface FlatObjectOptions {
-    includeBranches?: boolean;
-}
-
-function flatObject(object: StringIndexableObject,
-    options?: FlatObjectOptions) {
-    const flat: StringIndexableObject = {};
+export function flatObject(object: any, options?: { includeBranches?: boolean }): SIO {
+    const flat = <SIO>{};
     const kpFunc = (options || {}).includeBranches ? allKeyPaths : keyPaths;
     for (const keyPath of kpFunc(object)) {
         flat[keyPath] = valueForKeyPath(keyPath, object);
     }
     return flat;
-}
-
-export {
-    valueForKeyPath, _keyPathContainsPath, keyPathContainsPath,
-    setValueForKeyPath, mergeValueAtKeypath, unsetKeyPath, keyPaths,
-    allKeyPaths, filteredKeyPaths, flatObject
 }

@@ -8,15 +8,15 @@ import { safeOLHM, map as mapOLHM, okmap as okmapOLHM, reduce as reduceOLHM } fr
 export { safeOLHM, mapOLHM, okmapOLHM, reduceOLHM };
 
 import {
-    valueForKeyPath, _keyPathContainsPath, keyPathContainsPath,
+    valueForKeyPath, keyPathContainsPath, filteredKeyPaths,
     setValueForKeyPath, mergeValueAtKeypath, unsetKeyPath, keyPaths,
-    allKeyPaths, filteredKeyPaths, flatObject
+    allKeyPaths, flatObject
 } from './keypath';
 
 export {
-    valueForKeyPath, _keyPathContainsPath, keyPathContainsPath,
+    valueForKeyPath, keyPathContainsPath, filteredKeyPaths,
     setValueForKeyPath, mergeValueAtKeypath, unsetKeyPath, keyPaths,
-    allKeyPaths, filteredKeyPaths, flatObject
+    allKeyPaths, flatObject
 }
 
 import { select, cascadeShallow, cascade } from './cascade';

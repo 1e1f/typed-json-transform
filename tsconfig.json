@@ -14,7 +14,6 @@
         "moduleResolution": "node",
         "target": "es5",
         "preserveConstEnums": true,
-        "allowSyntheticDefaultImports": true,
         "declaration": false,
         "noEmitOnError": false
     }

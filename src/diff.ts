@@ -7,38 +7,12 @@ import {
   allKeyPaths, filteredKeyPaths
 } from './keypath';
 
-interface StringIndexableObject { [index: string]: any }
-
-interface Document extends StringIndexableObject {
-  _id: string;
-}
-
-interface Collection {
-  findOne: Function;
-  find: Function;
-  update: Function;
-}
-
-interface UpdateOptions {
-  collection?: Collection;
-  get?: Function;
-  set?: Function;
-  ignore?: string[];
-}
-
-interface Modifier {
-  $set?: StringIndexableObject;
-  $unset?: StringIndexableObject;
-}
-
-function forwardDiffToModifier(prev: StringIndexableObject,
-  doc: StringIndexableObject,
-  fieldsToIgnore?: string[]) {
+function forwardDiffToModifier(prev: SIO, doc: SIO, fieldsToIgnore?: string[]): Mongo.Modifier {
   const filteredKeys = union(difference(keyPaths(prev), keyPaths(doc)), fieldsToIgnore || []);
   return diffToModifier(prev, doc, filteredKeys);
 }
 
-function shouldSet(val: any, prev: any) {
+function shouldSet(val: any, prev: any): boolean {
   if (Array.isArray(val)) {
     return !isEqual(prev, val);
   } else if (val instanceof Date) {
@@ -52,7 +26,7 @@ function shouldSet(val: any, prev: any) {
   }
 }
 
-function shouldUnset(val: any, prev: any) {
+function shouldUnset(val: any, prev: any): boolean {
   if ((prev || check(prev, Number)) && !(val || check(val, Number))) {
     return true;
   }
@@ -64,10 +38,8 @@ function shouldUnset(val: any, prev: any) {
   return false;
 }
 
-function diffToModifier(prev: StringIndexableObject, doc: StringIndexableObject,
-  fieldsToIgnore?: string[],
-  pruneEmptyObjects?: boolean): Modifier {
-  const delta: Modifier = { $set: {}, $unset: {} };
+function diffToModifier(prev: SIO, doc: SIO, fieldsToIgnore?: string[], pruneEmptyObjects?: boolean): Mongo.Modifier {
+  const delta: Mongo.Modifier = { $set: {}, $unset: {} };
   if (doc) {
     const forwardKeyPaths =
       filteredKeyPaths(keyPaths(doc), fieldsToIgnore || []);
@@ -113,7 +85,7 @@ function diffToModifier(prev: StringIndexableObject, doc: StringIndexableObject,
   }
 }
 
-function modifierToObj(modifier: Modifier) {
+function modifierToObj(modifier: Mongo.Modifier): SIO {
   if (modifier) {
     const obj = {};
     for (const keyPath of Object.keys(modifier.$set || {})) {
@@ -127,11 +99,11 @@ function modifierToObj(modifier: Modifier) {
   }
 }
 
-function objToModifier(obj: StringIndexableObject) {
+function objToModifier(obj: SIO): Mongo.Modifier {
   return diffToModifier(undefined, obj);
 }
 
-function apply(dest: StringIndexableObject, source: Modifier) {
+function apply<T>(dest: T, source: Mongo.Modifier): T {
   if (!source) {
     return dest;
   }
@@ -146,7 +118,7 @@ function apply(dest: StringIndexableObject, source: Modifier) {
   return prune(dest);
 }
 
-function $set(dest: StringIndexableObject, source: Modifier) {
+function $set(dest: SIO, source: Mongo.Modifier): void {
   if (!source) {
     return;
   }
@@ -160,7 +132,7 @@ function $set(dest: StringIndexableObject, source: Modifier) {
   });
 }
 
-function $addToSet(dest: Array<any>, src: Object) {
+function $addToSet<T>(dest: T[], src: T): T[] {
   if (!Array.isArray(dest)) {
     throw new Error('$addToSet, 1st arg not array');
   }
@@ -170,7 +142,7 @@ function $addToSet(dest: Array<any>, src: Object) {
   return dest;
 }
 
-function $unset(dest: Object, source: Modifier) {
+function $unset(dest: Object, source: Mongo.Modifier): void {
   if (!source) {
     return;
   }
@@ -180,8 +152,8 @@ function $unset(dest: Object, source: Modifier) {
   each(<any>source, (val: any, keyPath: string) => { unsetKeyPath(keyPath, dest); });
 }
 
-function update(doc: Document, options: UpdateOptions) {
-  let model: Document;
+function update(doc: Mongo.Document, options: Mongo.UpdateOptions): Mongo.Modifier {
+  let model: Mongo.Document;
   if (check(options.get, Function)) {
     model = options.get();
   } else if (doc._id && options.collection) {
@@ -210,11 +182,11 @@ function update(doc: Document, options: UpdateOptions) {
 }
 
 
-function mapModifierToKey(modifier: Modifier, key: string) {
+function mapModifierToKey(modifier: Mongo.Modifier, key: string): Mongo.Modifier {
   if (!modifier) {
     throw new Error('called mapModifierToKey on undefined');
   }
-  const valueModifier: Modifier = {};
+  const valueModifier: Mongo.Modifier = {};
   for (const keyPath of Object.keys(modifier.$set || {})) {
     if (valueModifier.$set == null) {
       valueModifier.$set = {};
