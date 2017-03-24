@@ -64,12 +64,12 @@ function shallowSearch(current: any, keywords: string[], selectors: string[], st
   return stack;
 }
 
-function flatten(stack: any) {
+function flatten<T>(stack: T & SIO): T {
   const flat = {};
   for (const level of Object.keys(stack)) {
     extend(flat, stack[level]);
   }
-  return flat;
+  return <T>flat;
 }
 
 function match(selectors: string[], selectable: string) {
@@ -103,7 +103,7 @@ export function select(input: string[], cssString: string): number {
   return matchCssString(input, cssString);
 }
 
-function search(tree: any, keywords: string[], selectors: string[], searchFn: Function) {
+function search<T>(tree: T, keywords: string[], selectors: string[], searchFn: Function): T {
   if (!tree) {
     throw new Error('searching undefined for selectors');
   }
@@ -113,10 +113,10 @@ function search(tree: any, keywords: string[], selectors: string[], searchFn: Fu
   return searchFn(tree, keywords, selectors, [], 0);
 }
 
-export function cascadeShallow(tree: any, keywords: string[], selectors: string[]) {
+export function cascadeShallow<T>(tree: T, keywords: string[], selectors: string[]): T {
   return flatten(search(tree, keywords, selectors, shallowSearch));
 }
 
-export function cascade(tree: any, keywords: string[], selectors: string[]) {
+export function cascade<T>(tree: T, keywords: string[], selectors: string[]): T {
   return search(tree, keywords, selectors, deepSearch);
 }

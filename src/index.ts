@@ -23,14 +23,14 @@ import { select, cascadeShallow, cascade } from './cascade';
 export { select, cascadeShallow, cascade };
 
 import {
-    isEqual, each, map, every, any, contains, containsAny, containsAll,
-    extend, combine, prune, plain, clone, arrayify, union, difference,
+    assign, isEqual, each, map, every, any, contains, containsAny, containsAll,
+    extend, extendN, combine, combineN, prune, plain, clone, arrayify, union, difference,
     reduce, okmap, stringify, geoSum, greatestResult, sum
 } from './containers';
 
 export {
-    isEqual, each, map, every, any, contains, containsAny, containsAll,
-    extend, combine, prune, plain, clone, arrayify, union, difference,
+    assign, isEqual, each, map, every, any, contains, containsAny, containsAll,
+    extend, extendN, combine, combineN, prune, plain, clone, arrayify, union, difference,
     reduce, okmap, stringify, geoSum, greatestResult, sum
 };
 

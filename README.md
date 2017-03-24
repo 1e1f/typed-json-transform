@@ -24,15 +24,18 @@ this library is NOT a drop-in replacement for underscore ot lodash, however func
 documentation = index.d.ts:
 
 ```typescript
- declare module 'typed-json-transform' {
+declare module 'typed-json-transform' {
   /* 
   * Container Methods
   */
 
   interface SIO { [index: string]: any }
   function each<T>(iter: { [index: string]: T } | T[], fn: (val: T, index?: string | number, breakLoop?: () => void) => void): void
-  function extend(target: SIO, ...sources: SIO[])
-  function combine<T, U>(retType: T, ...args: U[]): T
+  function extend<T, U>(target: T & SIO, source: U & SIO): T & U
+  function extendN<T>(target: T & SIO, ...sources: Array<SIO>): T
+  function assign<A, B>(a: A, b: B): A & B
+  function combine<A, B>(a: A, b: B): A & B
+  function combineN<T>(retType: T, ...args: SIO[]): T
   function any(iterable: Array<any>, fn: Function): boolean
   function every<T>(iterable: any[], fn: Function): boolean
   function map<R, I>(iter: { [index: string]: I } | I[], fn: (val: I, index: any) => R): R[]
@@ -134,8 +137,8 @@ documentation = index.d.ts:
   * Cascade
   */
 
-  function cascadeShallow(tree: any, keywords: string[], selectors: string[]);
-  function cascade(tree: any, keywords: string[], selectors: string[]);
+  function cascadeShallow<T>(tree: T, keywords: string[], selectors: string[]): T
+  function cascade<T>(tree: T, keywords: string[], selectors: string[]): T
   function select(input: string[], cssString: string): boolean;
 
   /*

@@ -26,7 +26,20 @@ export function each<T>(iter: { [index: string]: T } | T[], fn: (val: T, index?:
     }
 }
 
-export function extend(target: SIO, ...sources: SIO[]) {
+export function extend<A, B>(target: A & SIO, source: B & SIO): A & B {
+    if (check(source, Object)) {
+        for (const key of Object.keys(source)) {
+            if (check(source[key], Object) && check(target[key], Object)) {
+                extend(target[key], source[key]);
+            } else {
+                target[key] = clone(source[key]);
+            }
+        }
+    }
+    return <A & B>target;
+}
+
+export function extendN<T>(target: T & SIO, ...sources: Array<SIO>): T {
     for (const source of sources) {
         if (check(source, Object)) {
             for (const key of Object.keys(source)) {
@@ -38,10 +51,20 @@ export function extend(target: SIO, ...sources: SIO[]) {
             }
         }
     }
-    return target;
+    return <T>target;
 }
 
-export function combine<T, U>(retType: T, ...args: U[]): T {
+export function assign<A, B>(a: A, b: B): A & B {
+    let result = clone(a);
+    return extend(result, b);
+}
+
+export function combine<A, B>(a: A, b: B): A & B {
+    let result = clone(a);
+    return extend(result, b);
+}
+
+export function combineN<T>(retType: T, ...args: SIO[]): T {
     const result = clone(retType);
     for (const dict of args) {
         if (check(dict, Object)) {

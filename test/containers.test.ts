@@ -1,7 +1,7 @@
 import { assert } from 'chai';
 import { makeA, makeB, makeC, makeD, makeZ } from './fixtures';
 
-import { isEqual, check, combine, any, every, contains, extend, clone, arrayify, union, difference } from '../src';
+import { isEqual, check, combine, combineN, any, every, contains, extend, extendN, clone, arrayify, union, difference } from '../src';
 
 describe('isEqual', () => {
     it('isEqual', () => {
@@ -144,7 +144,7 @@ describe('extend', () => {
     const a = makeA();
     const b = makeB();
     const d = makeD();
-    extend(a, b, d);
+    extendN(a, b, d);
     it('can combine 2 objects into a new object', () => {
         const res = combine(a, b);
         assert.deepEqual(res, {
