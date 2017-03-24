@@ -24,36 +24,59 @@ this library is NOT a drop-in replacement for underscore ot lodash, however func
 the documentation IS index.d.ts so here is a copy:
 
 ```typescript
- /* 
+ declare module 'typed-json-transform' {
+  /* 
   * Container Methods
   */
-  
+
   interface SIO { [index: string]: any }
-  function each<T>(iter: { [index: string]: T } | T[], fn: (val: T, index?: string | number, breakLoop?: () => void) => void): void;
-  function extend(target: SIO, ...sources: SIO[]);
-  function combine(...args: Object[]);
-  function any(iterable: Array<any>, fn: Function);
-  function every<T>(iterable: any[], fn: Function);
-  function map<T>(iter: { [index: string]: T } | T[], fn: (val: any, index: any) => any): T[];
-  function reduce<T, S>(input: Array<T> | { [index: string]: T }, fn: (input: T, memo: S) => S, base?: S): S;
-  function sum<T>(input: { [index: string]: T } | Array<T>, fn: (input: T) => number): number;
-  function greatestResult<T>(input: { [index: string]: T } | Array<T>, fn: (input: T) => number): number;
-  function sumIfEvery<T>(input: { [index: string]: T } | Array<T>, fn: (input: T) => number): number;
-  function geoSum<T>(input: { [index: string]: T } | Array<T>, fn: (input: T, memo: number) => number): number;
-  function union(...args: any[][]);
-  function intersect<T>(...args: any[][]);
-  function difference<T>(a: any[], b: any[]);
-  function contains<T>(set: any[], match: T);
-  function containsAny<T>(set: any[], match: any[]);
-  function containsAll<T>(set: any[], match: any[]);
-  function isEqual(actual: any, expected: any, opts?: any);
-  function prune(obj: SIO);
-  function plain(obj: any);
-  function clone(input: any);
-  function arrayify<T>(val: T | T[]): T[];
-  function isEmpty(input: SIO);
-  function okmap(iterable: Object | Array<any>, fn: Function);
-  function stringify(value: any, replacer?: (number | string));
+
+  function each<T>(iter: { [index: string]: T } | T[], fn: (val: T, index?: string | number, breakLoop?: () => void) => void): void
+  function extend(target: SIO, ...sources: SIO[])
+  function combine<T, U>(retType: T, ...args: U[]): T
+
+  function any(iterable: Array<any>, fn: Function): boolean
+  function every<T>(iterable: any[], fn: Function): boolean
+
+  function map<R, I>(iter: { [index: string]: I } | I[], fn: (val: I, index: any) => R): R[]
+
+  function reduce<T, S>(input: Array<T>, fn: (input: T, memo: S) => S, base?: S): S
+  function reduce<T, S>(input: { [index: string]: T }, fn: (input: T, memo: S) => S, base?: S): S
+
+  function sum<T>(input: { [index: string]: T } | Array<T>, fn: (input: T) => number): number
+
+  function greatestResult<T>(input: { [index: string]: T } | Array<T>, fn: (input: T) => number): number
+  function sumIfEvery<T>(input: { [index: string]: T } | Array<T>, fn: (input: T) => number): number
+  function geoSum<T>(input: { [index: string]: T } | Array<T>, fn: (input: T, memo: number) => number): number
+  function union<T>(...args: T[][]): T[]
+
+  function intersect<T>(...args: T[][]): T[]
+  function difference<T>(a: T[], b: T[]): T[]
+  function contains<T>(set: any[], match: T): boolean
+
+  function containsAny<T>(set: any[], match: any[]): boolean
+
+  function containsAll<T>(set: any[], match: any[]): boolean
+
+
+  interface ComparisonOptions {
+    [index: string]: boolean;
+    strict: boolean;
+  }
+
+  function isEqual(actual: any, expected: any, opts?: ComparisonOptions): boolean
+
+
+
+  function prune<T>(obj: T): T
+  function plain<T>(obj: T): T
+
+  function clone<T>(input: T): T
+
+  function arrayify<T>(val: T | T[]): T[]
+  function okmap<T>(iterable: Object | Array<any>, fn: (v: any, k: string) => { [index: string]: T }): { [index: string]: T }
+
+  function stringify(value: any, replacer?: (number | string)[], space?: string | number): string
 
   /*
   * Keypath
@@ -119,8 +142,11 @@ the documentation IS index.d.ts so here is a copy:
   * Check
   */
 
-  function check(value: any, type: any): boolean;
-
+  function check(value: any, type: any): boolean
+  function isNumeric(n: any)
+  function isArguments(object: any): boolean
+  function isEmpty(input: { [index: string]: string }): boolean
+  function isUndefinedOrNull(value: any): boolean
   /*
   * Cascade
   */
@@ -163,4 +189,7 @@ the documentation IS index.d.ts so here is a copy:
   function okmap<T>(olhm: OLHM<T>, fn: (v: any, k?: string) => OLHV<T> | T): OLHM<T>;
   function parseOLHM(object: any): OLHM<any>;
   function safeOLHM<T>(olhm: OLHM<T>): T[];
+
+}
+
 ```
