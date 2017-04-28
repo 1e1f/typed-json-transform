@@ -145,8 +145,7 @@ declare module 'typed-json-transform' {
   class OLHM<T> {
     [index: string]: OLHV<T>;
   }
-  function map<T>(olhm: OLHM<T>, fn: (v: any, k?: string) => T): T[];
-  function okmap<T>(olhm: OLHM<T>, fn: (v: any, k?: string) => OLHV<T> | T): OLHM<T>;
+
   function parseOLHM(object: any): OLHM<any>;
   function safeOLHM<T>(olhm: OLHM<T>): T[];
 
