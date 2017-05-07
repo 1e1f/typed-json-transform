@@ -10,6 +10,7 @@ declare module 'typed-json-transform' {
   function assign<A, B>(a: A, b: B): A & B
   function combine<A, B>(a: A, b: B): A & B
   function combineN<T>(retType: T, ...args: SIO[]): T
+  function flatten<A>(arr: A[][]): A[]
   function any(iterable: Array<any>, fn: Function): boolean
   function every<T>(iterable: any[], fn: Function): boolean
   function map<R, I>(iter: { [index: string]: I } | I[], fn: (val: I, index: any) => R): R[]
