@@ -34,7 +34,7 @@ declare module 'typed-json-transform' {
   function plain<T>(obj: T): T
   function clone<T>(input: T): T
   function arrayify<T>(val: T | T[]): T[]
-  function okmap<T>(iterable: Object | Array<any>, fn: (v: any, k: string) => { [index: string]: T }): { [index: string]: T }
+  function okmap<R, U extends { [index: string]: R }>(iterable: U | Array<R>, fn: (v: R, k: string | number) => R | U): U;
   function stringify(value: any, replacer?: (number | string)[], space?: string | number): string
 
   /*
@@ -146,7 +146,13 @@ declare module 'typed-json-transform' {
     [index: string]: OLHV<T>;
   }
 
-  function parseOLHM(object: any): OLHM<any>;
-  function safeOLHM<T>(olhm: OLHM<T>): T[];
+  namespace OLHM {
+    function parse(object: any): OLHM<any>;
+    function safe<T>(olhm: OLHM<T>): T[];
+  }
 
+  namespace OLHV {
+    function is(obj: any): boolean;
+    function safe<T>(objOrVal: OLHV<T> | T): T;
+  }
 }

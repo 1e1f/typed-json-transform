@@ -1,47 +1,24 @@
-import { check, isNumeric, isArguments, isEmpty, isUndefinedOrNull } from './check';
-export { check, isNumeric, isArguments, isEmpty, isUndefinedOrNull };
+export { check, isNumeric, isArguments, isEmpty, isUndefinedOrNull } from './check';
 
-import { Graph } from './graph';
-export { Graph };
+export { Graph } from './graph';
 
-import { safeOLHM, map as mapOLHM, okmap as okmapOLHM, reduce as reduceOLHM } from './olhm';
-export { safeOLHM, mapOLHM, okmapOLHM, reduceOLHM };
+export * from './olhm';
 
-import {
+export {
     valueForKeyPath, keyPathContainsPath, filteredKeyPaths,
     setValueForKeyPath, mergeValueAtKeypath, unsetKeyPath, keyPaths,
     allKeyPaths, flatObject
 } from './keypath';
 
+export { select, cascadeShallow, cascade } from './cascade';
+
 export {
-    valueForKeyPath, keyPathContainsPath, filteredKeyPaths,
-    setValueForKeyPath, mergeValueAtKeypath, unsetKeyPath, keyPaths,
-    allKeyPaths, flatObject
-}
-
-import { select, cascadeShallow, cascade } from './cascade';
-export { select, cascadeShallow, cascade };
-
-import {
     assign, isEqual, each, map, every, any, contains, containsAny, containsAll,
-    extend, extendN, combine, combineN, prune, plain, clone, arrayify, union, difference,
+    extend, extendN, combine, combineN, flatten, prune, plain, clone, arrayify, union, difference,
     reduce, okmap, stringify, geoSum, greatestResult, sum
 } from './containers';
 
 export {
-    assign, isEqual, each, map, every, any, contains, containsAny, containsAll,
-    extend, extendN, combine, combineN, prune, plain, clone, arrayify, union, difference,
-    reduce, okmap, stringify, geoSum, greatestResult, sum
-};
-
-import {
     diffToModifier, forwardDiffToModifier, modifierToObj, objToModifier, $set, $addToSet, $unset, update,
     apply, mapModifierToKey
 } from './diff';
-
-export {
-    diffToModifier, forwardDiffToModifier, modifierToObj, objToModifier, $set, $addToSet, $unset, update,
-    apply, mapModifierToKey
-};
-
-

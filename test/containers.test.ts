@@ -1,7 +1,7 @@
 import { assert } from 'chai';
 import { makeA, makeB, makeC, makeD, makeZ } from './fixtures';
 
-import { isEqual, check, combine, combineN, any, every, contains, extend, extendN, clone, arrayify, union, difference } from '../src';
+import { isEqual, check, combine, combineN, any, every, flatten, contains, extend, extendN, clone, arrayify, map, okmap, union, difference } from '../src';
 
 describe('isEqual', () => {
     it('isEqual', () => {
@@ -137,7 +137,9 @@ describe('arrays', () => {
     it('difference', () => {
         assert.deepEqual(difference([1, 2, 3, 4, 5], [5, 2, 10]), [1, 3, 4]);
     });
-
+    it('flatten', () => {
+        assert.deepEqual(flatten([[1, 2], [3], [4, [5]]]), [1, 2, 3, 4, 5]);
+    });
 });
 
 describe('extend', () => {
@@ -201,5 +203,46 @@ describe('collections', () => {
         assert.ok(every(list, (s: string) => {
             return contains(sameList, s);
         }));
+    });
+
+    it('okmap with object input', () => {
+        const test = {
+            a: 1,
+            b: 2,
+            c: 3,
+        }
+        const expect = {
+            a: 7,
+            x: 2,
+            c: 3,
+        }
+        const res = okmap(test, (v: number, k) => {
+            switch (k) {
+                case 'a': return 7;
+                case 'b': return { x: v }
+            }
+        });
+        assert.deepEqual(expect, res, 'okmap');
+    });
+
+    it('okmap with array input', () => {
+        const test = [
+            1,
+            2,
+            3,
+        ]
+        const expect = {
+            0: 7,
+            x: 2,
+            2: 0,
+        }
+        const res = okmap(test, (v: number, k: number) => {
+            switch (k) {
+                case 0: return 7;
+                case 1: return { x: v }
+                default: return 0;
+            }
+        });
+        assert.deepEqual(expect, res, 'okmap');
     });
 });

@@ -54,6 +54,18 @@ export function extendN<T>(target: T & SIO, ...sources: Array<SIO>): T {
     return <T>target;
 }
 
+export function flatten<A>(arr: A[][]): A[] {
+    let stack: A[] = [];
+    for (const v of arr) {
+        if (check(v, Array)) {
+            stack = stack.concat(flatten(<A[][]><any>v));
+        } else {
+            stack.push(<A><any>v);
+        }
+    }
+    return stack;
+}
+
 export function assign<A, B>(a: A, b: B): A & B {
     let result = clone(a);
     return extend(result, b);
@@ -359,12 +371,18 @@ export function arrayify<T>(val: T | T[]): T[] {
     return [val as T];
 }
 
-export function okmap<T>(iterable: Object | Array<any>, fn: (v: any, k: string) => { [index: string]: T }): { [index: string]: T } {
-    const sum = <{ [index: string]: T }>{};
+export function okmap<R, U extends { [index: string]: R }>(iterable: U | Array<R>, fn: (v: R, k: string | number) => R | U): U {
+    const sum = <U>{};
     each(iterable, (v: any, k: any) => {
         const res = fn(v, k);
-        const key = Object.keys(res)[0];
-        sum[key] = res[key];
+        if (check(res, Object)) {
+            const key = Object.keys(res)[0];
+            sum[key] = (<U>res)[key];
+        } else if (res !== undefined || check(res, Number)) {
+            sum[k] = <R>res;
+        } else {
+            sum[k] = v;
+        }
     });
     return sum;
 }
