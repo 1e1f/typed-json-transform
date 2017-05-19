@@ -30,7 +30,7 @@ function shouldUnset(val: any, prev: any): boolean {
   if ((prev || check(prev, Number)) && !(val || check(val, Number))) {
     return true;
   }
-  if (val !== null && typeof prev === 'object') {
+  if (val && typeof val === 'object') {
     if (!Object.keys(val).length) {
       return true;
     }
@@ -77,8 +77,7 @@ function diffToModifier(prev: SIO, doc: SIO, fieldsToIgnore?: string[], pruneEmp
   }
   if (Object.keys(delta).length) {
     if (pruneEmptyObjects) {
-      const newDelta =
-        diffToModifier(prev, (clone(prev), delta), fieldsToIgnore, false);
+      const newDelta = diffToModifier(prev, apply(clone(prev), delta), fieldsToIgnore, false);
       return newDelta || delta;
     }
     return delta;

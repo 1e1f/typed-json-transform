@@ -68,12 +68,12 @@ export function flatten<A>(arr: A[][]): A[] {
 
 export function assign<A, B>(a: A, b: B): A & B {
     let result = clone(a);
-    return extend(result, b);
+    return extend(result || <A>{}, clone(b));
 }
 
 export function combine<A, B>(a: A, b: B): A & B {
     let result = clone(a);
-    return extend(result, b);
+    return extend(result || <A>{}, clone(b));
 }
 
 export function combineN<T>(retType: T, ...args: SIO[]): T {
