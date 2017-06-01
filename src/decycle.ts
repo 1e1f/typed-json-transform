@@ -15,6 +15,9 @@ export function decycle(object: Object) {
         // typeof null === 'object', so go on if this value is really an object but not
         // one of the weird builtin objects.
 
+        if (value != undefined && value instanceof Date) {
+            return new Date(value.valueOf());
+        }
         if (typeof value === 'object' && value !== null) {
             // If the value is an object or array, look to see if we have already
             // encountered it. If so, return a $ref/path object. This is a hard way,

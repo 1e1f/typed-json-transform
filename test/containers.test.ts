@@ -73,13 +73,14 @@ describe('isEqual', () => {
 });
 
 describe('clone', () => {
-    const test = makeZ();
+    const date = new Date();
+    const test = makeZ(date);
     it('can make a deep copy of an object', () => {
         const cloned = clone(test);
         assert.deepEqual(cloned, test);
     });
     it('does not mutate original', () => {
-        assert.deepEqual(test, makeZ());
+        assert.deepEqual(test, makeZ(date));
     });
     it('can clone an object with a recursive reference', () => {
         const a = {

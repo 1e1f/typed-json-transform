@@ -24,7 +24,7 @@ function makeD() {
     };
 }
 
-function makeZ() {
+function makeZ(date: Date) {
     return {
         0: 'arrayLikeThing',
         a: {
@@ -32,6 +32,7 @@ function makeZ() {
                 c: 0
             }
         },
+        d: date,
         z: [
             7,
             7, {

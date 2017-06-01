@@ -22,7 +22,7 @@ describe('keyPaths', () => {
     });
 
     it('valueForKeyPath', () => {
-        const testObj = makeZ();
+        const testObj = makeZ(new Date());
         const res = valueForKeyPath('a.b.c', testObj);
         assert.equal(res, testObj.a.b.c);
         const seven = valueForKeyPath('z.2.seven', testObj);
