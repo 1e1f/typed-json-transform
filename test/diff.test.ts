@@ -1,5 +1,5 @@
 import { assert } from 'chai';
-import { check, modifierToObj, diffToModifier, forwardDiffToModifier, apply} from '../src';
+import { check, modifierToObj, diffToModifier, forwardDiffToModifier, apply } from '../src';
 import { makeA, makeB, makeC, makeD, makeZ } from './fixtures';
 
 interface Modifier {
@@ -52,7 +52,7 @@ describe('diff', () => {
     const testObj = makeA();
     const modifier = diffToModifier(testObj, makeB());
     apply(testObj, modifier);
-    assert.deepEqual(testObj, makeB());
+    assert.deepEqual(testObj, <any>makeB());
   });
 
   return it('apply (complex)', () => {
@@ -128,6 +128,6 @@ describe('diff', () => {
 
     const modifier = diffToModifier(messA, messB);
     apply(messA, modifier);
-    assert.deepEqual(messA, messB, `failed with modifier ${JSON.stringify(modifier, [], 2)}`);
+    assert.deepEqual(messA, <any>messB, `failed with modifier ${JSON.stringify(modifier, [], 2)}`);
   });
 });

@@ -150,7 +150,7 @@ describe('extend', () => {
     extendN(a, b, d);
     it('can combine 2 objects into a new object', () => {
         const res = combine(a, b);
-        assert.deepEqual(res, {
+        assert.deepEqual(res, <any>{
             a: {
                 b: {
                     c: 0
@@ -223,7 +223,7 @@ describe('collections', () => {
                 case 'b': return { x: v }
             }
         });
-        assert.deepEqual(expect, res, 'okmap');
+        assert.deepEqual(expect, <any>res, 'okmap');
     });
 
     it('okmap with array input', () => {

@@ -10,6 +10,7 @@ declare module 'typed-json-transform' {
   function assign<A, B>(a: A, b: B): A & B
   function combine<A, B>(a: A, b: B): A & B
   function combineN<T>(retType: T, ...args: SIO[]): T
+  function or<A, B>(a: A, b: B): A & B
   function flatten<A>(arr: A[][]): A[]
   function any(iterable: Array<any>, fn: Function): boolean
   function every<T>(iterable: any[], fn: Function): boolean
@@ -112,8 +113,9 @@ declare module 'typed-json-transform' {
   * Cascade
   */
 
-  function cascadeShallow<T>(tree: T, keywords: string[], selectors: string[]): T
-  function cascade<T>(tree: T, keywords: string[], selectors: string[]): T
+  function extractKeywordsAndSelectors(options: { [index: string]: boolean }): { keywords: string[], selectors: string[] }
+  function cascade(tree: any, keywords: string[], selectors: string[]): any
+  function hashField(tree: any, keywords: string[], selectors: string[]): any
   function select(input: string[], cssString: string): boolean;
 
   /*

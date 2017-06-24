@@ -72,7 +72,7 @@ describe('olhm', () => {
       assert.ok(check(i, Number));
       return memo + (v * 2);
     }, 0);
-    assert.deepEqual(res, 120);
+    assert.deepEqual(res, <any>120);
   });
   it('did not mutate the input objects', () => {
     const original = load(yamlFile);

@@ -1,15 +1,11 @@
 import { check } from './check';
-import { every, sum, sumIfEvery, greatestResult, each, extend, any, contains } from './containers';
+import { combine, every, sum, sumIfEvery, greatestResult, each, or, any, contains, okmap } from './containers';
 import { valueForKeyPath, mergeValueAtKeypath, keyPaths, unsetKeyPath } from './keypath';
 import { startsWith, replaceAll } from './string';
 
-interface Level<T> {
-  [index: string]: T
-}
-
-type Stack<T> = Level<T>[]
-
-function deepSearch<T>(object: any, keywords: string[], selectors: string[], stack: Stack<T>) {
+function deepSearch(object: any, keywords: string[], selectors: string[]) {
+  const stack: Level[] = [];
+  const failed = {};
   each(keyPaths(object), (key) => {
     let filtered = key;
     const unfiltered = key.split('.');
@@ -21,8 +17,6 @@ function deepSearch<T>(object: any, keywords: string[], selectors: string[], sta
           filtered = filtered.replace(`${k}.`, '').replace(`.${k}`, '');
           level += precedence;
         } else {
-          // console.log('remove non match', filtered)
-          // unsetKeyPath(filtered, object);
           return;
         }
       }
@@ -32,45 +26,35 @@ function deepSearch<T>(object: any, keywords: string[], selectors: string[], sta
     }
     stack[level][filtered] = valueForKeyPath(key, object);
   });
+  return stack;
+}
+
+function merge(v: any, kp: any, object: any) {
+  const parts = kp.split('.');
+  let verb = 'merge';
+  if (contains(parts, '$add')) {
+    // mergeValue()
+  }
+  return mergeValueAtKeypath(v, kp, object);
+}
+
+export function flatten(stack: Level[], fn?: Function) {
   const flat = {};
+  const apply = fn || mergeValueAtKeypath;
   each(stack, (level, height) => {
     if (level) {
-      each(level, (v: T, kp: string) => {
-        mergeValueAtKeypath(v, kp, flat);
+      each(level, (v: any, kp: string) => {
+        apply(v, kp, flat);
       });
     }
   });
   return flat;
 }
 
-function shallowSearch(current: any, keywords: string[], selectors: string[], stack: any[], height?: number) {
-  if (!check(stack[height], Object)) {
-    stack[height] = {};
-  }
-  for (const key of Object.keys(current)) {
-    if (select(keywords, key)) {
-      if (select(selectors, key)) {
-        shallowSearch(current[key], keywords, selectors, stack, height + 1);
-      }
-    } else {
-      if (check(current[key], Object)) {
-        stack[height][key] =
-          flatten(shallowSearch(current[key], keywords, selectors, [], 0));
-      } else {
-        stack[height][key] = current[key];
-      }
-    }
-  }
-  return stack;
+interface Level {
+  [index: string]: any;
 }
 
-function flatten<T>(stack: T & SIO): T {
-  const flat = {};
-  for (const level of Object.keys(stack)) {
-    extend(flat, stack[level]);
-  }
-  return <T>flat;
-}
 
 function match(selectors: string[], selectable: string) {
   if (startsWith(selectable, '!')) {
@@ -103,20 +87,40 @@ export function select(input: string[], cssString: string): number {
   return matchCssString(input, cssString);
 }
 
-function search<T>(tree: T, keywords: string[], selectors: string[], searchFn: Function): T {
-  if (!tree) {
-    throw new Error('searching undefined for selectors');
+// export function allKeywords(object: any) {
+//   const ret = <any>{};
+//   each(keyPaths(object), (key) => {
+//     let filtered = key;
+//     key.split('.').forEach((v) => ret[v] = false);
+//   });
+//   return ret;
+// }
+
+export function extractKeywordsAndSelectors(options: { [index: string]: boolean }): { keywords: string[], selectors: string[] } {
+  const keywords: string[] = [];
+  const selectors: string[] = [];
+  each(options, (opt, key: string) => {
+    keywords.push(key);
+    if (opt) selectors.push(key);
+  });
+  return {
+    keywords, selectors
   }
-  if (!keywords || !selectors) {
-    console.warn('searching tree without keywords or selectors string');
-  }
-  return searchFn(tree, keywords, selectors, [], 0);
 }
 
-export function cascadeShallow<T>(tree: T, keywords: string[], selectors: string[]): T {
-  return flatten(search(tree, keywords, selectors, shallowSearch));
+export function hashField(trie: any, options: any) {
+  const { keywords, selectors } = extractKeywordsAndSelectors(options);
+  console.log('select with', keywords, selectors);
+  const match = flatten(deepSearch(trie, keywords, selectors));
+  const unselected = okmap(trie, (val: any) => {
+    return false;
+  });
+  const selected = okmap(match, (val: any) => {
+    return !!val;
+  });
+  return or(unselected, selected);
 }
 
-export function cascade<T>(tree: T, keywords: string[], selectors: string[]): T {
-  return search(tree, keywords, selectors, deepSearch);
+export function cascade(tree: any, keywords: string[], selectors: string[], apply?: Function) {
+  return flatten(deepSearch(tree, keywords, selectors), apply);
 }

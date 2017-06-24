@@ -10,7 +10,7 @@ export {
     allKeyPaths, flatObject
 } from './keypath';
 
-export { select, cascadeShallow, cascade } from './cascade';
+export * from './cascade';
 
 export {
     assign, isEqual, each, map, every, any, contains, containsAny, containsAll,

@@ -1,5 +1,6 @@
 import { assert } from 'chai';
-import { select, cascadeShallow, cascade } from '../src';
+import { each, select, cascade, hashField } from '../src';
+
 
 const keywords = [
   'win',
@@ -326,7 +327,7 @@ describe('objects', () => {
 
   for (const i in testASelectors) {
     it(`selects A${i} ${testASelectors[i]}`, () => {
-      const result = cascadeShallow(testAObject, keywords, testASelectors[i]);
+      const result = cascade(testAObject, keywords, testASelectors[i]);
       assert.deepEqual(result, testAExpected[i]);
     });
   }
@@ -338,8 +339,45 @@ describe('objects', () => {
   }
   for (const i in testCSelectors) {
     it(`selects C${i} ${testCSelectors[i]}`, () => {
-      const result = cascadeShallow(testObjC, keywords, testCSelectors[i]);
+      const result = cascade(testObjC, keywords, testCSelectors[i]);
       assert.deepEqual(result, testCExpected[i]);
     });
   }
+});
+
+
+
+describe('hash field', () => {
+  const environment = {
+    mac: true,
+    linux: false,
+    production: true,
+    debug: false,
+    overriddenOption: false
+  }
+
+  const config = {
+    defaultOption: true,
+    overriddenOption: true,
+    selectedOption: {
+      mac: true,
+      linux: false
+    },
+    unselectedOption: {
+      production: false
+    }
+  }
+
+  it(`can parse`, () => {
+    const res = hashField(config, environment);
+
+    console.log(res);
+
+    assert.deepEqual(res, {
+      selectedOption: true,
+      unselectedOption: false,
+      defaultOption: true,
+      overriddenOption: false
+    });
+  });
 });

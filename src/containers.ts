@@ -86,6 +86,14 @@ export function combineN<T>(retType: T, ...args: SIO[]): T {
     return result;
 }
 
+export function or<A, B>(a: A, b: B): A & B {
+  const ret = <any>clone(a);
+  each(b, (v: any, k: string) => {
+    ret[k] = (<any>a)[k] || (<any>b)[k];
+  });
+  return ret;
+}
+
 export function any(iterable: Array<any>, fn: Function): boolean {
     for (const v of iterable) {
         if (fn(v) !== false) {
