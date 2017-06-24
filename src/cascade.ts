@@ -112,7 +112,6 @@ export function extractKeywordsAndSelectors(options: { [index: string]: boolean 
 
 export function hashField(trie: any, options: any) {
   const { keywords, selectors } = extractKeywordsAndSelectors(options);
-  console.log('select with', keywords, selectors);
   const match = flatten(deepSearch(trie, keywords, selectors));
   const unselected = okmap(trie, (val: any) => {
     return false;
