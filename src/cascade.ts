@@ -38,7 +38,7 @@ function merge(v: any, kp: any, object: any) {
   return mergeValueAtKeypath(v, kp, object);
 }
 
-export function flatten(stack: Level[], fn?: Function) {
+function flatten(stack: Level[], fn?: Function) {
   const flat = {};
   const apply = fn || mergeValueAtKeypath;
   each(stack, (level, height) => {
