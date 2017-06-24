@@ -4,6 +4,8 @@ import { valueForKeyPath, mergeValueAtKeypath, keyPaths, unsetKeyPath } from './
 import { startsWith, replaceAll } from './string';
 
 function deepSearch(object: any, keywords: string[], selectors: string[]) {
+  if (!object) return;
+  if (!Object.keys(object).length) return object;
   const stack: Level[] = [];
   const failed = {};
   each(keyPaths(object), (key) => {
