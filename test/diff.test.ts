@@ -1,6 +1,6 @@
 import { assert } from 'chai';
-import { check, modifierToObj, diffToModifier, forwardDiffToModifier, apply } from '../src';
-import { makeA, makeB, makeC, makeD, makeZ } from './fixtures';
+import { check, modifierToObj, diffToModifier, apply } from '../src';
+import { makeA, makeB, makeC, makeD, makeZ, makeZp } from './fixtures';
 
 interface Modifier {
   $set?: any,
@@ -22,28 +22,25 @@ describe('diff', () => {
   });
 
   it('modifier', () => {
-    const testObj = makeA();
-    const modifier = diffToModifier(testObj, makeB());
-    assert.deepEqual(testObj, makeA());
+    const date = new Date();
+    const otherDate = new Date(date.valueOf() + 1000);
+    const testObj = makeZ(date);
+    const modifier = diffToModifier(testObj, makeZp(otherDate));
+    assert.deepEqual(testObj, makeZ(date));
     assert.deepEqual(modifier, {
       $set: {
-        c: 'd',
-        e: 'f'
+        'a.b.c': 'string',
+        d: otherDate,
+        z: [
+          7,
+          7, {
+            eight: 8
+          }
+        ]
       },
       $unset: {
-        a: true
-      }
-    });
-  });
-
-  it('forwardModifier', () => {
-    const testObj = makeA();
-    const modifier = forwardDiffToModifier(testObj, makeB());
-    assert.deepEqual(testObj, makeA());
-    assert.deepEqual(modifier, {
-      $set: {
-        c: 'd',
-        e: 'f'
+        0: true,
+        e: true
       }
     });
   });

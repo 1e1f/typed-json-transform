@@ -33,6 +33,7 @@ function makeZ(date: Date) {
             }
         },
         d: date,
+        e: date,
         z: [
             7,
             7, {
@@ -42,6 +43,23 @@ function makeZ(date: Date) {
     };
 }
 
+function makeZp(date: Date) {
+    return {
+        a: {
+            b: {
+                c: 'string'
+            }
+        },
+        d: date,
+        z: [
+            7,
+            7, {
+                eight: 8
+            }
+        ]
+    };
+}
+
 export {
-    makeA, makeB, makeC, makeD, makeZ
+    makeA, makeB, makeC, makeD, makeZ, makeZp
 }

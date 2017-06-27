@@ -7,16 +7,14 @@ import {
   allKeyPaths, filteredKeyPaths
 } from './keypath';
 
-function forwardDiffToModifier(prev: SIO, doc: SIO, fieldsToIgnore?: string[]): Mongo.Modifier {
-  const filteredKeys = union(difference(keyPaths(prev), keyPaths(doc)), fieldsToIgnore || []);
-  return diffToModifier(prev, doc, filteredKeys);
-}
-
 function shouldSet(val: any, prev: any): boolean {
   if (Array.isArray(val)) {
     return !isEqual(prev, val);
   } else if (val instanceof Date) {
-    return !(prev instanceof Date) || (val.getTime() !== prev.getTime());
+    if (prev instanceof Date) {
+      return (val.getTime() !== prev.getTime());
+    }
+    return !!val.getTime();
   } else if (check(val, Number)) {
     return (prev !== val) || !check(prev, Number);
   } else if (val !== null && typeof val === 'object') {
@@ -27,6 +25,9 @@ function shouldSet(val: any, prev: any): boolean {
 }
 
 function shouldUnset(val: any, prev: any): boolean {
+  if (prev instanceof Date) {
+    return !(val && val.getTime());
+  }
   if ((prev || check(prev, Number)) && !(val || check(val, Number))) {
     return true;
   }
@@ -202,6 +203,6 @@ function mapModifierToKey(modifier: Mongo.Modifier, key: string): Mongo.Modifier
 }
 
 export {
-  diffToModifier, forwardDiffToModifier, modifierToObj, objToModifier, $set, $addToSet, $unset, update,
+  diffToModifier, modifierToObj, objToModifier, $set, $addToSet, $unset, update,
   apply, mapModifierToKey
 };
