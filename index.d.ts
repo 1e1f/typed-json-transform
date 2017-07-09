@@ -1,8 +1,15 @@
 declare module 'typed-json-transform' {
+  /*
+  String
+  */
+  function startsWith(string: string, s: string): boolean
+  function beginsWith(string: string, s: string): boolean
+  function endsWith(string: string, s: string): boolean
+  function replaceAll(str: string, find: string, rep: string): string
+  
   /* 
   * Container Methods
   */
-
   interface SIO { [index: string]: any }
   function each<T>(iter: { [index: string]: T } | T[], fn: (val: T, index?: string | number, breakLoop?: () => void) => void): void
   function extend<T, U>(target: T & SIO, source: U & SIO): T & U

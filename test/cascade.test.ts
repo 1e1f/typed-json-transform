@@ -370,9 +370,6 @@ describe('hash field', () => {
 
   it(`can parse`, () => {
     const res = hashField(config, environment);
-
-    console.log(res);
-
     assert.deepEqual(res, {
       selectedOption: true,
       unselectedOption: false,

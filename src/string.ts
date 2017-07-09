@@ -10,7 +10,7 @@ export function beginsWith(string: string, s: string) {
 }
 
 export function endsWith(string: string, s: string) {
-  return s === '' || string.slice(-s.length) === s;
+  return s === string.slice(-s.length)
 }
 
 export function replaceAll(str: string, find: string, rep: string) {
