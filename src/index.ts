@@ -4,5 +4,5 @@ export * from './olhm';
 export * from './keypath';
 export * from './cascade';
 export * from './containers';
-export * from './diff';
+export * from './mongo';
 export * from './string';

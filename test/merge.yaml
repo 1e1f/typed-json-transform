@@ -1,0 +1,109 @@
+fixtures:
+  a:
+    a: a
+    b: a
+  b:
+    b: b
+    c: b
+  c: [a, b]
+  d: [b, c]
+  complexA:
+    a: a
+    b:
+      c: d
+      e: f
+    g: [h, i]
+  complexB:
+    assign:
+      <=:
+        b:
+          x: y
+        g: [z]
+    pull:
+      b:
+        <-:
+          c: true
+      g:
+        <-: i
+    push:
+      <=:
+        d: e
+        g:
+          <+: j
+    if:
+      <=:
+        b:
+          <?:
+            c: x
+            y: x
+    ifNot:
+      <=:
+        b:
+          <!:
+            c: x
+            y: x
+    nested:
+      <&:
+        b:
+          <+:
+            c: x
+        g:
+          <+:
+            a: b
+expect:
+  operators:
+    <=:
+      b: b
+      c: b
+    <|:
+      a: a
+      b: b
+      c: b
+    <?:
+      a: a
+      b: b
+    <!:
+      a: a
+      b: a
+      c: b
+    <&:
+      b: b
+    <-:
+      a: a
+  arrayOperators:
+    <=: [b, c]
+    <|: [a, b, c]
+    <+: [a, b, b, c]
+    <&: [b]
+    <!: [c]
+    <-: [a]
+  complex:
+    assign:
+      b:
+        x: y
+      g: [z]
+    pull:
+      a: a
+      b:
+        e: f
+      g: [h]
+    push:
+      d: e
+      g: [h, i, j]
+    if:
+      b:
+        c: x
+        e: f
+    ifNot:
+      b:
+        c: d
+        e: f
+        y: x
+    nested:
+      b:
+        c: x
+        e: f
+      g:
+      - h
+      - i
+      - a: b

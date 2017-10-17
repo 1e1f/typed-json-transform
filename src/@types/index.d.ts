@@ -30,3 +30,8 @@ declare namespace Keypath {
     diffArrays?: boolean;
   }
 }
+
+interface ComparisonOptions {
+  [index: string]: boolean;
+  strict: boolean;
+}

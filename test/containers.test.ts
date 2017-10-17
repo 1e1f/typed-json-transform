@@ -1,7 +1,8 @@
 import { assert } from 'chai';
 import { makeA, makeB, makeC, makeD, makeZ } from './fixtures';
-
-import { isEqual, check, combine, combineN, any, every, flatten, contains, extend, extendN, clone, arrayify, map, okmap, union, difference } from '../src';
+import { readFileSync } from 'fs';
+import { load } from 'js-yaml';
+import { isEqual, check, combine, combineN, any, each, every, flatten, contains, extend, extendN, intersect, clone, arrayify, map, merge, okmap, union, difference } from '../src';
 
 describe('isEqual', () => {
     it('isEqual', () => {
@@ -138,6 +139,9 @@ describe('arrays', () => {
     it('difference', () => {
         assert.deepEqual(difference([1, 2, 3, 4, 5], [5, 2, 10]), [1, 3, 4]);
     });
+    it('intersect', () => {
+        assert.deepEqual(intersect([1, 2, 3, 4, 5], [1, 2], [2, 7]), [2]);
+    });
     it('flatten', () => {
         assert.deepEqual(flatten([[1, 2], [3], [4, [5]]]), [1, 2, 3, 4, 5]);
     });
@@ -147,9 +151,8 @@ describe('extend', () => {
     const a = makeA();
     const b = makeB();
     const d = makeD();
-    extendN(a, b, d);
     it('can combine 2 objects into a new object', () => {
-        const res = combine(a, b);
+        const res = extendN(a, b, d);
         assert.deepEqual(res, <any>{
             a: {
                 b: {
@@ -193,6 +196,42 @@ describe('combine', () => {
         });
     });
 });
+
+describe('merge', function () {
+    const yamlFile = readFileSync('test/merge.yaml', 'utf8');
+    const o = load(yamlFile);
+
+    const { operators, arrayOperators, complex } = o.expect;
+
+    Object.keys(operators).forEach((key) => {
+        const expected = operators[key];
+        it('object: ' + key, () => {
+            const { a, b } = clone(o.fixtures);
+            const actual = merge(a, b, { objectMergeMethod: <any>key[1] });
+            assert.deepEqual(actual, expected);
+        });
+    })
+
+    Object.keys(arrayOperators).forEach((key) => {
+        const expected = { array: arrayOperators[key] };
+        it('array: ' + key, () => {
+            const { c, d } = clone(o.fixtures);
+            const actual = merge({ array: c }, { array: d }, { arrayMergeMethod: <any>key[1] });
+            assert.deepEqual(actual, expected);
+        });
+    })
+
+    const { complexA, complexB } = o.fixtures;
+
+    each(complexB, (b, name) => {
+        const a = clone(complexA);
+        const expected = complex[name];
+        it('complex merge ' + name, () => {
+            const actual = merge(a, b);
+            assert.deepEqual(actual, expected);
+        });
+    })
+})
 
 describe('collections', () => {
     it('every', () => {

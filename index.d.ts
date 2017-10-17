@@ -6,45 +6,54 @@ declare module 'typed-json-transform' {
   function beginsWith(string: string, s: string): boolean
   function endsWith(string: string, s: string): boolean
   function replaceAll(str: string, find: string, rep: string): string
-  
+
   /* 
   * Container Methods
   */
-  interface SIO { [index: string]: any }
-  function each<T>(iter: { [index: string]: T } | T[], fn: (val: T, index?: string | number, breakLoop?: () => void) => void): void
-  function extend<T, U>(target: T & SIO, source: U & SIO): T & U
-  function extendN<T>(target: T & SIO, ...sources: Array<SIO>): T
-  function assign<A, B>(a: A, b: B): A & B
-  function combine<A, B>(a: A, b: B): A & B
-  function combineN<T>(retType: T, ...args: SIO[]): T
-  function or<A, B>(a: A, b: B): A & B
-  function flatten<A>(arr: A[][]): A[]
-  function any(iterable: Array<any>, fn: Function): boolean
-  function every<T>(iterable: any[], fn: Function): boolean
-  function map<R, I>(iter: { [index: string]: I } | I[], fn: (val: I, index: any) => R): R[]
-  function reduce<T, S>(input: Array<T>, fn: (input: T, memo: S) => S, base?: S): S
-  function reduce<T, S>(input: { [index: string]: T }, fn: (input: T, memo: S) => S, base?: S): S
-  function sum<T>(input: { [index: string]: T } | Array<T>, fn: (input: T) => number): number
-  function greatestResult<T>(input: { [index: string]: T } | Array<T>, fn: (input: T) => number): number
-  function sumIfEvery<T>(input: { [index: string]: T } | Array<T>, fn: (input: T) => number): number
-  function geoSum<T>(input: { [index: string]: T } | Array<T>, fn: (input: T, memo: number) => number): number
-  function union<T>(...args: T[][]): T[]
-  function intersect<T>(...args: T[][]): T[]
-  function difference<T>(a: T[], b: T[]): T[]
-  function contains<T>(set: any[], match: T): boolean
-  function containsAny<T>(set: any[], match: any[]): boolean
-  function containsAll<T>(set: any[], match: any[]): boolean
   interface ComparisonOptions {
     [index: string]: boolean;
     strict: boolean;
   }
-  function isEqual(actual: any, expected: any, opts?: ComparisonOptions): boolean
-  function prune<T>(obj: T): T
-  function plain<T>(obj: T): T
-  function clone<T>(input: T): T
-  function arrayify<T>(val: T | T[]): T[]
-  function okmap<R, U extends { [index: string]: R }>(iterable: U | Array<R>, fn: (v: R, k: string | number) => R | U): U;
-  function stringify(value: any, replacer?: (number | string)[], space?: string | number): string
+
+
+  interface SIO { [index: string]: any }
+
+  export function each<T>(iter: { [index: string]: T } | T[], fn: (val: T, index?: string | number, breakLoop?: () => void) => void): void
+  export function replace<A, B>(target: A & SIO, source: B & SIO): A & B
+  export function extend<A, B>(target: A & SIO, source: B & SIO): A & B
+  export function extendOwn<A, B>(target: A & SIO, source: B & SIO): A & B
+  export function existentialExtend<A, B>(target: A & SIO, source: B & SIO): A & B
+  export function extendN<T>(target: T & SIO, ...sources: Array<SIO>): T
+  export function flatten<A>(arr: A[][]): A[]
+  export function assign<A, B>(a: A, b: B): A & B
+  export function combine<A, B>(a: A, b: B): A & B
+  export function combineN<T>(retType: T, ...args: SIO[]): T
+  export function or<A, B>(a: A, b: B): A & B
+  export function any<T>(iter: { [index: string]: T } | T[], fn: (val: T, index?: string | number) => boolean): boolean
+  export function every<T>(iter: { [index: string]: T } | T[], fn: (val: T, index?: string | number) => boolean): boolean
+  export function all<T>(iter: { [index: string]: T } | T[], fn: (val: T, index?: string | number) => boolean): boolean
+  export function map<R, I>(iter: { [index: string]: I } | I[], fn: (val: I, index: any) => R): R[]
+  export function reduce<T, S>(input: Array<T>, fn: (input: T, memo: S) => S, base?: S): S
+  export function reduce<T, S>(input: { [index: string]: T }, fn: (input: T, memo: S) => S, base?: S): S
+  export function sum<T>(input: { [index: string]: T } | Array<T>, fn: (input: T) => number): number
+  export function greatestResult<T>(input: { [index: string]: T } | Array<T>, fn: (input: T) => number): number
+  export function sumIfEvery<T>(input: { [index: string]: T } | Array<T>, fn: (input: T) => number): number
+  export function geoSum<T>(input: { [index: string]: T } | Array<T>, fn: (input: T, memo: number) => number): number
+  export function union<T>(...args: T[][]): T[]
+  export function concat<T>(...args: T[][]): T[]
+  export function intersect<T>(...args: T[][]): T[]
+  export function difference<T>(a: T[], b: T[]): T[]
+  export function contains<T>(set: any[], match: T): boolean
+  export function containsAny<T>(set: any[], match: any[]): boolean
+  export function containsAll<T>(set: any[], match: any[]): boolean
+  export function isEqual(actual: any, expected: any, opts?: ComparisonOptions): boolean
+  export function prune<T>(obj: T): T
+  export function clean<T>(obj: T): T
+  export function plain<T>(obj: T): T
+  export function clone<T>(input: T): T
+  export function arrayify<T>(val: T | T[]): T[]
+  export function okmap<R, U extends { [index: string]: R }>(iterable: U | Array<R>, fn: (v: R, k: string | number) => R | U): U
+  export function stringify(value: any, replacer?: (number | string)[], space?: string | number): string
 
   /*
   * Keypath

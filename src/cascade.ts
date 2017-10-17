@@ -31,15 +31,6 @@ function deepSearch(object: any, keywords: string[], selectors: string[]) {
   return stack;
 }
 
-function merge(v: any, kp: any, object: any) {
-  const parts = kp.split('.');
-  let verb = 'merge';
-  if (contains(parts, '$add')) {
-    // mergeValue()
-  }
-  return mergeValueAtKeypath(v, kp, object);
-}
-
 function flatten(stack: Level[], fn?: Function) {
   const flat = {};
   const apply = fn || mergeValueAtKeypath;

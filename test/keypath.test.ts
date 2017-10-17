@@ -1,6 +1,6 @@
 import { assert } from 'chai';
 
-import { check, contains, valueForKeyPath, mergeValueAtKeypath, flatObject, allKeyPaths, setValueForKeyPath, unsetKeyPath } from '../src';
+import { check, contains, valueForKeyPath, merge, mergeValueAtKeypath, flatObject, allKeyPaths, setValueForKeyPath, unsetKeyPath } from '../src';
 
 import { makeA, makeB, makeC, makeD, makeZ } from './fixtures';
 

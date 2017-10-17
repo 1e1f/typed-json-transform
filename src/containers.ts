@@ -26,6 +26,15 @@ export function each<T>(iter: { [index: string]: T } | T[], fn: (val: T, index?:
     }
 }
 
+export function replace<A, B>(target: A & SIO, source: B & SIO): A & B {
+    if (check(source, Object)) {
+        for (const key of Object.keys(source)) {
+            delete target[key];
+        }
+    }
+    return extend(target, source);
+}
+
 export function extend<A, B>(target: A & SIO, source: B & SIO): A & B {
     if (check(source, Object)) {
         for (const key of Object.keys(source)) {
@@ -33,6 +42,33 @@ export function extend<A, B>(target: A & SIO, source: B & SIO): A & B {
                 extend(target[key], source[key]);
             } else {
                 target[key] = clone(source[key]);
+            }
+        }
+    }
+    return <A & B>target;
+}
+
+export function extendOwn<A, B>(target: A & SIO, source: B & SIO): A & B {
+    if (check(source, Object)) {
+        for (const key of Object.keys(source)) {
+            if (check(source[key], Object) && check(target[key], Object)) {
+                extendOwn(target[key], source[key]);
+            } else if (target[key]) {
+                target[key] = clone(source[key]);
+            }
+        }
+    }
+    return <A & B>target;
+}
+
+export function existentialExtend<A, B>(target: A & SIO, source: B & SIO): A & B {
+    if (check(source, Object)) {
+        for (const key of Object.keys(source)) {
+            if (!target[key]) {
+                target[key] = clone(source[key]);
+            }
+            else if (check(source[key], Object) && check(target[key], Object)) {
+                existentialExtend(target[key], source[key]);
             }
         }
     }
@@ -87,30 +123,62 @@ export function combineN<T>(retType: T, ...args: SIO[]): T {
 }
 
 export function or<A, B>(a: A, b: B): A & B {
-  const ret = <any>clone(a);
-  each(b, (v: any, k: string) => {
-    ret[k] = (<any>a)[k] || (<any>b)[k];
-  });
-  return ret;
+    const ret = <any>clone(a);
+    each(b, (v: any, k: string) => {
+        ret[k] = (<any>a)[k] || (<any>b)[k];
+    });
+    return ret;
 }
 
-export function any(iterable: Array<any>, fn: Function): boolean {
-    for (const v of iterable) {
-        if (fn(v) !== false) {
-            return true;
+export function any<T>(iter: { [index: string]: T } | T[], fn: (val: T, index?: string | number) => boolean): boolean {
+    if (check(iter, Array)) {
+        let index = 0;
+        for (const v of <T[]>iter) {
+            if (fn(v, index)) {
+                return true;
+            }
+            index++;
+        }
+    } if (check(iter, Object)) {
+        for (const k of Object.keys(iter)) {
+            if (fn((<any>iter)[k], k)) {
+                return true;
+            }
         }
     }
     return false;
 }
 
-export function every<T>(iterable: any[], fn: Function): boolean {
-    for (const v of iterable) {
-        if (fn(v) === false) {
-            return false;
+export function every<T>(iter: { [index: string]: T } | T[], fn: (val: T, index?: string | number) => boolean): boolean {
+
+    if (check(iter, Array)) {
+        let index = 0;
+        for (const v of <T[]>iter) {
+            if (fn(v, index) === false) {
+                return false;
+            }
+            index++;
+        }
+    } if (check(iter, Object)) {
+        for (const k of Object.keys(iter)) {
+            if (fn((<any>iter)[k], k) === false) {
+                return false;
+            }
         }
     }
     return true;
 }
+
+// export function every<T>(iterable: T[], fn: (arg: T) => boolean): boolean {
+//     for (const v of iterable) {
+//         if (fn(v) === false) {
+//             return false;
+//         }
+//     }
+//     return true;
+// }
+
+export const all = every;
 
 export function map<R, I>(iter: { [index: string]: I } | I[], fn: (val: I, index: any) => R): R[] {
     const res: R[] = [];
@@ -189,15 +257,28 @@ export function union<T>(...args: T[][]): T[] {
     return res;
 }
 
+export function concat<T>(...args: T[][]): T[] {
+    const res: T[] = [];
+    for (const arr of args) {
+        for (const v of arr) {
+            res.push(v);
+        }
+    }
+    return res;
+}
+
 export function intersect<T>(...args: T[][]): T[] {
     const res = <T[]>[];
     for (const a of args) {
         for (const v of a) {
             if (!contains(res, v)) {
-                for (const b of args) {
-                    if (contains(b, v)) {
-                        res.push(v);
+                if (every(args, (b) => {
+                    if (b == a) {
+                        return true;
                     }
+                    return contains(b, v);
+                })) {
+                    res.push(v);
                 }
             }
         }
@@ -249,12 +330,6 @@ export function containsAll<T>(set: any[], match: any[]): boolean {
         }
     }
     return true;
-}
-
-
-interface ComparisonOptions {
-    [index: string]: boolean;
-    strict: boolean;
 }
 
 export function isEqual(actual: any, expected: any, opts?: ComparisonOptions): boolean {
@@ -361,6 +436,13 @@ function _prune(input: SIO): boolean {
 
 export function prune<T>(obj: T): T {
     _prune(obj);
+    return obj;
+}
+
+export function clean<T>(obj: T): T {
+    for (const key of Object.keys(obj)) {
+        delete (<any>obj)[key];
+    }
     return obj;
 }
 
