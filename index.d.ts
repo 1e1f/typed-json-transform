@@ -28,6 +28,15 @@ declare module 'typed-json-transform' {
   export function assign<A, B>(a: A, b: B): A & B
   export function combine<A, B>(a: A, b: B): A & B
   export function combineN<T>(retType: T, ...args: SIO[]): T
+
+  type MergeMethod = '!' | '&' | '!' | '=' | '?' | '+' | '|' | '-' | '^';
+
+  interface MergeOptions {
+    arrayMergeMethod?: MergeMethod
+    objectMergeMethod?: MergeMethod
+  }
+
+  export function merge<T>(target: T & { [index: string]: any }, setter: any, options?: MergeOptions): T
   export function or<A, B>(a: A, b: B): A & B
   export function any<T>(iter: { [index: string]: T } | T[], fn: (val: T, index?: string | number) => boolean): boolean
   export function every<T>(iter: { [index: string]: T } | T[], fn: (val: T, index?: string | number) => boolean): boolean
