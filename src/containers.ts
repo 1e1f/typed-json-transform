@@ -128,7 +128,7 @@ interface MergeOptions {
     objectMergeMethod?: MergeMethod
 }
 
-function mergeArray(existing: any[], future: any[], arrayMergeMethod: MergeMethod) {
+function _mergeArray(existing: any[], future: any[], arrayMergeMethod: MergeMethod) {
     switch (arrayMergeMethod) {
         case '=': return future;
         case '+': return concat(existing, arrayify(future));
@@ -139,22 +139,43 @@ function mergeArray(existing: any[], future: any[], arrayMergeMethod: MergeMetho
     }
 }
 
-export function merge<T>(target: T & { [index: string]: any }, setter: any, options: MergeOptions = {}): T {
-    const objectMergeMethod = options.objectMergeMethod || '|';
-    const arrayMergeMethod = options.arrayMergeMethod || '=';
-    // this function mutates obj
-
-    for (const key of Object.keys(setter)) {
-        switch (key) {
-            case '<=': case '<&': case '<|': case '<?': case '<!': case '<+': case '<!': case '<-': case '<^':
-                const method = <any>key.slice(1);
-                return merge(target, setter[key], {
-                    objectMergeMethod: method,
-                    arrayMergeMethod
-                });
-            default: break;
-        }
+function mergeArray(lhs: any[], rhs: any[], arrayMergeMethod: MergeMethod): any[] {
+    if (check(rhs, Object)) {
+        for (const possiblyMergeOperator of Object.keys(rhs)) {
+            switch (possiblyMergeOperator) {
+                case '<=': case '<&': case '<|': case '<?': case '<!': case '<+': case '<!': case '<-': case '<^':
+                    return _mergeArray(<any[]>lhs, (<any>rhs)[possiblyMergeOperator], <MergeMethod>possiblyMergeOperator.slice(1));
+            }
+        };
+        throw new Error(`merging object into array (object contains no merge methods), ${JSON.stringify(rhs)}`);
     }
+    if (check(rhs, Array)) {
+        return _mergeArray(<any[]>lhs, <any[]>rhs, arrayMergeMethod);
+    }
+    throw new Error('replacing array value with non-array value');
+}
+
+export function applyMergeMethod(lhs: any, rhs: any, options: MergeOptions) {
+    if (check(lhs, Array)) {
+        return mergeArray(lhs, rhs, options.arrayMergeMethod);
+    }
+    if (lhs instanceof Date) {
+        if (rhs instanceof Date) {
+            return new Date(rhs.valueOf());
+        }
+        throw new Error('replacing date value with non-date value');
+    }
+    if (check(lhs, Object)) {
+        if (check(rhs, Object)) {
+            return mergeObject(lhs, rhs, options);
+        }
+        throw new Error('merging non object value into object value at keypath')
+    }
+    return rhs;
+}
+
+export function mergeObject<T>(target: T & { [index: string]: any }, setter: any, options: MergeOptions): T {
+    const { objectMergeMethod, arrayMergeMethod } = options;
 
     let res: any = target;
     if (objectMergeMethod == '=' || objectMergeMethod == '^' || objectMergeMethod == '&') {
@@ -162,43 +183,23 @@ export function merge<T>(target: T & { [index: string]: any }, setter: any, opti
     }
 
     for (const key of Object.keys(setter)) {
+        switch (key) {
+            case '<=': case '<&': case '<|': case '<?': case '<!': case '<+': case '<!': case '<-': case '<^':
+                const method = <any>key.slice(1);
+                return mergeObject(target, setter[key], {
+                    objectMergeMethod: method,
+                    arrayMergeMethod
+                });
+            default: break;
+        }
+    }
+
+    for (const key of Object.keys(setter)) {
         const lhs = target[key];
         const rhs = setter[key];
-        let assign;
 
-        if (check(lhs, Array)) {
-            if (check(rhs, Object)) {
-                if (!any(Object.keys(rhs), (possiblyMergeOperator: string) => {
-                    switch (possiblyMergeOperator) {
-                        case '<=': case '<&': case '<|': case '<?': case '<!': case '<+': case '<!': case '<-': case '<^':
-                            assign = mergeArray(lhs, rhs[possiblyMergeOperator], <MergeMethod>possiblyMergeOperator.slice(1));
-                            return true;
-                    }
-                })) {
-                    throw new Error('merging object into array (object contains no merge methods)');
-                }
-            } else {
-                if (check(rhs, Array)) {
-                    assign = mergeArray(lhs, rhs, arrayMergeMethod);
-                } else {
-                    throw new Error('replacing array value with non-array value');
-                }
-            }
-        } else if (lhs instanceof Date) {
-            if (rhs instanceof Date) {
-                assign = new Date(rhs.valueOf());
-            } else {
-                throw new Error('replacing date value with non-date value');
-            }
-        } else if (check(lhs, Object)) {
-            if (check(rhs, Object)) {
-                assign = merge(lhs, rhs, { objectMergeMethod, arrayMergeMethod });
-            } else {
-                throw new Error('merging non object value into object value at keypath')
-            }
-        } else {
-            assign = rhs;
-        }
+        const assign = applyMergeMethod(lhs, rhs, options);
+
         switch (objectMergeMethod) {
             case '=': case '|': case '+': res[key] = assign; break;
             case '!': case '^': if (!lhs) res[key] = assign; break;
@@ -211,6 +212,16 @@ export function merge<T>(target: T & { [index: string]: any }, setter: any, opti
         }
     }
     return res;
+}
+
+export function merge<T>(target: T & { [index: string]: any }, setter: any, options: MergeOptions = {}): T {
+    const objectMergeMethod = options.objectMergeMethod || '|';
+    const arrayMergeMethod = options.arrayMergeMethod || '=';
+    // this function mutates obj
+    if (check(target, Array)) {
+        return <T><any>mergeArray(<any>target, setter, arrayMergeMethod);
+    }
+    return mergeObject(target, setter, { objectMergeMethod, arrayMergeMethod });
 }
 
 export function or<A, B>(a: A, b: B): A & B {

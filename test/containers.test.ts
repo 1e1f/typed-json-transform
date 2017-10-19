@@ -213,11 +213,10 @@ describe('merge', function () {
     })
 
     Object.keys(arrayOperators).forEach((key) => {
-        const expected = { array: arrayOperators[key] };
         it('array: ' + key, () => {
             const { c, d } = clone(o.fixtures);
-            const actual = merge({ array: c }, { array: d }, { arrayMergeMethod: <any>key[1] });
-            assert.deepEqual(actual, expected);
+            const actual = merge(c, d, { arrayMergeMethod: <any>key[1] });
+            assert.deepEqual(actual, arrayOperators[key]);
         });
     })
 
@@ -283,6 +282,6 @@ describe('collections', () => {
                 default: return 0;
             }
         });
-        assert.deepEqual(expect, res, 'okmap');
+        assert.deepEqual(res, expect, 'okmap');
     });
 });
