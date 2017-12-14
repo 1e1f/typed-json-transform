@@ -256,14 +256,14 @@ export function every<T>(iter: { [index: string]: T } | T[], fn: (val: T, index?
     if (check(iter, Array)) {
         let index = 0;
         for (const v of <T[]>iter) {
-            if (fn(v, index) === false) {
+            if (!fn(v, index)) {
                 return false;
             }
             index++;
         }
     } if (check(iter, Object)) {
         for (const k of Object.keys(iter)) {
-            if (fn((<any>iter)[k], k) === false) {
+            if (!fn((<any>iter)[k], k)) {
                 return false;
             }
         }
