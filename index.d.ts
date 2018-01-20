@@ -61,7 +61,7 @@ declare module 'typed-json-transform' {
   export function plain<T>(obj: T): T
   export function clone<T>(input: T): T
   export function arrayify<T>(val: T | T[]): T[]
-  export function okmap<R, U extends { [index: string]: R }>(iterable: U | Array<R>, fn: (v: R, k: string | number) => R | U): U
+  export function okmap<R, I, IObject extends { [index: string]: I }, RObject extends { [index: string]: R }>(iterable: IObject | Array<I>, fn: (v: I, k?: string | number) => R): RObject;
   export function stringify(value: any, replacer?: (number | string)[], space?: string | number): string
 
   /*

@@ -255,7 +255,7 @@ describe('collections', () => {
             x: 2,
             c: 3,
         }
-        const res = okmap(test, (v: number, k) => {
+        const res = okmap(test, (v, k) => {
             switch (k) {
                 case 'a': return 7;
                 case 'b': return { x: v }
@@ -275,9 +275,9 @@ describe('collections', () => {
             x: 2,
             2: 0,
         }
-        const res = okmap(test, (v: number, k: number) => {
+        const res = okmap(test, (v, k) => {
             switch (k) {
-                case 0: return 7;
+                case 0: return <any>7;
                 case 1: return { x: v }
                 default: return 0;
             }
