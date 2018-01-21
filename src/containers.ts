@@ -565,11 +565,16 @@ export function arrayify<T>(val: T | T[]): T[] {
 
 export function okmap<R, I, IObject extends { [index: string]: I }, RObject extends { [index: string]: R }>(iterable: IObject | Array<I>, fn: (v: I, k?: string | number) => R): RObject {
     const sum = <RObject>{};
-    each(iterable, (v: any, k: any) => {
+    each(iterable, (v: any, k: string) => {
         const res = fn(v, k);
         if (check(res, Object)) {
-            const key = Object.keys(res)[0];
-            sum[key] = (<RObject><any>res)[key];
+            const keys = Object.keys(res);
+            if (keys.length == 2 && (keys[0] == 'key' || keys[1] == 'key')){
+                const key: string = (<any>res).key;
+                sum[key] = <R>(<any>res).value;
+            } else {
+                sum[k] = res;
+            }
         } else if ((res !== undefined) || check(res, Number)) {
             sum[k] = res;
         } else {

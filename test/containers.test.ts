@@ -258,7 +258,7 @@ describe('collections', () => {
         const res = okmap(test, (v, k) => {
             switch (k) {
                 case 'a': return 7;
-                case 'b': return { x: v }
+                case 'b': return { key: 'x', value: v }
             }
         });
         assert.deepEqual(expect, <any>res, 'okmap');
@@ -278,10 +278,30 @@ describe('collections', () => {
         const res = okmap(test, (v, k) => {
             switch (k) {
                 case 0: return <any>7;
-                case 1: return { x: v }
+                case 1: return { key: 'x', value: v };
                 default: return 0;
             }
         });
         assert.deepEqual(res, expect, 'okmap');
+    });
+
+    it('okmap with complex input', () => {
+        const test = {
+            a: { value: 1},
+            b: { value: 2},
+            c: { value: 3},
+        }
+        const expect = {
+            a: { value: 7},
+            x: { value: 2},
+            c: { value: 3},
+        }
+        const res = okmap(test, (v, k) => {
+            switch (k) {
+                case 'a': return { value: 7 };
+                case 'b': return { key: 'x', value: {value: 2} };
+            }
+        });
+        assert.deepEqual(expect, <any>res, 'okmap');
     });
 });
