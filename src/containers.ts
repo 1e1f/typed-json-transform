@@ -37,16 +37,7 @@ export function replace<A, B>(target: A & SIO, source: B & SIO): A & B {
 
 export function extend<A, B>(target: A & SIO, source: B & SIO): A & B {
     if (check(source, Object)) {
-        for (const key of Object.keys(source)) {
-            if (check(source[key], Function)) {
-                target[key] = source[key];
-            }
-            if (check(source[key], Object) && check(target[key], Object)) {
-                extend(target[key], source[key]);
-            } else {
-                target[key] = clone(source[key]);
-            }
-        }
+        return <A & B>extendN(target, source);
     }
     return <A & B>target;
 }
@@ -81,13 +72,12 @@ export function existentialExtend<A, B>(target: A & SIO, source: B & SIO): A & B
 export function extendN<T>(target: T & SIO, ...sources: Array<SIO>): T {
     for (const source of sources) {
         if (check(source, Object)) {
-            for (const key of Object.keys(source)) {
-                if (check(source[key], Object) && check(target[key], Object)) {
-                    extend(target[key], source[key]);
-                } else {
-                    target[key] = clone(source[key]);
-                }
+            const copy = clone(source);
+            for (const attr in copy) {
+                target[attr] = copy[attr];
             }
+        } else {
+            throw new Error(`extending object with scalar value ${JSON.stringify(source)}, only use objects`);
         }
     }
     return <T>target;
@@ -555,8 +545,39 @@ export function plain<T>(obj: T): T {
     return JSON.parse(JSON.stringify(obj));
 }
 
+
 export function clone<T>(input: T): T {
-    return <T>retrocycle(decycle(input));
+    // return <T>retrocycle(decycle(input));
+    // Handle Date (return new Date object with old value)
+    if ((input !== null && typeof input === 'function')) {
+        return input;
+    }
+
+    if (input instanceof Date) {
+        return new Date(input as any) as any;
+    }
+
+    // Handle Array (return a full slice of the array)
+    if (input instanceof Array) {
+        return (input as any).slice();
+    }
+
+    // Handle Object
+    if (input instanceof Object) {
+        var copy = new (input as any).constructor();
+        for (var attr in input) {
+            if (input.hasOwnProperty(attr)) {
+                if (input[attr] instanceof Object) {
+                    copy[attr] = clone(input[attr]);
+                } else {
+                    copy[attr] = input[attr];
+                }
+            }
+        }
+        return copy;
+    }
+
+    return input;
 }
 
 export function arrayify<T>(val: T | T[]): T[] {

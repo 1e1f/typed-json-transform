@@ -83,15 +83,15 @@ describe('clone', () => {
     it('does not mutate original', () => {
         assert.deepEqual(test, makeZ(date));
     });
-    it('can clone an object with a recursive reference', () => {
-        const a = {
-            num: 1,
-            self: {}
-        }
-        a.self = a;
-        const cloned = clone(a);
-        assert.deepEqual(cloned, a);
-    });
+    // it('can clone an object with a recursive reference', () => {
+    //     const a = {
+    //         num: 1,
+    //         self: {}
+    //     }
+    //     a.self = a;
+    //     const cloned = clone(a);
+    //     assert.deepEqual(cloned, a);
+    // });
 });
 
 
@@ -147,21 +147,36 @@ describe('arrays', () => {
     });
 });
 
+class toExtend {
+    myFunc() {
+        return 'result';
+    }
+}
+
 describe('extend', () => {
     const a = makeA();
     const b = makeB();
     const d = makeD();
-    it('can combine 2 objects into a new object', () => {
-        const res = extendN(a, b, d);
-        assert.deepEqual(res, <any>{
+    const f = { f: makeD };
+    it('extend object with multiple objects', () => {
+        extendN(a, b, d, f);
+        assert.deepEqual(a, <any>{
             a: {
                 b: {
                     c: 0
                 }
             },
             c: 'd',
-            e: 'f'
+            e: 'f',
+            f: makeD
         });
+    });
+
+    it('extend a class into an object', () => {
+        const inherits = {};
+        const instance = new toExtend();
+        extend(inherits, instance);
+        assert.deepEqual(inherits, instance);
     });
 });
 
@@ -287,19 +302,19 @@ describe('collections', () => {
 
     it('okmap with complex input', () => {
         const test = {
-            a: { value: 1},
-            b: { value: 2},
-            c: { value: 3},
+            a: { value: 1 },
+            b: { value: 2 },
+            c: { value: 3 },
         }
         const expect = {
-            a: { value: 7},
-            x: { value: 2},
-            c: { value: 3},
+            a: { value: 7 },
+            x: { value: 2 },
+            c: { value: 3 },
         }
         const res = okmap(test, (v, k) => {
             switch (k) {
                 case 'a': return { value: 7 };
-                case 'b': return { key: 'x', value: {value: 2} };
+                case 'b': return { key: 'x', value: { value: 2 } };
             }
         });
         assert.deepEqual(expect, <any>res, 'okmap');
