@@ -23,7 +23,7 @@ function _c(val: any, type: any): boolean {
       return val !== null && typeof val === 'object' && !_c(val, Date) && !_c(val, Array) && !_c(val, Error);
     case String:
     case 'String':
-      return typeof val === 'string' && !isNumeric(val);
+      return typeof val === 'string';
     case Number:
     case 'Number':
       return isNumeric(val);

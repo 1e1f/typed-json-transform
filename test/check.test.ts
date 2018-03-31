@@ -26,7 +26,7 @@ const data = {
   number: 1,
   null: <any>null,
   stringNumber: '1',
-  complexStringNumber: '1.0.1',
+  semver: '1.0.1',
   string: 'hello',
   error: new SyntaxError(),
   boolean: true,
@@ -70,9 +70,9 @@ describe('check', () => {
     assert.ok(!check(data.string, Object));
     assert.ok(!check(data.string, Array));
     assert.ok(check(data.string, String));
-    assert.ok(!check(data.stringNumber, String));
-    assert.ok(check(data.complexStringNumber, String));
-    return assert.ok(!check(data.string, Number));
+    assert.ok(check(data.stringNumber, String));
+    assert.ok(check(data.semver, String));
+    return assert.notOk(check(data.string, Number));
   });
 
   it('number', () => {
@@ -81,7 +81,7 @@ describe('check', () => {
     assert.ok(!check(data.number, String));
     assert.ok(check(data.number, Number));
     assert.ok(check(data.stringNumber, Number));
-    return assert.ok(!check(data.complexStringNumber, Number));
+    return assert.notOk(check(data.semver, Number));
   });
 
   it('date', () => {

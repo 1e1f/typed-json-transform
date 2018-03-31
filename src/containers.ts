@@ -38,6 +38,9 @@ export function replace<A, B>(target: A & SIO, source: B & SIO): A & B {
 export function extend<A, B>(target: A & SIO, source: B & SIO): A & B {
     if (check(source, Object)) {
         for (const key of Object.keys(source)) {
+            if (check(source[key], Function)) {
+                target[key] = source[key];
+            }
             if (check(source[key], Object) && check(target[key], Object)) {
                 extend(target[key], source[key]);
             } else {
@@ -565,11 +568,11 @@ export function arrayify<T>(val: T | T[]): T[] {
 
 export function okmap<R, I, IObject extends { [index: string]: I }, RObject extends { [index: string]: R }>(iterable: IObject | Array<I>, fn: (v: I, k?: string | number) => R): RObject {
     const sum = <RObject>{};
-    each(iterable, (v: any, k: string) => {
+    each(iterable, (v: I, k: string) => {
         const res = fn(v, k);
         if (check(res, Object)) {
             const keys = Object.keys(res);
-            if (keys.length == 2 && (keys[0] == 'key' || keys[1] == 'key')){
+            if (keys.length == 2 && (keys[0] == 'key' || keys[1] == 'key')) {
                 const key: string = (<any>res).key;
                 sum[key] = <R>(<any>res).value;
             } else {
@@ -578,7 +581,7 @@ export function okmap<R, I, IObject extends { [index: string]: I }, RObject exte
         } else if ((res !== undefined) || check(res, Number)) {
             sum[k] = res;
         } else {
-            sum[k] = v;
+            sum[k] = <R><any>v;
         }
     });
     return sum;
