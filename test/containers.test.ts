@@ -178,6 +178,12 @@ describe('extend', () => {
         extend(inherits, instance);
         assert.deepEqual(inherits, instance);
     });
+
+    it('ignores extending by an undefined object', () => {
+        const inherits = {};
+        extend(inherits, undefined);
+        assert.deepEqual(inherits, inherits);
+    });
 });
 
 describe('combine', () => {

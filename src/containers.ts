@@ -217,6 +217,16 @@ export function merge<T>(target: T & { [index: string]: any }, setter: any, opti
     return mergeObject(target, setter, { objectMergeMethod, arrayMergeMethod });
 }
 
+export function mergeN<T>(target: T & { [index: string]: any }, ...args: any[]): T {
+    const result = clone(target);
+    for (const dict of args) {
+        if (check(dict, Object)) {
+            merge(result, dict);
+        }
+    }
+    return result;
+}
+
 export function or<A, B>(a: A, b: B): A & B {
     const ret = <any>clone(a);
     each(b, (v: any, k: string) => {
