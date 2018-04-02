@@ -6,7 +6,16 @@ declare module 'typed-json-transform' {
   function beginsWith(string: string, s: string): boolean
   function endsWith(string: string, s: string): boolean
   function replaceAll(str: string, find: string, rep: string): string
+  function trim(str: string): string
 
+  interface CamelOptions {
+    delimiter?: string
+    upperCase?: boolean
+    capsLock?: boolean
+  }
+
+  function toCamel(input: string, options?: CamelOptions): string
+  function fromCamel(input: string, options?: CamelOptions): string
   /* 
   * Container Methods
   */

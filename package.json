@@ -34,11 +34,11 @@
         "chai": "^3.5.0",
         "coveralls": "^2.11.9",
         "gulp": "^3.9.1",
-        "gulp-typescript": "^3.1.1",
+        "gulp-typescript": "^4.0.2",
         "js-yaml": "^3.7.0",
         "mocha": "^3.2.0",
-        "typescript": "^2.1.6",
-        "ts-node": "^2.0.0",
+        "typescript": "^2.7.0",
+        "ts-node": "^5.0.0",
         "nyc": "^8.4.0"
     },
     "nyc": {
