@@ -1,7 +1,7 @@
 import { assert } from 'chai';
 import { makeA, makeB, makeC, makeD, makeZ } from './fixtures';
 import { readFileSync } from 'fs';
-import { load } from 'js-yaml';
+import { load, dump } from 'js-yaml';
 import { isEqual, check, combine, combineN, any, each, every, flatten, contains, extend, extendN, intersect, clone, arrayify, map, merge, okmap, union, difference } from '../src';
 
 describe('isEqual', () => {
@@ -83,15 +83,33 @@ describe('clone', () => {
     it('does not mutate original', () => {
         assert.deepEqual(test, makeZ(date));
     });
-    // it('can clone an object with a recursive reference', () => {
-    //     const a = {
-    //         num: 1,
-    //         self: {}
-    //     }
-    //     a.self = a;
-    //     const cloned = clone(a);
-    //     assert.deepEqual(cloned, a);
-    // });
+    it('nested objects are not references to original', () => {
+        const a = {
+            num: 1,
+            object: {
+                nested: 'string'
+            },
+            array: [{ nested: '1' }, { nested: '2' }]
+        }
+        const cloned = clone(a);
+        const both = {
+            a, cloned
+        }
+        assert.deepEqual(a, cloned);
+        assert.notEqual(a.object, cloned.object);
+        assert.notEqual(a.array[0], cloned.array[0]);
+    });
+    it('nested arrays are not references to original', () => {
+        const a = {
+            array: [{ nested: '1' }, { nested: '2' }]
+        }
+        const cloned = clone(a);
+        const both = {
+            a, cloned
+        }
+        assert.deepEqual(a, cloned);
+        assert.notEqual(a.array[0], cloned.array[0]);
+    });
 });
 
 

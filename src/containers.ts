@@ -569,7 +569,8 @@ export function clone<T>(input: T): T {
 
     // Handle Array (return a full slice of the array)
     if (input instanceof Array) {
-        return (input as any).slice();
+        // return (input as any).slice();
+        return <T><any>input.map((i: any) => clone(i));
     }
 
     // Handle Object
