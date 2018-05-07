@@ -255,9 +255,9 @@ export function any<T>(iter: { [index: string]: T } | T[], fn: (val: T, index?: 
 }
 
 export function every<T>(iter: { [index: string]: T } | T[], fn: (val: T, index?: string | number) => boolean): boolean {
-
     if (check(iter, Array)) {
         let index = 0;
+        if (!(iter as any[]).length) return false;
         for (const v of <T[]>iter) {
             if (!fn(v, index)) {
                 return false;
@@ -265,7 +265,9 @@ export function every<T>(iter: { [index: string]: T } | T[], fn: (val: T, index?
             index++;
         }
     } if (check(iter, Object)) {
-        for (const k of Object.keys(iter)) {
+        const keys = Object.keys(iter);
+        if (!keys.length) return false;
+        for (const k of keys) {
             if (!fn((<any>iter)[k], k)) {
                 return false;
             }
@@ -599,24 +601,25 @@ export function arrayify<T>(val: T | T[]): T[] {
 }
 
 export function okmap<R, I, IObject extends { [index: string]: I }, RObject extends { [index: string]: R }>(iterable: IObject | Array<I>, fn: (v: I, k?: string | number) => R): RObject {
-    const sum = <RObject>{};
-    each(iterable, (v: I, k: string) => {
-        const res = fn(v, k);
-        if (check(res, Object)) {
-            const keys = Object.keys(res);
+    const o = <RObject>{};
+    const a = <RObject><any>[];
+    each(iterable, (_v: I, _k: string) => {
+        let k = _k;
+        let v = fn(_v, k);
+        if (check(v, Object)) {
+            const keys = Object.keys(v);
             if (keys.length == 2 && (keys[0] == 'key' || keys[1] == 'key')) {
-                const key: string = (<any>res).key;
-                sum[key] = <R>(<any>res).value;
-            } else {
-                sum[k] = res;
+                k = (<any>v).key;
+                v = <R>(<any>v).value;
             }
-        } else if ((res !== undefined) || check(res, Number)) {
-            sum[k] = res;
-        } else {
-            sum[k] = <R><any>v;
+        }
+        o[k] = v;
+        if (<any>k >= 0) {
+            a[k] = v;
         }
     });
-    return sum;
+    if (every(Object.keys(o), (k) => check(k, Number))) return a;
+    return o;
 }
 
 export function stringify(value: any, replacer?: (number | string)[], space?: string | number): string {

@@ -282,8 +282,10 @@ describe('collections', () => {
             return contains(sameList, s);
         }));
     });
+});
 
-    it('okmap with object input', () => {
+describe('okmap', () => {
+    it('object', () => {
         const test = {
             a: 1,
             b: 2,
@@ -298,12 +300,30 @@ describe('collections', () => {
             switch (k) {
                 case 'a': return 7;
                 case 'b': return { key: 'x', value: v }
+                default: return v;
             }
         });
-        assert.deepEqual(expect, <any>res, 'okmap');
+        assert.deepEqual(<any>res, expect, 'okmap');
     });
 
-    it('okmap with array input', () => {
+    it('array', () => {
+        const test = [
+            1,
+            2,
+            3,
+        ]
+        const expect = [7, 2, 0];
+        const res: Number[] = <any>okmap(test, (v, k) => {
+            switch (k) {
+                case 0: return 7;
+                case 1: return { key: 1, value: v };
+                default: return 0;
+            }
+        });
+        assert.deepEqual(res, expect, 'okmap');
+    });
+
+    it('array to object', () => {
         const test = [
             1,
             2,
@@ -324,7 +344,29 @@ describe('collections', () => {
         assert.deepEqual(res, expect, 'okmap');
     });
 
-    it('okmap with complex input', () => {
+    it('object to array', () => {
+        const test = {
+            phoenix: {
+                place: 0
+            },
+            portland: {
+                place: 1
+            },
+            seattle: {
+                place: -1
+            }
+        };
+        const expect = ['phoenix', 'portland'];
+        const res = <any>okmap(test, (v: { place: number }, k) => {
+            return {
+                key: v.place,
+                value: k
+            }
+        });
+        assert.deepEqual(res, expect, 'okmap');
+    });
+
+    it('complex', () => {
         const test = {
             a: { value: 1 },
             b: { value: 2 },
@@ -339,8 +381,9 @@ describe('collections', () => {
             switch (k) {
                 case 'a': return { value: 7 };
                 case 'b': return { key: 'x', value: { value: 2 } };
+                default: return v;
             }
         });
-        assert.deepEqual(expect, <any>res, 'okmap');
+        assert.deepEqual(<any>res, expect, 'okmap');
     });
 });
