@@ -166,6 +166,9 @@ export function keyPaths(obj: SIO, _options?: Keypath.Options, _stack?: string[]
                         const p = parent ? `${parent}.${el}.${i}` : `${el}.${i}`;
                         const s = val[i];
                         if (Array.isArray(s) || (s !== null && typeof s === 'object')) {
+                            if (options.allLevels) {
+                                stack.push(p);
+                            }
                             keyPaths(s, options, stack, p);
                         } else {
                             stack.push(p);
@@ -178,10 +181,14 @@ export function keyPaths(obj: SIO, _options?: Keypath.Options, _stack?: string[]
                 const key = parent ? `${parent}.${el}` : el;
                 stack.push(key);
             } else if (val !== null && typeof val === 'object') {
-                if (options.allLevels) {
+                if (check(val, RegExp)) {
                     stack.push(parent ? `${parent}.${el}` : el);
+                } else {
+                    if (options.allLevels) {
+                        stack.push(parent ? `${parent}.${el}` : el);
+                    }
+                    keyPaths(val, options, stack, parent ? `${parent}.${el}` : el);
                 }
-                keyPaths(val, options, stack, parent ? `${parent}.${el}` : el);
             } else {
                 stack.push(parent ? `${parent}.${el}` : el);
             }
@@ -193,8 +200,8 @@ export function keyPaths(obj: SIO, _options?: Keypath.Options, _stack?: string[]
     return stack;
 }
 
-export function allKeyPaths(obj: SIO): string[] {
-    return keyPaths(obj, { allLevels: true });
+export function allKeyPaths(obj: SIO, options?: Keypath.Options): string[] {
+    return keyPaths(obj, { allLevels: true, diffArrays: true, ...options });
 }
 
 export function flatObject(object: any, options?: { includeBranches?: boolean }): SIO {

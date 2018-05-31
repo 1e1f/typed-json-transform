@@ -62,8 +62,8 @@ declare module 'typed-json-transform' {
   export function concat<T>(...args: T[][]): T[]
   export function intersect<T>(...args: T[][]): T[]
   export function difference<T>(a: T[], b: T[]): T[]
-  export function contains<T>(set: any[], match: T): boolean
-  export function containsAny<T>(set: any[], match: any[]): boolean
+  export function contains<T>(set: any[], match: T): number
+  export function containsAny<T>(set: any[], match: any[]): number
   export function containsAll<T>(set: any[], match: any[]): boolean
   export function isEqual(actual: any, expected: any, opts?: ComparisonOptions): boolean
   export function prune<T>(obj: T): T

@@ -383,7 +383,7 @@ export function intersect<T>(...args: T[][]): T[] {
                     if (b == a) {
                         return true;
                     }
-                    return contains(b, v);
+                    return contains(b, v) > 0;
                 })) {
                     res.push(v);
                 }
@@ -403,28 +403,31 @@ export function difference<T>(a: T[], b: T[]): T[] {
     return res;
 }
 
-export function contains<T>(set: any[], match: T): boolean {
+export function contains<T>(set: any[], match: T): number {
     if (check(match, Array)) {
         return containsAny(set, match as any);
     }
+    let matches = 0;
     for (const val of set) {
         if (isEqual(val, match)) {
-            return true;
+            matches++;
         }
     }
-    return false;
+    return matches;
 }
 
-export function containsAny<T>(set: any[], match: any[]): boolean {
+export function containsAny<T>(set: any[], match: any[]): number {
     if (!check(match, Array)) {
         throw new Error('contains all takes a list to match');
     }
+    let matches = 0;
     for (const val of match) {
         if (contains(set, val)) {
-            return true;
+            // return true;
+            matches++;
         }
     }
-    return false;
+    return matches;
 }
 
 export function containsAll<T>(set: any[], match: any[]): boolean {
@@ -572,12 +575,12 @@ export function clone<T>(input: T): T {
     // Handle Array (return a full slice of the array)
     if (input instanceof Array) {
         // return (input as any).slice();
-        return <T><any>input.map((i: any) => clone(i));
+        return <T><any>input.map((obj: any) => clone(obj));
     }
 
     // Handle Object
     if (input instanceof Object) {
-        var copy = new (input as any).constructor();
+        const copy = new (input as any).constructor();
         for (var attr in input) {
             if (input.hasOwnProperty(attr)) {
                 if (input[attr] instanceof Object) {
