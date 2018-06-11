@@ -560,7 +560,6 @@ export function plain<T>(obj: T): T {
     return JSON.parse(JSON.stringify(obj));
 }
 
-
 export function clone<T>(input: T): T {
     // return <T>retrocycle(decycle(input));
     // Handle Date (return new Date object with old value)
@@ -580,7 +579,7 @@ export function clone<T>(input: T): T {
 
     // Handle Object
     if (input instanceof Object) {
-        const copy = new (input as any).constructor();
+        const copy = new (input as any).constructor(plain(input));
         for (var attr in input) {
             if (input.hasOwnProperty(attr)) {
                 if (input[attr] instanceof Object) {

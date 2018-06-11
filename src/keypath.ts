@@ -181,7 +181,7 @@ export function keyPaths(obj: SIO, _options?: Keypath.Options, _stack?: string[]
                 const key = parent ? `${parent}.${el}` : el;
                 stack.push(key);
             } else if (val !== null && typeof val === 'object') {
-                if (check(val, RegExp)) {
+                if (val instanceof Buffer || val instanceof RegExp) {
                     stack.push(parent ? `${parent}.${el}` : el);
                 } else {
                     if (options.allLevels) {
