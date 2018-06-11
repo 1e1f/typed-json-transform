@@ -73,6 +73,16 @@ describe('isEqual', () => {
     })
 });
 
+class SimpleClass {
+    prop: any;
+    constructor() {
+
+    }
+    method() {
+        return this.prop;
+    }
+}
+
 describe('clone', () => {
     const date = new Date();
     const test = makeZ(date);
@@ -109,6 +119,11 @@ describe('clone', () => {
         }
         assert.deepEqual(a, cloned);
         assert.notEqual(a.array[0], cloned.array[0]);
+    });
+    it('clone a simple class', () => {
+        const instance = new SimpleClass();
+        // extend(inherits, instance);
+        assert.deepEqual(clone(instance), instance);
     });
 });
 
@@ -166,6 +181,13 @@ describe('arrays', () => {
 });
 
 class toExtend {
+    prop: any;
+    constructor(arg) {
+        this.prop = arg;
+    }
+    clone() {
+        return new toExtend(this.prop);
+    }
     myFunc() {
         return 'result';
     }
@@ -192,7 +214,7 @@ describe('extend', () => {
 
     it('extend a class into an object', () => {
         const inherits = {};
-        const instance = new toExtend();
+        const instance = new toExtend('value');
         extend(inherits, instance);
         assert.deepEqual(inherits, instance);
     });
