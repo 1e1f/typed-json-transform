@@ -134,6 +134,14 @@ export function keyPathContainsPath(keyPath: string, ignorePath: string): boolea
     return _keyPathContainsPath(keyPath, ignorePath);
 }
 
+export const lastKey = (kp: string) => {
+    const parts = kp.split('.');
+    if (parts.length) {
+        return parts[parts.length - 1];
+    }
+    return kp;
+}
+
 export function filteredKeyPaths(_keyPaths: string[], ignore?: string[]): string[] {
     if (!ignore.length) {
         return _keyPaths;

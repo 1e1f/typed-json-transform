@@ -27,16 +27,16 @@ declare module 'typed-json-transform' {
 
   interface SIO { [index: string]: any }
 
-  export function each<T>(iter: { [index: string]: T } | T[], fn: (val: T, index?: string | number, breakLoop?: () => void) => void): void
-  export function replace<A, B>(target: A & SIO, source: B & SIO): A & B
-  export function extend<A, B>(target: A & SIO, source: B & SIO): A & B
-  export function extendOwn<A, B>(target: A & SIO, source: B & SIO): A & B
-  export function existentialExtend<A, B>(target: A & SIO, source: B & SIO): A & B
-  export function extendN<T>(target: T & SIO, ...sources: Array<SIO>): T
-  export function flatten<A>(arr: A[][]): A[]
-  export function assign<A, B>(a: A, b: B): A & B
-  export function combine<A, B>(a: A, b: B): A & B
-  export function combineN<T>(retType: T, ...args: SIO[]): T
+  function each<T>(iter: { [index: string]: T } | T[], fn: (val: T, index?: string | number, breakLoop?: () => void) => void): void
+  function replace<A, B>(target: A & SIO, source: B & SIO): A & B
+  function extend<A, B>(target: A & SIO, source: B & SIO): A & B
+  function extendOwn<A, B>(target: A & SIO, source: B & SIO): A & B
+  function existentialExtend<A, B>(target: A & SIO, source: B & SIO): A & B
+  function extendN<T>(target: T & SIO, ...sources: Array<SIO>): T
+  function flatten<A>(arr: A[][]): A[]
+  function assign<A, B>(a: A, b: B): A & B
+  function combine<A, B>(a: A, b: B): A & B
+  function combineN<T>(retType: T, ...args: SIO[]): T
 
   type MergeMethod = '!' | '&' | '!' | '=' | '?' | '+' | '|' | '-' | '^';
 
@@ -45,34 +45,35 @@ declare module 'typed-json-transform' {
     objectMergeMethod?: MergeMethod
   }
 
-  export function merge<T>(target: T & { [index: string]: any }, setter: any, options?: MergeOptions): T
-  export function mergeN<T>(target: T & { [index: string]: any }, ...args: any[]): T
-  export function or<A, B>(a: A, b: B): A & B
-  export function any<T>(iter: { [index: string]: T } | T[], fn: (val: T, index?: string | number) => boolean): boolean
-  export function every<T>(iter: { [index: string]: T } | T[], fn: (val: T, index?: string | number) => boolean): boolean
-  export function all<T>(iter: { [index: string]: T } | T[], fn: (val: T, index?: string | number) => boolean): boolean
-  export function map<R, I>(iter: { [index: string]: I } | I[], fn: (val: I, index: any) => R): R[]
-  export function reduce<T, S>(input: Array<T>, fn: (input: T, memo: S) => S, base?: S): S
-  export function reduce<T, S>(input: { [index: string]: T }, fn: (input: T, memo: S) => S, base?: S): S
-  export function sum<T>(input: { [index: string]: T } | Array<T>, fn: (input: T) => number): number
-  export function greatestResult<T>(input: { [index: string]: T } | Array<T>, fn: (input: T) => number): number
-  export function sumIfEvery<T>(input: { [index: string]: T } | Array<T>, fn: (input: T) => number): number
-  export function geoSum<T>(input: { [index: string]: T } | Array<T>, fn: (input: T, memo: number) => number): number
-  export function union<T>(...args: T[][]): T[]
-  export function concat<T>(...args: T[][]): T[]
-  export function intersect<T>(...args: T[][]): T[]
-  export function difference<T>(a: T[], b: T[]): T[]
-  export function contains<T>(set: any[], match: T): number
-  export function containsAny<T>(set: any[], match: any[]): number
-  export function containsAll<T>(set: any[], match: any[]): boolean
-  export function isEqual(actual: any, expected: any, opts?: ComparisonOptions): boolean
-  export function prune<T>(obj: T): T
-  export function clean<T>(obj: T): T
-  export function plain<T>(obj: T): T
-  export function clone<T>(input: T): T
-  export function arrayify<T>(val: T | T[]): T[]
-  export function okmap<R, I, IObject extends { [index: string]: I }, RObject extends { [index: string]: R }>(iterable: IObject | Array<I>, fn: (v: I, k?: string | number) => R): RObject;
-  export function stringify(value: any, replacer?: (number | string)[], space?: string | number): string
+  function merge<T>(target: T & { [index: string]: any }, setter: any, options?: MergeOptions): T
+  function mergeN<T>(target: T & { [index: string]: any }, ...args: any[]): T
+  function or<A, B>(a: A, b: B): A & B
+  function any<T>(iter: { [index: string]: T } | T[], fn: (val: T, index?: string | number) => boolean): boolean
+  function every<T>(iter: { [index: string]: T } | T[], fn: (val: T, index?: string | number) => boolean): boolean
+  function all<T>(iter: { [index: string]: T } | T[], fn: (val: T, index?: string | number) => boolean): boolean
+  function map<R, I>(iter: { [index: string]: I } | I[], fn: (val: I, index: any) => R): R[]
+  function keysAndValues<T>(object: { [index: string]: T }): { keys: string[], values: T[] }
+  function reduce<T, S>(input: Array<T>, fn: (input: T, memo: S) => S, base?: S): S
+  function reduce<T, S>(input: { [index: string]: T }, fn: (input: T, memo: S) => S, base?: S): S
+  function sum<T>(input: { [index: string]: T } | Array<T>, fn: (input: T) => number): number
+  function greatestResult<T>(input: { [index: string]: T } | Array<T>, fn: (input: T) => number): number
+  function sumIfEvery<T>(input: { [index: string]: T } | Array<T>, fn: (input: T) => number): number
+  function geoSum<T>(input: { [index: string]: T } | Array<T>, fn: (input: T, memo: number) => number): number
+  function union<T>(...args: T[][]): T[]
+  function concat<T>(...args: T[][]): T[]
+  function intersect<T>(...args: T[][]): T[]
+  function difference<T>(a: T[], b: T[]): T[]
+  function contains<T>(set: any[], match: T): number
+  function containsAny<T>(set: any[], match: any[]): number
+  function containsAll<T>(set: any[], match: any[]): boolean
+  function isEqual(actual: any, expected: any, opts?: ComparisonOptions): boolean
+  function prune<T>(obj: T): T
+  function clean<T>(obj: T): T
+  function plain<T>(obj: T): T
+  function clone<T>(input: T): T
+  function arrayify<T>(val: T | T[]): T[]
+  function okmap<R, I, IObject extends { [index: string]: I }, RObject extends { [index: string]: R }>(iterable: IObject | Array<I>, fn: (v: I, k?: string | number) => R): RObject;
+  function stringify(value: any, replacer?: (number | string)[], space?: string | number): string
 
   /*
   * Keypath
@@ -89,6 +90,7 @@ declare module 'typed-json-transform' {
   function valueForKeyPath(keyPath: string, input: SIO): any
   function unsetKeyPath(keyPath: string, obj: SIO): boolean
   function keyPathContainsPath(keyPath: string, ignorePath: string): boolean
+  function lastKey(kp: string): string
   function filteredKeyPaths(_keyPaths: string[], ignore?: string[]): string[]
   function keyPaths(obj: SIO, _options?: Keypath.Options, _stack?: string[], parent?: string): string[]
   function allKeyPaths(obj: SIO): string[]

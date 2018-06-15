@@ -2,7 +2,7 @@ import { assert } from 'chai';
 import { makeA, makeB, makeC, makeD, makeZ } from './fixtures';
 import { readFileSync } from 'fs';
 import { load, dump } from 'js-yaml';
-import { isEqual, check, combine, combineN, any, each, every, flatten, contains, extend, extendN, intersect, clone, arrayify, map, merge, okmap, union, difference } from '../src';
+import { isEqual, check, combine, combineN, any, each, every, flatten, contains, extend, extendN, intersect, clone, arrayify, map, merge, okmap, union, difference, keysAndValues } from '../src';
 
 describe('isEqual', () => {
     it('isEqual', () => {
@@ -294,6 +294,16 @@ describe('merge', function () {
 })
 
 describe('collections', () => {
+    it('contains', () => {
+        const hash = {
+            keyA: 'A',
+        };
+        const { keys, values } = keysAndValues(hash);
+        assert.equal(contains(keys, 'keyA'), 1);
+        assert.equal(contains(values, 'A'), 1);
+        assert.equal(contains(keys, 'keyX'), 0);
+        assert.equal(contains(values, 'X'), 0);
+    });
     it('every', () => {
         const list = ['a', 'b', 'a.c', 'b.d'];
         const sameList = ['a', 'b', 'a.c', 'b.d'];

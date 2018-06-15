@@ -1,6 +1,6 @@
 import { assert } from 'chai';
 
-import { check, contains, valueForKeyPath, merge, mergeValueAtKeypath, flatObject, allKeyPaths, setValueForKeyPath, unsetKeyPath, keyPaths } from '../src';
+import { check, contains, valueForKeyPath, merge, mergeValueAtKeypath, lastKey, keyPathContainsPath, flatObject, allKeyPaths, setValueForKeyPath, unsetKeyPath, keyPaths } from '../src';
 
 import { makeA, makeB, makeC, makeD, makeZ } from './fixtures';
 
@@ -19,6 +19,20 @@ describe('keyPaths', () => {
         for (const s of list) {
             assert.ok(contains(kps, s) == 1, `no keypath ${s} in ${kps}`);
         }
+    });
+
+    it('lastKey', () => {
+        assert.equal(lastKey('a.b.c'), 'c');
+        assert.equal(lastKey('1._9'), '_9');
+        assert.equal(lastKey('?'), '?');
+    });
+
+    it('keyPathContainsPath', () => {
+        assert.ok(keyPathContainsPath('a.b.c', 'a'));
+        assert.ok(keyPathContainsPath('a.b.c', 'a.b'));
+        assert.ok(keyPathContainsPath('a.b.c', 'a.b.c'));
+        assert.notOk(keyPathContainsPath('a.b.c', 'b.c'));
+        assert.notOk(keyPathContainsPath('a.b.c', 'c'));
     });
 
     it('valueForKeyPath', () => {

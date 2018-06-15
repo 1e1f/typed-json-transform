@@ -96,6 +96,16 @@ export function flatten<A>(arr: A[][]): A[] {
     return stack;
 }
 
+export function keysAndValues<T>(object: { [index: string]: T }): { keys: string[], values: T[] } {
+    const keys: string[] = [];
+    const values: T[] = [];
+    each(object, (v: T, k: string) => {
+        keys.push(k);
+        values.push(v);
+    });
+    return { keys, values };
+}
+
 export function assign<A, B>(a: A, b: B): A & B {
     let result = clone(a);
     return extend(result || <A>{}, clone(b));
