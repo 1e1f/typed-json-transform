@@ -1,5 +1,6 @@
 import { check, isArguments, isEmpty, isUndefinedOrNull, isBuffer } from './check';
 import { decycle, retrocycle } from './decycle';
+import { prototype } from 'stream';
 
 interface SIO { [index: string]: any }
 
@@ -93,6 +94,16 @@ export function flatten<A>(arr: A[][]): A[] {
         }
     }
     return stack;
+}
+
+export function keysAndValues<T>(object: { [index: string]: T }): { keys: string[], values: T[] } {
+    const keys: string[] = [];
+    const values: T[] = [];
+    each(object, (v: T, k: string) => {
+        keys.push(k);
+        values.push(v);
+    });
+    return { keys, values };
 }
 
 export function assign<A, B>(a: A, b: B): A & B {
@@ -383,7 +394,7 @@ export function intersect<T>(...args: T[][]): T[] {
                     if (b == a) {
                         return true;
                     }
-                    return contains(b, v);
+                    return contains(b, v) > 0;
                 })) {
                     res.push(v);
                 }
@@ -403,28 +414,31 @@ export function difference<T>(a: T[], b: T[]): T[] {
     return res;
 }
 
-export function contains<T>(set: any[], match: T): boolean {
+export function contains<T>(set: any[], match: T): number {
     if (check(match, Array)) {
         return containsAny(set, match as any);
     }
+    let matches = 0;
     for (const val of set) {
         if (isEqual(val, match)) {
-            return true;
+            matches++;
         }
     }
-    return false;
+    return matches;
 }
 
-export function containsAny<T>(set: any[], match: any[]): boolean {
+export function containsAny<T>(set: any[], match: any[]): number {
     if (!check(match, Array)) {
         throw new Error('contains all takes a list to match');
     }
+    let matches = 0;
     for (const val of match) {
         if (contains(set, val)) {
-            return true;
+            // return true;
+            matches++;
         }
     }
-    return false;
+    return matches;
 }
 
 export function containsAll<T>(set: any[], match: any[]): boolean {
@@ -560,41 +574,117 @@ export function plain<T>(obj: T): T {
     return JSON.parse(JSON.stringify(obj));
 }
 
+function ObjectAssign(target: any, source: any) {
+    var from;
+    var to = target;
+    var index = 0;
+    var total = arguments.length;
+    var hasOwnProperty = Object.prototype.hasOwnProperty;
 
-export function clone<T>(input: T): T {
-    // return <T>retrocycle(decycle(input));
-    // Handle Date (return new Date object with old value)
-    if ((input !== null && typeof input === 'function')) {
-        return input;
-    }
+    while (++index < total) {
+        from = arguments[index];
 
-    if (input instanceof Date) {
-        return new Date(input as any) as any;
-    }
-
-    // Handle Array (return a full slice of the array)
-    if (input instanceof Array) {
-        // return (input as any).slice();
-        return <T><any>input.map((i: any) => clone(i));
-    }
-
-    // Handle Object
-    if (input instanceof Object) {
-        var copy = new (input as any).constructor();
-        for (var attr in input) {
-            if (input.hasOwnProperty(attr)) {
-                if (input[attr] instanceof Object) {
-                    copy[attr] = clone(input[attr]);
-                } else {
-                    copy[attr] = input[attr];
+        if (from != null) {
+            for (var key in from) {
+                if (hasOwnProperty.call(from, key)) {
+                    to[key] = from[key];
                 }
             }
         }
-        return copy;
     }
 
-    return input;
+    return to;
 }
+
+
+export function clone<T>(obj: T): T {
+    var copy;
+
+    // Handle the 3 simple types, and null or undefined
+    if (null == obj || "object" != typeof obj) return obj;
+
+    // Handle Date
+    if (obj instanceof Date) {
+        copy = new Date();
+        copy.setTime(obj.getTime());
+        return <T><any>copy;
+    }
+
+    // Handle Array
+    if (obj instanceof Array) {
+        copy = [];
+        for (var i = 0, len = obj.length; i < len; i++) {
+            copy[i] = clone(obj[i]);
+        }
+        return <T><any>copy;
+    }
+
+    // Handle Object
+    if (obj instanceof Object) {
+        const from: any = obj;
+        let copy = <any>{};
+        const { hasOwnProperty } = Object.prototype;
+
+        if (from != null) {
+            if (from.clone) return from.clone();
+            else if (from.constructor) {
+                try {
+                    copy = new (from.constructor)();
+                }
+                catch (e) {
+                    throw new Error(`Error while cloning a ${typeof obj} instance, which has a complex constructor, and no explicit clone method`);
+                }
+            }
+            for (var key in from) {
+                if (hasOwnProperty.call(from, key)) {
+                    (<any>copy)[key] = clone(from[key]);
+                }
+            }
+        }
+
+        return <T><any>copy;
+    }
+
+    throw new Error("Unable to copy obj! Its type isn't supported.");
+}
+
+// export function clone<T>(input: T): T {
+//     // return <T>retrocycle(decycle(input));
+//     // Handle Date (return new Date object with old value)
+//     if ((input !== null && typeof input === 'function')) {
+//         return input;
+//     }
+
+//     if (input instanceof Date) {
+//         return new Date(input as any) as any;
+//     }
+
+//     // Handle Array (return a full slice of the array)
+//     if (input instanceof Array) {
+//         // return (input as any).slice();
+//         return <T><any>input.map(clone);
+//     }
+
+//     // Handle Object
+//     if (input instanceof Object) {
+//         // const copy = new (input as any).constructor(plain(input));
+//         const copy: any = {};
+//         if ((input as any).prototype) copy.prototype = (input as any).prototype;
+//         if ((input as any).constructor) copy.constructor = (input as any).constructor;
+//         for (var attr in input) {
+//             if (input.hasOwnProperty(attr)) {
+//                 if (input[attr] instanceof Object) {
+//                     copy[attr] = clone(input[attr]);
+//                 } else {
+//                     copy[attr] = input[attr];
+//                 }
+//             }
+//         }
+//         return copy;
+//     }
+
+//     return input;
+// }
 
 export function arrayify<T>(val: T | T[]): T[] {
     if (check(val, Array)) {

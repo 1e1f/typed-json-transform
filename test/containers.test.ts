@@ -2,7 +2,7 @@ import { assert } from 'chai';
 import { makeA, makeB, makeC, makeD, makeZ } from './fixtures';
 import { readFileSync } from 'fs';
 import { load, dump } from 'js-yaml';
-import { isEqual, check, combine, combineN, any, each, every, flatten, contains, extend, extendN, intersect, clone, arrayify, map, merge, okmap, union, difference } from '../src';
+import { isEqual, check, combine, combineN, any, each, every, flatten, contains, extend, extendN, intersect, clone, arrayify, map, merge, okmap, union, difference, keysAndValues } from '../src';
 
 describe('isEqual', () => {
     it('isEqual', () => {
@@ -73,6 +73,16 @@ describe('isEqual', () => {
     })
 });
 
+class SimpleClass {
+    prop: any;
+    constructor() {
+
+    }
+    method() {
+        return this.prop;
+    }
+}
+
 describe('clone', () => {
     const date = new Date();
     const test = makeZ(date);
@@ -109,6 +119,11 @@ describe('clone', () => {
         }
         assert.deepEqual(a, cloned);
         assert.notEqual(a.array[0], cloned.array[0]);
+    });
+    it('clone a simple class', () => {
+        const instance = new SimpleClass();
+        // extend(inherits, instance);
+        assert.deepEqual(clone(instance), instance);
     });
 });
 
@@ -166,6 +181,13 @@ describe('arrays', () => {
 });
 
 class toExtend {
+    prop: any;
+    constructor(arg) {
+        this.prop = arg;
+    }
+    clone() {
+        return new toExtend(this.prop);
+    }
     myFunc() {
         return 'result';
     }
@@ -192,7 +214,7 @@ describe('extend', () => {
 
     it('extend a class into an object', () => {
         const inherits = {};
-        const instance = new toExtend();
+        const instance = new toExtend('value');
         extend(inherits, instance);
         assert.deepEqual(inherits, instance);
     });
@@ -272,6 +294,16 @@ describe('merge', function () {
 })
 
 describe('collections', () => {
+    it('contains', () => {
+        const hash = {
+            keyA: 'A',
+        };
+        const { keys, values } = keysAndValues(hash);
+        assert.equal(contains(keys, 'keyA'), 1);
+        assert.equal(contains(values, 'A'), 1);
+        assert.equal(contains(keys, 'keyX'), 0);
+        assert.equal(contains(values, 'X'), 0);
+    });
     it('every', () => {
         const list = ['a', 'b', 'a.c', 'b.d'];
         const sameList = ['a', 'b', 'a.c', 'b.d'];
