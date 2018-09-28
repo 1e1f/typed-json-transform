@@ -19,7 +19,7 @@ describe('string', () => {
   });
 
   it("doesn't trim all whitespace", () => {
-    assert.equal(trim(`${name}    `), name)
+    assert.equal(trim(`  ${name}    `), name)
   });
 
   it("xform to camelCase", () => {
@@ -31,7 +31,7 @@ describe('string', () => {
   });
 
   it("xform from camelCase and capitalize each", () => {
-    assert.equal(fromCamel(camelName, { capsLock: true }), name);
+    assert.equal(fromCamel(camelName, { capitalize: true }), name);
   });
 
   it("xform from camelCase and capitalize first", () => {

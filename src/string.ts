@@ -1,5 +1,4 @@
 import { map } from './containers';
-import { check } from './check';
 
 export const startsWith = (string: string, s: string) => {
   return string.slice(0, s.length) === s;
@@ -20,8 +19,11 @@ export const replaceAll = (str: string, find: string, rep: string) => {
 
 export const trim = (str: string) => {
   let ret = str;
-  while (ret.length && ret.slice(-1) == ' ') {
+  while (ret.length && ret[ret.length - 1] == ' ') {
     ret = ret.slice(0, ret.length - 1);
+  }
+  while (ret.length && ret[0] == ' ') {
+    ret = ret.slice(1, ret.length);
   }
   return ret;
 }
@@ -29,6 +31,7 @@ export const trim = (str: string) => {
 interface CamelOptions {
   delimiter?: string
   upperCase?: boolean
+  capitalize?: boolean
   capsLock?: boolean
 }
 
@@ -50,13 +53,13 @@ const fromCamelDefaults: CamelOptions = {
 };
 
 export const fromCamel = (input: string, options?: CamelOptions) => {
-  const { delimiter, upperCase, capsLock } = { ...fromCamelDefaults, ...options };
+  const { delimiter, upperCase, capitalize, capsLock } = { ...fromCamelDefaults, ...options };
   var words = input.match(/[A-Za-z][a-z]*/g);
   var out = words;
 
   out = out.map((word) => {
     const firstLetter = word.charAt(0);
-    return (capsLock ? firstLetter.toUpperCase() : firstLetter.toLowerCase()) + word.substring(1);
+    return (capitalize || capsLock ? firstLetter.toUpperCase() : firstLetter.toLowerCase()) + (capsLock ? word.substring(1).toUpperCase() : word.substring(1))
   });
 
   const joined = out.join(delimiter || " ");

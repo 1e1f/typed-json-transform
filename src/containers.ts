@@ -537,6 +537,9 @@ function _prune(input: SIO): boolean {
                 pruned = true;
             }
         }
+        if (val === undefined) {
+            delete ref[k];
+        }
     }
     return pruned;
 }
