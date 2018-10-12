@@ -1,6 +1,101 @@
 import { assert } from 'chai';
 import { check, modifierToObj, diffToModifier, apply } from '../src';
 import { makeA, makeB, makeC, makeD, makeZ, makeZp } from './fixtures';
+import { ObjectId } from 'mongodb';
+
+const dates = {
+  sampleDate: new Date(),
+  createdAt: new Date(),
+  modifiedAt: new Date()
+}
+
+const createdBy = new ObjectId();
+const createdByB = new ObjectId(createdBy.toHexString());
+
+const complexObjects = {
+  a: {
+    "header": {
+      "productName": "Skunk 2.0s",
+      "sampleDate": dates.sampleDate,
+      "batchId": "1",
+      "laboratoryId": "1",
+      "licenseNumber": "1"
+    },
+    "results": {
+      "potency": [
+        {
+          "cannabinoid": "CBD",
+          "weight": 1
+        },
+        {
+          "cannabinoid": "THCA",
+          "weight": 0.8
+        }
+      ]
+    },
+    "descriptors": {
+      "effects": [
+        {
+          "name": "happy",
+          "value": 10
+        }
+      ],
+      "taste": [
+        {
+          "name": "sick",
+          "value": 2
+        }
+      ]
+    },
+    "_id": "5bbd90d7b4b98e135023ae49",
+    "strainId": "5b99625e0039e677e00173bb",
+    createdBy,
+    "createdAt": dates.createdAt,
+    "modifiedAt": dates.modifiedAt,
+    "__v": 0
+  },
+  b: {
+    "header": {
+      "productName": "Skunk 2.0",
+      "sampleDate": dates.sampleDate,
+      "batchId": "1",
+      "laboratoryId": "1",
+      "licenseNumber": "1"
+    },
+    "results": {
+      "potency": [
+        {
+          "cannabinoid": "CBD",
+          "weight": 1
+        },
+        {
+          "cannabinoid": "THCA",
+          "weight": 0.8
+        }
+      ]
+    },
+    "descriptors": {
+      "effects": [
+        {
+          "name": "happy",
+          "value": 10
+        }
+      ],
+      "taste": [
+        {
+          "name": "sick",
+          "value": 2
+        }
+      ]
+    },
+    "_id": "5bbd90d7b4b98e135023ae49",
+    "strainId": "5b99625e0039e677e00173bb",
+    createdBy: createdByB,
+    "createdAt": dates.createdAt,
+    "modifiedAt": dates.modifiedAt,
+    "__v": 0
+  }
+}
 
 interface Modifier {
   $set?: any,
@@ -8,6 +103,15 @@ interface Modifier {
 }
 
 describe('diff', () => {
+  it('diffToModifier', () => {
+    const modifier = diffToModifier(complexObjects.a, complexObjects.b);
+    assert.deepEqual(modifier, {
+      $set: {
+        "header.productName": "Skunk 2.0",
+      }
+    });
+  });
+
   it('modifierToObj', () => {
     const modifier: Modifier = {};
     modifier.$set = {

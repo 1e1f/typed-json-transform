@@ -482,20 +482,21 @@ export function containsAll<T>(set: any[], match: any[]): boolean {
     return true;
 }
 
-export function isEqual(actual: any, expected: any, opts?: ComparisonOptions): boolean {
+export function isEqual(a: any, e: any, opts?: ComparisonOptions): boolean {
     // http://wiki.commonjs.org/wiki/Unit_Testing/1.0
     if (!opts) opts = <ComparisonOptions>{};
     // 7.1. All identical values are equivalent, as determined by ===.
-    if (actual === expected) {
+
+    if (a === e) {
         return true;
-
-    } else if (actual instanceof Date && expected instanceof Date) {
-        return actual.getTime() === expected.getTime();
-
+    }
+    else if (a instanceof Date && e instanceof Date) {
+        return a.getTime() === e.getTime();
         // 7.3. Other pairs that do not both pass typeof value == 'object',
         // equivalence is determined by ==.
-    } else if (!actual || !expected || typeof actual != 'object' && typeof expected != 'object') {
-        return opts.strict ? actual === expected : actual == expected;
+    } else if (!a || !e || typeof a != 'object' && typeof e != 'object') {
+
+        return opts.strict ? a === e : a == e;
 
         // 7.4. For all other Object pairs, including Array objects, equivalence is
         // determined by having the same number of owned properties (as verified
@@ -504,11 +505,19 @@ export function isEqual(actual: any, expected: any, opts?: ComparisonOptions): b
         // corresponding key, and an identical 'prototype' property. Note: this
         // accounts for both named and indexed properties on Arrays.
     } else {
-        return _objEquiv(actual, expected, opts);
+        return _objEquiv(a, e, opts);
     }
 }
 
 const pSlice = Array.prototype.slice;
+
+const compareBuffer = (a: Buffer, b: Buffer) => {
+    if (a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) {
+        if (a[i] !== b[i]) return false;
+    }
+    return true;
+}
 
 function _objEquiv(a: any, b: any, opts?: ComparisonOptions): boolean {
     var i, key;
@@ -530,11 +539,7 @@ function _objEquiv(a: any, b: any, opts?: ComparisonOptions): boolean {
         if (!isBuffer(b)) {
             return false;
         }
-        if (a.length !== b.length) return false;
-        for (i = 0; i < a.length; i++) {
-            if (a[i] !== b[i]) return false;
-        }
-        return true;
+        return compareBuffer(a, b);
     }
     try {
         var ka = Object.keys(a),

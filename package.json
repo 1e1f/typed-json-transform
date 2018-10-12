@@ -1,6 +1,6 @@
 {
     "name": "typed-json-transform",
-    "version": "0.21.0",
+    "version": "0.21.1",
     "description": "_ like library written in typescript using templated generics where reasonable",
     "homepage": "https://github.com/1e1f/typed-json-transform",
     "author": {
@@ -14,10 +14,12 @@
     "bugs": {
         "url": "https://github.com/1e1f/typed-json-transform/issues"
     },
-    "licenses": [{
-        "type": "MIT",
-        "url": "https://github.com/1e1f/typed-json-transform/blob/master/LICENSE-MIT"
-    }],
+    "licenses": [
+        {
+            "type": "MIT",
+            "url": "https://github.com/1e1f/typed-json-transform/blob/master/LICENSE-MIT"
+        }
+    ],
     "main": "dist/index.js",
     "types": "index.d.ts",
     "scripts": {
@@ -28,18 +30,19 @@
     },
     "devDependencies": {
         "@types/chai": "^3.4.34",
+        "@types/js-yaml": "^3.5.29",
         "@types/mocha": "^2.2.32",
         "@types/node": "^6.0.46",
-        "@types/js-yaml": "^3.5.29",
         "chai": "^3.5.0",
         "coveralls": "^2.11.9",
         "gulp": "^3.9.1",
         "gulp-typescript": "^4.0.2",
         "js-yaml": "^3.7.0",
         "mocha": "^3.2.0",
-        "typescript": "^3.0.0",
+        "nyc": "^8.4.0",
         "ts-node": "^5.0.0",
-        "nyc": "^8.4.0"
+        "typescript": "^3.0.0",
+        "mongodb": "^3.1.8"
     },
     "nyc": {
         "include": [
