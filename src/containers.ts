@@ -486,7 +486,6 @@ export function isEqual(a: any, e: any, opts?: ComparisonOptions): boolean {
     // http://wiki.commonjs.org/wiki/Unit_Testing/1.0
     if (!opts) opts = <ComparisonOptions>{};
     // 7.1. All identical values are equivalent, as determined by ===.
-
     if (a === e) {
         return true;
     }
@@ -495,18 +494,15 @@ export function isEqual(a: any, e: any, opts?: ComparisonOptions): boolean {
         // 7.3. Other pairs that do not both pass typeof value == 'object',
         // equivalence is determined by ==.
     } else if (!a || !e || typeof a != 'object' && typeof e != 'object') {
-
         return opts.strict ? a === e : a == e;
-
         // 7.4. For all other Object pairs, including Array objects, equivalence is
         // determined by having the same number of owned properties (as verified
         // with Object.prototype.hasOwnProperty.call), the same set of keys
         // (although not necessarily the same order), equivalent values for every
         // corresponding key, and an identical 'prototype' property. Note: this
         // accounts for both named and indexed properties on Arrays.
-    } else {
-        return _objEquiv(a, e, opts);
     }
+    return _objEquiv(a, e, opts);
 }
 
 const pSlice = Array.prototype.slice;
@@ -520,49 +516,42 @@ const compareBuffer = (a: Buffer, b: Buffer) => {
 }
 
 function _objEquiv(a: any, b: any, opts?: ComparisonOptions): boolean {
-    var i, key;
-    if (isUndefinedOrNull(a) || isUndefinedOrNull(b))
-        return false;
+    if (isUndefinedOrNull(a) || isUndefinedOrNull(b)) return false;
     // an identical 'prototype' property.
     if (a.prototype !== b.prototype) return false;
     //~~~I've managed to break Object.keys through screwy arguments passing.
     //   Converting to array solves the problem.
     if (isArguments(a)) {
-        if (!isArguments(b)) {
-            return false;
-        }
+        if (!isArguments(b)) return false;
         a = pSlice.call(a);
         b = pSlice.call(b);
         return isEqual(a, b, opts);
     }
     if (isBuffer(a)) {
-        if (!isBuffer(b)) {
-            return false;
-        }
+        if (!isBuffer(b)) return false;
         return compareBuffer(a, b);
     }
+    let ka, kb;
     try {
-        var ka = Object.keys(a),
-            kb = Object.keys(b);
+        ka = Object.keys(a);
+        kb = Object.keys(b);
     } catch (e) {//happens when one is a string literal and the other isn't
         return false;
     }
     // having the same number of owned properties (keys incorporates
     // hasOwnProperty)
-    if (ka.length != kb.length)
-        return false;
+    if (ka.length != kb.length) return false;
     //the same set of keys (although not necessarily the same order),
     ka.sort();
     kb.sort();
     //~~~cheap key test
-    for (i = ka.length - 1; i >= 0; i--) {
-        if (ka[i] != kb[i])
-            return false;
+    for (let i = ka.length - 1; i >= 0; i--) {
+        if (ka[i] != kb[i]) return false;
     }
     //equivalent values for every corresponding key, and
     //~~~possibly expensive deep test
-    for (i = ka.length - 1; i >= 0; i--) {
-        key = ka[i];
+    for (let i = ka.length - 1; i >= 0; i--) {
+        const key = ka[i];
         if (!isEqual(a[key], b[key], opts)) return false;
     }
     return typeof a === typeof b;

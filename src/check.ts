@@ -53,13 +53,8 @@ function _c(val: any, type: any): boolean {
   }
 }
 
-export function isNumeric(n: any): boolean {
-  return !isNaN(parseFloat(n)) && isFinite(n);
-}
-
-export function isArguments(object: any): boolean {
-  return Object.prototype.toString.call(object) == '[object Arguments]';
-};
+export const isNumeric = (n: any) => !isNaN(parseFloat(n)) && isFinite(n);
+export const isArguments = (object: any) => Object.prototype.toString.call(object) == '[object Arguments]';
 
 export function isEmpty(input: { [index: string]: string }): boolean {
   const ref = input;
@@ -75,9 +70,7 @@ export function isEmpty(input: { [index: string]: string }): boolean {
   return !containsValid;
 }
 
-export function isUndefinedOrNull(value: any): boolean {
-  return value === null || value === undefined;
-}
+export const isUndefinedOrNull = (value: any) => value === null || value === undefined;
 
 export function isBuffer(x: any): boolean {
   if (!x || typeof x !== 'object' || typeof x.length !== 'number') return false;
