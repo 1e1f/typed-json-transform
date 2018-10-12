@@ -1,13 +1,11 @@
-import { check } from './check';
-import { combine, every, sum, sumIfEvery, greatestResult, each, or, any, contains, okmap } from './containers';
-import { valueForKeyPath, mergeValueAtKeypath, keyPaths, unsetKeyPath } from './keypath';
+import { sumIfEvery, greatestResult, each, or, contains, okmap } from './containers';
+import { valueForKeyPath, mergeValueAtKeypath, keyPaths } from './keypath';
 import { startsWith, replaceAll } from './string';
 
 function deepSearch(object: any, keywords: string[], selectors: string[]) {
   if (!object) return;
   if (!Object.keys(object).length) return object;
   const stack: Level[] = [];
-  const failed = {};
   each(keyPaths(object), (key) => {
     let filtered = key;
     const unfiltered = key.split('.');
@@ -49,45 +47,36 @@ interface Level {
 }
 
 
-function match(selectors: string[], selectable: string) {
+function matchSelector(selectors: string[], selectable: string) {
   if (startsWith(selectable, '!')) {
     return 1 * <any>!contains(selectors, selectable.slice(1));
   }
   return 1 * <any>contains(selectors, selectable);
 }
 
-function matchEvery(selectors: string[], cssString: string): number {
-  if (cssString.indexOf(' ') !== -1) {
-    const selectables = cssString.split(' ');
+function matchEvery(selectedList: string[], selectorString: string): number {
+  if (selectorString.indexOf(' ') !== -1) {
+    const selectables = selectorString.split(' ');
     return sumIfEvery(selectables, (selectable: string) => {
-      return match(selectors, selectable);
+      return matchSelector(selectedList, selectable);
     });
   }
-  return match(selectors, cssString);
+  return matchSelector(selectedList, selectorString);
 }
 
-function matchCssString(selectors: string[], cssString: string): number {
-  const selectables = replaceAll(cssString, ', ', ',');
+function matchSelectorString(selectedList: string[], selectorString: string): number {
+  const selectables = replaceAll(selectorString, ', ', ',');
   if (selectables.indexOf(',') !== -1) {
     return greatestResult(selectables.split(','), (subCssString: string) => {
-      return matchEvery(selectors, subCssString);
+      return matchEvery(selectedList, subCssString);
     });
   }
-  return matchEvery(selectors, selectables);
+  return matchEvery(selectedList, selectables);
 }
 
 export function select(input: string[], cssString: string): number {
-  return matchCssString(input, cssString);
+  return matchSelectorString(input, cssString);
 }
-
-// export function allKeywords(object: any) {
-//   const ret = <any>{};
-//   each(keyPaths(object), (key) => {
-//     let filtered = key;
-//     key.split('.').forEach((v) => ret[v] = false);
-//   });
-//   return ret;
-// }
 
 export function extractKeywordsAndSelectors(options: { [index: string]: boolean }): { keywords: string[], selectors: string[] } {
   const keywords: string[] = [];

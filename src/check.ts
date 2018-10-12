@@ -7,6 +7,7 @@ export function check(val: any, type: any) {
     }
     return false;
   }
+  // if (type && type.prototype) { console.log(new Error().stack); return val && val.prototype == type.prototype; }
   return _c(val, type);
 }
 
@@ -48,7 +49,7 @@ function _c(val: any, type: any): boolean {
     case 'any':
       return (val !== null && val !== undefined) || isNumeric(val);
     default:
-      return val !== undefined && val.constructor === type;
+      return val !== undefined && (val.constructor === type || val.prototype == type.prototype);
   }
 }
 

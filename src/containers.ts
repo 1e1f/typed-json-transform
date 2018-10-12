@@ -1,6 +1,5 @@
 import { check, isArguments, isEmpty, isUndefinedOrNull, isBuffer } from './check';
-import { decycle, retrocycle } from './decycle';
-import { prototype } from 'stream';
+import { decycle } from './decycle';
 
 interface SIO { [index: string]: any }
 
@@ -17,7 +16,7 @@ export function each<T>(iter: { [index: string]: T } | T[], fn: (val: T, index?:
             }
             index++;
         }
-    } if (check(iter, Object)) {
+    } else if (check(iter, Object)) {
         for (const k of Object.keys(iter)) {
             fn((<{ [index: string]: T }><any>iter)[k], k, breakLoop);
             if (broken) {
@@ -287,6 +286,36 @@ export function every<T>(iter: { [index: string]: T } | T[], fn: (val: T, index?
     return true;
 }
 
+// export const everyAsync = <T>(iter: { [index: string]: T } | T[], fn: (val: T, index?: string | number) => boolean): Promise<boolean> => {
+//     return new Promise(async (resolve, reject) => {
+//         if (check(iter, Array)) {
+//             let index = 0;
+//             if (!(iter as any[]).length) return resolve(false);
+//             for (const v of <T[]>iter) {
+//                 try {
+//                     const res = await fn(v, index);
+//                     if (!res) return resolve(false);
+//                 } catch (e) {
+//                     return reject(e);
+//                 }
+//                 index++;
+//             }
+//         } if (check(iter, Object)) {
+//             const keys = Object.keys(iter);
+//             if (!keys.length) return resolve(false);
+//             for (const k of keys) {
+//                 try {
+//                     const res = await fn((<any>iter)[k], k);
+//                     if (!res) return resolve(false);
+//                 } catch (e) {
+//                     return reject(e);
+//                 }
+//             }
+//         }
+//         return resolve(true);
+//     });
+// }
+
 // export function every<T>(iterable: T[], fn: (arg: T) => boolean): boolean {
 //     for (const v of iterable) {
 //         if (fn(v) === false) {
@@ -334,7 +363,7 @@ export function sum<T>(input: { [index: string]: T } | Array<T>, fn: (input: T) 
 export function greatestResult<T>(input: { [index: string]: T } | Array<T>, fn: (input: T) => number): number {
     let greatestResult = 0;
     each(input, (value: T) => {
-        const res = fn(value)
+        const res = fn(value);
         if (res > greatestResult) greatestResult = res;
     });
     return greatestResult;
@@ -414,13 +443,13 @@ export function difference<T>(a: T[], b: T[]): T[] {
     return res;
 }
 
-export function contains<T>(set: any[], match: T): number {
-    if (check(match, Array)) {
-        return containsAny(set, match as any);
+export function contains<T>(set: any[], toMatch: T): number {
+    if (check(toMatch, Array)) {
+        return containsAny(set, toMatch as any);
     }
     let matches = 0;
     for (const val of set) {
-        if (isEqual(val, match)) {
+        if (isEqual(val, toMatch)) {
             matches++;
         }
     }

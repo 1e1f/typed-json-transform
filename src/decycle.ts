@@ -1,8 +1,3 @@
-/*property 
- $ref, apply, call, decycle, hasOwnProperty, length, prototype, push,
- retrocycle, stringify, test, toString
- */
-
 export function decycle(object: Object) {
     const objects: Object[] = [];   // Keep a reference to each unique object or array
     const paths: string[] = [];     // Keep the path to each unique object or array

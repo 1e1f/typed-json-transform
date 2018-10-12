@@ -1,5 +1,5 @@
 import { assert } from 'chai';
-import { each, select, cascade, hashField } from '../src';
+import { select, cascade, hashField } from '../src';
 
 
 const keywords = [
