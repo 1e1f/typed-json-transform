@@ -1,8 +1,9 @@
-import { assert } from 'chai';
+import { describe, it } from 'mocha';
+import { assert, expect } from 'chai';
 import { makeA, makeB, makeC, makeD, makeZ } from './fixtures';
 import { readFileSync } from 'fs';
 import { load, dump } from 'js-yaml';
-import { isEqual, check, combine, combineN, any, each, every, flatten, contains, extend, extendN, intersect, clone, arrayify, map, merge, okmap, union, difference, keysAndValues } from '../src';
+import { amap, isEqual, check, combine, combineN, any, each, every, flatten, contains, extend, extendN, intersect, clone, arrayify, map, merge, okmap, union, difference, keysAndValues, aokmap } from '../src';
 
 describe('isEqual', () => {
     it('isEqual', () => {
@@ -102,10 +103,7 @@ describe('clone', () => {
             array: [{ nested: '1' }, { nested: '2' }]
         }
         const cloned = clone(a);
-        const both = {
-            a, cloned
-        }
-        assert.deepEqual(a, cloned);
+        assert.deepEqual(a, cloned, 'original is deep equal');
         assert.notEqual(a.object, cloned.object);
         assert.notEqual(a.array[0], cloned.array[0]);
     });
@@ -182,7 +180,7 @@ describe('arrays', () => {
 
 class toExtend {
     prop: any;
-    constructor(arg) {
+    constructor(arg: any) {
         this.prop = arg;
     }
     clone() {
@@ -310,9 +308,17 @@ describe('collections', () => {
         for (const s of list) {
             assert.ok(contains(sameList, s), `contains ${s}`);
         }
-        assert.ok(every(list, (s: string) => {
-            return contains(sameList, s);
+        assert.ok(every(list, (s) => {
+            return !!contains(sameList, s);
         }));
+    });
+});
+
+describe('amap', () => {
+    it('amap', () => {
+        const promise = amap([1, 2], (v) => new Promise((r) => r(v * 2)));
+        expect(promise).to.be.a('promise');
+        return promise.then((res: any) => expect(res).to.deep.equal([2, 4]));
     });
 });
 
@@ -323,7 +329,7 @@ describe('okmap', () => {
             b: 2,
             c: 3,
         }
-        const expect = {
+        const expected = {
             a: 7,
             x: 2,
             c: 3,
@@ -335,7 +341,7 @@ describe('okmap', () => {
                 default: return v;
             }
         });
-        assert.deepEqual(<any>res, expect, 'okmap');
+        assert.deepEqual(<any>res, expected, 'okmap');
     });
 
     it('array', () => {
@@ -344,7 +350,7 @@ describe('okmap', () => {
             2,
             3,
         ]
-        const expect = [7, 2, 0];
+        const expected = [7, 2, 0];
         const res: Number[] = <any>okmap(test, (v, k) => {
             switch (k) {
                 case 0: return 7;
@@ -352,7 +358,7 @@ describe('okmap', () => {
                 default: return 0;
             }
         });
-        assert.deepEqual(res, expect, 'okmap');
+        assert.deepEqual(res, expected, 'okmap');
     });
 
     it('array to object', () => {
@@ -361,7 +367,7 @@ describe('okmap', () => {
             2,
             3,
         ]
-        const expect = {
+        const expected = {
             0: 7,
             x: 2,
             2: 0,
@@ -373,7 +379,7 @@ describe('okmap', () => {
                 default: return 0;
             }
         });
-        assert.deepEqual(res, expect, 'okmap');
+        assert.deepEqual(res, expected, 'okmap');
     });
 
     it('object to array', () => {
@@ -388,14 +394,14 @@ describe('okmap', () => {
                 place: -1
             }
         };
-        const expect = ['phoenix', 'portland'];
+        const expected = ['phoenix', 'portland'];
         const res = <any>okmap(test, (v: { place: number }, k) => {
             return {
                 key: v.place,
                 value: k
             }
         });
-        assert.deepEqual(res, expect, 'okmap');
+        assert.deepEqual(res, expected, 'okmap');
     });
 
     it('complex', () => {
@@ -404,7 +410,7 @@ describe('okmap', () => {
             b: { value: 2 },
             c: { value: 3 },
         }
-        const expect = {
+        const expected = {
             a: { value: 7 },
             x: { value: 2 },
             c: { value: 3 },
@@ -416,6 +422,32 @@ describe('okmap', () => {
                 default: return v;
             }
         });
-        assert.deepEqual(<any>res, expect, 'okmap');
+        assert.deepEqual(<any>res, expected, 'okmap');
+    });
+});
+
+describe('aokmap', () => {
+    it('complex async', () => {
+        const test = {
+            a: { value: 1 },
+            b: { value: 2 },
+            c: { value: 3 },
+        }
+        const expected = {
+            a: { value: 7 },
+            x: { value: 2 },
+            c: { value: 3 },
+        }
+        const promise = aokmap(test, (v, k) => {
+            switch (k) {
+                case 'a': return Promise.resolve({ value: 7 });
+                case 'b': return { key: 'x', value: { value: 2 } };
+                default: return new Promise((resolve) => {
+                    setTimeout(() => resolve(v), 10)
+                });
+            }
+        });
+        expect(promise).to.be.a('promise');
+        return promise.then((res: any) => expect(res).to.deep.equal(expected));
     });
 });

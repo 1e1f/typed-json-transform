@@ -31,7 +31,7 @@ declare namespace Keypath {
   }
 }
 
-interface ComparisonOptions {
+declare interface ComparisonOptions {
   [index: string]: boolean;
   strict: boolean;
 }

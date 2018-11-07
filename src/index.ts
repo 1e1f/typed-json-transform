@@ -1,3 +1,4 @@
+///<reference path="./@types/index.d.ts" />
 export { Graph } from './graph';
 export * from './check';
 export * from './olhm';

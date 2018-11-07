@@ -1,3 +1,4 @@
+///<reference path="./@types/index.d.ts" />
 import { check, isArguments, isEmpty, isUndefinedOrNull, isBuffer } from './check';
 import { decycle } from './decycle';
 
@@ -343,6 +344,22 @@ export function map<R, I>(iter: { [index: string]: I } | I[], fn: (val: I, index
     return res;
 }
 
+export function amap<R, I>(iter: { [index: string]: I } | I[], fn: (val: I, index: any) => R | Promise<R>): Promise<R[]> {
+    const arr: (R | Promise<R>)[] = [];
+    if (check(iter, Array)) {
+        let i = 0;
+        for (const v of <I[]>iter) {
+            arr.push(fn(v, i));
+            i++;
+        }
+    } if (check(iter, Object)) {
+        for (const k of Object.keys(iter)) {
+            arr.push(fn((<{ [index: string]: I }>iter)[k], k));
+        }
+    }
+    return Promise.all(arr);
+}
+
 export function reduce<T, S>(input: Array<T>, fn: (input: T, memo: S) => S, base?: S): S
 export function reduce<T, S>(input: { [index: string]: T }, fn: (input: T, memo: S) => S, base?: S): S {
     let sum: S = base;
@@ -649,13 +666,21 @@ export function clone<T>(obj: T): T {
         const { hasOwnProperty } = Object.prototype;
 
         if (from != null) {
-            if (from.clone) return from.clone();
+            if (from.clone) {
+                try {
+                    copy = from.clone(from);
+                }
+                catch (e) {
+                    throw new Error(`${typeof obj} instance: clone(${from}) failed`);
+                }
+            }
             else if (from.constructor) {
                 try {
                     copy = new (from.constructor)();
                 }
                 catch (e) {
-                    throw new Error(`Error while cloning a ${typeof obj} instance, which has a complex constructor, and no explicit clone method`);
+                    // copy = {};
+                    throw new Error(`${typeof obj} instance: ${from.constructor}() failed: ${e.message}`);
                 }
             }
             for (var key in from) {
@@ -664,7 +689,6 @@ export function clone<T>(obj: T): T {
                 }
             }
         }
-
         return <T><any>copy;
     }
 
@@ -737,6 +761,44 @@ export function okmap<R, I, IObject extends { [index: string]: I }, RObject exte
     if (every(Object.keys(o), (k) => check(k, Number))) return a;
     return o;
 }
+
+export function aokmap<R, I, IObject extends { [index: string]: I }>(iterable: IObject | Array<I>, fn: (v: I, k?: string | number) => R | Promise<R>): any {
+    const a = <(R | Promise<R>)[]><any>[];
+    interface Wrapable { key: string, valuePromise: R | Promise<R> }
+    let keys: string[] = [];
+    const prepForPromiseAll = ({ key, valuePromise }: Wrapable) => new Promise((resolve) =>
+        Promise.resolve(valuePromise).then((resolved) =>
+            resolve({
+                key, value: resolved
+            })
+        )
+    );
+
+    const oa = <Promise<any>[]>[];
+    each(iterable, (_v: I, _k: string) => {
+        let k = _k;
+        let v = fn(_v, k);
+        if (check(v, Object)) {
+            const keys = Object.keys(v);
+            if (keys.length == 2 && (keys[0] == 'key' || keys[1] == 'key')) {
+                k = (<any>v).key;
+                v = <R>(<any>v).value;
+            }
+        }
+        keys.push(k);
+        oa.push(prepForPromiseAll({ key: k, valuePromise: v }));
+        if (<any>k >= 0) {
+            a[<any>k] = v;
+        }
+    });
+    if (every(keys, (k) => check(k, Number))) return Promise.all(a);
+    const r: any = {};
+    return Promise.all(oa).then((resolved) => {
+        each(resolved, (kv) => r[kv.key] = kv.value);
+        return Promise.resolve(r);
+    });
+}
+
 
 export function stringify(value: any, replacer?: (number | string)[], space?: string | number): string {
     return JSON.stringify(decycle(value), replacer, space || 2);

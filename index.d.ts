@@ -52,6 +52,7 @@ declare module 'typed-json-transform' {
   function every<T>(iter: { [index: string]: T } | T[], fn: (val: T, index?: string | number) => boolean): boolean
   function all<T>(iter: { [index: string]: T } | T[], fn: (val: T, index?: string | number) => boolean): boolean
   function map<R, I>(iter: { [index: string]: I } | I[], fn: (val: I, index: any) => R): R[]
+  function amap<R, I>(iter: { [index: string]: I } | I[], fn: (val: I, index: any) => R | Promise<R>): Promise<R[]>
   function keysAndValues<T>(object: { [index: string]: T }): { keys: string[], values: T[] }
   function reduce<T, S>(input: Array<T>, fn: (input: T, memo: S) => S, base?: S): S
   function reduce<T, S>(input: { [index: string]: T }, fn: (input: T, memo: S) => S, base?: S): S
@@ -72,7 +73,8 @@ declare module 'typed-json-transform' {
   function plain<T>(obj: T): T
   function clone<T>(input: T): T
   function arrayify<T>(val: T | T[]): T[]
-  function okmap<R, I, IObject extends { [index: string]: I }, RObject extends { [index: string]: R }>(iterable: IObject | Array<I>, fn: (v: I, k?: string | number) => R): RObject;
+  function okmap<R, I, IObject extends { [index: string]: I }, RObject extends { [index: string]: R }>(iterable: IObject | Array<I>, fn: (v: I, k?: string | number) => R): RObject
+  function aokmap<R, I, IObject extends { [index: string]: I }>(iterable: IObject | Array<I>, fn: (v: I, k?: string | number) => R | Promise<R>): any
   function stringify(value: any, replacer?: (number | string)[], space?: string | number): string
 
   /*
