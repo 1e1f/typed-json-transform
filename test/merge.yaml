@@ -23,8 +23,16 @@ fixtures:
       b:
         <-:
           c: true
+        <+:
+          h: true
       g:
         <-: i
+    bool:
+      b:
+        <&:
+          j: true
+        <|:
+          k: true
     push:
       <=:
         d: e
@@ -86,7 +94,13 @@ expect:
       a: a
       b:
         e: f
+        h: true
       g: [h]
+    bool:
+      a: a
+      b:
+        k: true
+      g: [h, i]
     push:
       d: e
       g: [h, i, j]

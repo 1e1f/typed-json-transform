@@ -186,17 +186,21 @@ export function mergeObject<T>(target: T & { [index: string]: any }, setter: any
         res = {};
     }
 
+    let foundOperators;
     for (const key of Object.keys(setter)) {
         switch (key) {
             case '<=': case '<&': case '<|': case '<?': case '<!': case '<+': case '<!': case '<-': case '<^':
                 const method = <any>key.slice(1);
-                return mergeObject(target, setter[key], {
+                foundOperators = true;
+                target = mergeObject(target, setter[key], {
                     objectMergeMethod: method,
                     arrayMergeMethod
                 });
             default: break;
         }
+
     }
+    if (foundOperators) return target;
 
     for (const key of Object.keys(setter)) {
         const lhs = target[key];
