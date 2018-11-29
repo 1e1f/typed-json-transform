@@ -4,6 +4,7 @@ import { makeA, makeB, makeC, makeD, makeZ } from './fixtures';
 import { readFileSync } from 'fs';
 import { load, dump } from 'js-yaml';
 import { amap, isEqual, check, combine, combineN, any, each, every, flatten, contains, extend, extendN, intersect, clone, arrayify, map, merge, okmap, union, difference, keysAndValues, aokmap } from '../src';
+import { Schema } from 'mongoose';
 
 describe('isEqual', () => {
     it('isEqual', () => {
@@ -118,10 +119,15 @@ describe('clone', () => {
         assert.deepEqual(a, cloned);
         assert.notEqual(a.array[0], cloned.array[0]);
     });
-    it('clone a simple class', () => {
+    it('clone a simple class instance', () => {
         const instance = new SimpleClass();
         // extend(inherits, instance);
         assert.deepEqual(clone(instance), instance);
+    });
+    it('clone a class definition', () => {
+        const Class = Schema.Types.Mixed;
+        // extend(inherits, instance);
+        assert.deepEqual(clone(Class), Class);
     });
 });
 

@@ -640,12 +640,18 @@ function ObjectAssign(target: any, source: any) {
     return to;
 }
 
-
-export function clone<T>(obj: T): T {
+export function clone<T>(obj: T, stacktrace: any[] = [], recursive: any = []): T {
     var copy;
 
     // Handle the 3 simple types, and null or undefined
     if (null == obj || "object" != typeof obj) return obj;
+
+    for (const ptr in recursive) {
+        if (ptr as any == obj[key]) {
+            console.log(ptr, '=', obj);
+            throw new Error(`terminate recursive clone @ ${key}, stack: ${stacktrace.join('.')}`);
+        }
+    }
 
     // Handle Date
     if (obj instanceof Date) {
@@ -658,38 +664,38 @@ export function clone<T>(obj: T): T {
     if (obj instanceof Array) {
         copy = [];
         for (var i = 0, len = obj.length; i < len; i++) {
-            copy[i] = clone(obj[i]);
+            copy[i] = clone(obj[i], stacktrace.concat(`[${i}]`), recursive.concat(obj));
         }
         return <T><any>copy;
     }
 
     // Handle Object
     if (obj instanceof Object) {
-        const from: any = obj;
         let copy = <any>{};
         const { hasOwnProperty } = Object.prototype;
 
-        if (from != null) {
-            if (from.clone) {
+        if (obj != null) {
+            if ((obj as any).clone) {
                 try {
-                    copy = from.clone(from);
+                    return (obj as any).clone(obj);
                 }
                 catch (e) {
-                    throw new Error(`${typeof obj} instance: clone(${from}) failed`);
+                    throw new Error(`${typeof obj} instance: clone(${obj}) failed`);
                 }
             }
-            else if (from.constructor) {
+            else if (obj.constructor) {
                 try {
-                    copy = new (from.constructor)();
+                    copy = new ((obj as any).constructor)();
                 }
                 catch (e) {
-                    // copy = {};
-                    throw new Error(`${typeof obj} instance: ${from.constructor}() failed: ${e.message}`);
+                    console.log(stacktrace.join('.'), e);
+                    throw new Error(`Error while cloning a(n) [ ${typeof obj} ] instance: ${JSON.stringify(obj)}`);
+                    // throw new Error(`${typeof obj} instance: ${from.constructor}() failed: ${e.message}`);
                 }
             }
-            for (var key in from) {
-                if (hasOwnProperty.call(from, key)) {
-                    (<any>copy)[key] = clone(from[key]);
+            for (var key in obj) {
+                if (hasOwnProperty.call(obj, key)) {
+                    (<any>copy)[key] = clone(obj[key], stacktrace.concat(key), recursive.concat(obj));
                 }
             }
         }
@@ -698,44 +704,6 @@ export function clone<T>(obj: T): T {
 
     throw new Error("Unable to copy obj! Its type isn't supported.");
 }
-
-// export function clone<T>(input: T): T {
-//     // return <T>retrocycle(decycle(input));
-//     // Handle Date (return new Date object with old value)
-//     if ((input !== null && typeof input === 'function')) {
-//         return input;
-//     }
-
-//     if (input instanceof Date) {
-//         return new Date(input as any) as any;
-//     }
-
-//     // Handle Array (return a full slice of the array)
-//     if (input instanceof Array) {
-//         // return (input as any).slice();
-//         return <T><any>input.map(clone);
-//     }
-
-//     // Handle Object
-//     if (input instanceof Object) {
-//         // const copy = new (input as any).constructor(plain(input));
-//         const copy: any = {};
-//         if ((input as any).prototype) copy.prototype = (input as any).prototype;
-//         if ((input as any).constructor) copy.constructor = (input as any).constructor;
-//         for (var attr in input) {
-//             if (input.hasOwnProperty(attr)) {
-//                 if (input[attr] instanceof Object) {
-//                     copy[attr] = clone(input[attr]);
-//                 } else {
-//                     copy[attr] = input[attr];
-//                 }
-//             }
-//         }
-//         return copy;
-//     }
-
-//     return input;
-// }
 
 export function arrayify<T>(val: T | T[]): T[] {
     if (check(val, Array)) {
