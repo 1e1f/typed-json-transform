@@ -738,12 +738,12 @@ export function aokmap<R, I, IObject extends { [index: string]: I }>(iterable: I
     const a = <(R | Promise<R>)[]><any>[];
     interface Wrapable { key: string, valuePromise: R | Promise<R> }
     let keys: string[] = [];
-    const prepForPromiseAll = ({ key, valuePromise }: Wrapable) => new Promise((resolve) =>
+    const prepForPromiseAll = ({ key, valuePromise }: Wrapable) => new Promise((resolve, reject) =>
         Promise.resolve(valuePromise).then((resolved) =>
             resolve({
                 key, value: resolved
             })
-        )
+            , (e) => reject(e)).catch((e) => reject(e))
     );
 
     const oa = <Promise<any>[]>[];
