@@ -433,11 +433,29 @@ describe('okmap', () => {
 });
 
 describe('aokmap', () => {
+    it('array', () => {
+        const test = [
+            1,
+            2,
+            3,
+        ]
+        const expected = [7, 2, 0];
+        const promise = aokmap(test, async (v, k) => {
+            switch (k) {
+                case 0: return 7;
+                case 1: return Promise.resolve({ key: 1, value: v });
+                default: return 0;
+            }
+        });
+        expect(promise).to.be.a('promise');
+        return promise.then((res: any) => expect(res).to.deep.equal(expected));
+    });
+
     it('complex async', () => {
         const test = {
             a: { value: 1 },
             b: { value: 2 },
-            c: { value: 3 },
+            c: { value: 3 }
         }
         const expected = {
             a: { value: 7 },
@@ -447,10 +465,10 @@ describe('aokmap', () => {
         const promise = aokmap(test, (v, k) => {
             switch (k) {
                 case 'a': return Promise.resolve({ value: 7 });
-                case 'b': return { key: 'x', value: { value: 2 } };
-                default: return new Promise((resolve) => {
-                    setTimeout(() => resolve(v), 10)
+                case 'b': return new Promise((resolve) => {
+                    setTimeout(() => resolve({ key: 'x', value: { value: 2 } }), 10)
                 });
+                default: return v;
             }
         });
         expect(promise).to.be.a('promise');

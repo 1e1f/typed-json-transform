@@ -734,43 +734,47 @@ export function okmap<R, I, IObject extends { [index: string]: I }, RObject exte
     return o;
 }
 
-export function aokmap<R, I, IObject extends { [index: string]: I }>(iterable: IObject | Array<I>, fn: (v: I, k?: string | number) => R | Promise<R>): any {
-    const a = <(R | Promise<R>)[]><any>[];
-    interface Wrapable { key: string, valuePromise: R | Promise<R> }
-    let keys: string[] = [];
-    const prepForPromiseAll = ({ key, valuePromise }: Wrapable) => new Promise((resolve, reject) =>
-        Promise.resolve(valuePromise).then((resolved) =>
-            resolve({
-                key, value: resolved
-            })
-            , (e) => reject(e)).catch((e) => reject(e))
-    );
 
-    const oa = <Promise<any>[]>[];
-    each(iterable, (_v: I, _k: string) => {
-        let k = _k;
-        let v = fn(_v, k);
-        if (check(v, Object)) {
-            const keys = Object.keys(v);
-            if (keys.length == 2 && (keys[0] == 'key' || keys[1] == 'key')) {
-                k = (<any>v).key;
-                v = <R>(<any>v).value;
+export function aokmap<R, I, IObject extends { [index: string]: I }>(iterable: IObject | Array<I>, fn: (v: I, k?: string | number) => R | Promise<R>): any {
+    // const a = <(R | Promise<R>)[]><any>[];
+    // interface Wrapable { key: string, valuePromise: R | Promise<R> }
+    // let keys: string[] = [];
+
+    const createPromise = (_v: I, _k: string) => new Promise((resolve, reject) => {
+        let key = _k;
+        return Promise.resolve(fn(_v, key)).then(value => {
+            if (check(value, Object)) {
+                const keys = Object.keys(value);
+                if (keys.length == 2 && (keys[0] == 'key' || keys[1] == 'key')) {
+                    key = (<any>value).key;
+                    value = <R>(<any>value).value;
+                }
             }
-        }
-        keys.push(k);
-        oa.push(prepForPromiseAll({ key: k, valuePromise: v }));
-        if (<any>k >= 0) {
-            a[<any>k] = v;
-        }
+            return resolve({ key, value })
+        })
     });
-    if (every(keys, (k) => check(k, Number))) return Promise.all(a);
-    const r: any = {};
-    return Promise.all(oa).then((resolved) => {
-        each(resolved, (kv) => r[kv.key] = kv.value);
-        return Promise.resolve(r);
+
+    const pa = <Promise<any>[]>[];
+    each(iterable, (_v: I, _k: string) => {
+        pa.push(createPromise(_v, _k));
+    });
+
+    return Promise.all(pa).then((resolved) => {
+        if (every(resolved, (kv) => check(kv.key, Number))) {
+            const r: any = [];
+            each(resolved, (kv) => {
+                r[kv.key] = kv.value;
+            });
+            return Promise.resolve(r);
+        } else {
+            const r: any = {};
+            each(resolved, (kv) => {
+                r[kv.key] = kv.value;
+            });
+            return Promise.resolve(r);
+        }
     });
 }
-
 
 export function stringify(value: any, replacer?: (number | string)[], space?: string | number): string {
     return JSON.stringify(decycle(value), replacer, space || 2);
