@@ -736,10 +736,6 @@ export function okmap<R, I, IObject extends { [index: string]: I }, RObject exte
 
 
 export function aokmap<R, I, IObject extends { [index: string]: I }>(iterable: IObject | Array<I>, fn: (v: I, k?: string | number) => R | Promise<R>): any {
-    // const a = <(R | Promise<R>)[]><any>[];
-    // interface Wrapable { key: string, valuePromise: R | Promise<R> }
-    // let keys: string[] = [];
-
     const createPromise = (_v: I, _k: string) => new Promise((resolve, reject) => {
         let key = _k;
         return Promise.resolve(fn(_v, key)).then(value => {
@@ -751,7 +747,7 @@ export function aokmap<R, I, IObject extends { [index: string]: I }>(iterable: I
                 }
             }
             return resolve({ key, value })
-        })
+        }, (e) => reject(e)).catch((e) => reject(e))
     });
 
     const pa = <Promise<any>[]>[];
