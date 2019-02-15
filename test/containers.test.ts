@@ -285,13 +285,21 @@ describe('merge', function () {
         });
     })
 
-    const { complexA, complexB } = o.fixtures;
+    const { complexA, complexB, embedded } = o.fixtures;
 
     each(complexB, (b, name) => {
         const a = clone(complexA);
         const expected = complex[name];
         it('complex merge ' + name, () => {
             const actual = merge(a, b);
+            assert.deepEqual(actual, expected);
+        });
+    })
+
+    each(embedded, (b, name) => {
+        it('complex merge ' + name, () => {
+            const expected = complex[name];
+            const actual = merge({}, b);
             assert.deepEqual(actual, expected);
         });
     })

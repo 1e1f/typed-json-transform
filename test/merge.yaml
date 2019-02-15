@@ -58,6 +58,34 @@ fixtures:
         g:
           <+:
             a: b
+  embedded:
+    nested2:
+      x:
+        v: a
+        a:
+          c: b
+      <|:
+        x:
+          v: 1
+          a:
+            b: 1
+            <-:
+                c: v
+    mult:
+        x:
+          a:
+            c: b
+          b: v
+        <*:
+          x.a: 1
+    xor:
+      s: 
+        x: val
+        y: 1
+      <^:
+        s:
+          t: 5
+        s.y: 1
 expect:
   operators:
     <=:
@@ -121,3 +149,17 @@ expect:
       - h
       - i
       - a: b
+    nested2:
+      x:
+        v: 1
+        a:
+          b: 1
+    mult:
+      x:
+        a:
+          c: b
+    xor:
+      s:
+        x: val
+        t: 5
+

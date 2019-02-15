@@ -1,6 +1,7 @@
 ///<reference path="./@types/index.d.ts" />
 import { check, isArguments, isEmpty, isUndefinedOrNull, isBuffer } from './check';
 import { decycle } from './decycle';
+import { unsetKeyPath, setValueForKeyPath, unflatten } from './keypath';
 
 interface SIO { [index: string]: any }
 
@@ -125,11 +126,13 @@ export function combineN<T>(retType: T, ...args: SIO[]): T {
     }
     return result;
 }
-type MergeMethod = '!' | '&' | '!' | '=' | '?' | '+' | '|' | '-' | '^';
+type MergeMethod = '!' | '&' | '!' | '=' | '?' | '+' | '|' | '-' | '^' | '*';
 
 interface MergeOptions {
     arrayMergeMethod?: MergeMethod
     objectMergeMethod?: MergeMethod
+    strict?: boolean
+    indent?: string // debug
 }
 
 function _mergeArray(existing: any[], future: any[], arrayMergeMethod: MergeMethod) {
@@ -137,9 +140,10 @@ function _mergeArray(existing: any[], future: any[], arrayMergeMethod: MergeMeth
         case '=': return future;
         case '+': return concat(existing, arrayify(future));
         case '|': return union(existing, future);
-        case '?': case '&': return intersect(existing, future);
+        case '?': case '&': case '*': return intersect(existing, future);
         case '-': return difference(existing, arrayify(future));
         case '^': case '!': return difference(future, existing);
+        default: throw new Error(`unhandled Array merge operator ${arrayMergeMethod}`);
     }
 }
 
@@ -147,7 +151,7 @@ function mergeArray(lhs: any[], rhs: any[], arrayMergeMethod: MergeMethod): any[
     if (check(rhs, Object)) {
         for (const possiblyMergeOperator of Object.keys(rhs)) {
             switch (possiblyMergeOperator) {
-                case '<=': case '<&': case '<|': case '<?': case '<!': case '<+': case '<!': case '<-': case '<^':
+                case '<*': case '<=': case '<&': case '<|': case '<?': case '<!': case '<+': case '<!': case '<-': case '<^':
                     return _mergeArray(<any[]>lhs, (<any>rhs)[possiblyMergeOperator], <MergeMethod>possiblyMergeOperator.slice(1));
             }
         };
@@ -159,7 +163,7 @@ function mergeArray(lhs: any[], rhs: any[], arrayMergeMethod: MergeMethod): any[
     throw new Error('replacing array value with non-array value');
 }
 
-export function applyMergeMethod(lhs: any, rhs: any, options: MergeOptions) {
+export function mergeAny(lhs: any, rhs: any, options: MergeOptions) {
     if (check(lhs, Array)) {
         return mergeArray(lhs, rhs, options.arrayMergeMethod);
     }
@@ -167,59 +171,91 @@ export function applyMergeMethod(lhs: any, rhs: any, options: MergeOptions) {
         if (rhs instanceof Date) {
             return new Date(rhs.valueOf());
         }
-        throw new Error('replacing date value with non-date value');
+        else if (check(rhs, [Boolean, Number])) {
+            return rhs > 0 && rhs < 2 && lhs;
+        }
+        throw new Error(`ambiguous merge Date ${options.objectMergeMethod} ${typeof rhs}: ${rhs}`);
     }
     if (check(lhs, Object)) {
         if (check(rhs, Object)) {
-            return mergeObject(lhs, rhs, options);
+            return mergeObject(lhs, rhs, { ...options, indent: options.indent + '  ' });
+        } else if (check(rhs, [Boolean, Number])) {
+            switch (options.objectMergeMethod) {
+                case '^': return rhs;
+                case '*': return rhs > 0 && rhs < 2 && lhs;
+            }
         }
-        throw new Error('merging non object value into object value at keypath')
+        throw new Error(`ambiguous merge Object ${options.objectMergeMethod} ${typeof rhs}: ${rhs}`);
+    }
+    switch (options.objectMergeMethod) {
+        case '*': return rhs && lhs;
     }
     return rhs;
 }
 
-export function mergeObject<T>(target: T & { [index: string]: any }, setter: any, options: MergeOptions): T {
-    const { objectMergeMethod, arrayMergeMethod } = options;
 
-    let res: any = target;
-    if (objectMergeMethod == '=' || objectMergeMethod == '^' || objectMergeMethod == '&') {
-        res = {};
+
+export function mergeObject<T>(target: T & { [index: string]: any }, setter: any, options: MergeOptions): T {
+    const { objectMergeMethod, arrayMergeMethod, indent } = options;
+    const results: any = {};
+
+
+    const expandedSetter = unflatten({}, setter);
+    for (const key of Object.keys(expandedSetter)) {
+        switch (key) {
+            case '<*': case '<=': case '<&': case '<|': case '<?': case '<!': case '<+': case '<!': case '<-': case '<^': break;
+            default:
+                let lhs = target[key];
+                let rhs = expandedSetter[key];
+                const assign = mergeAny(lhs, rhs, options);
+                if (assign) {
+                    const extendIt = () => {
+                        target[key] = assign;
+                        results[key] = assign;
+                    }
+                    switch (objectMergeMethod) {
+                        case '|': case '+': case '=': extendIt(); break;
+                        case '^': if (!lhs) target[key] = assign; else results[key] = assign; break;
+                        case '!': if (!lhs) extendIt(); break;
+                        case '?': case '&': case '*': if (lhs) extendIt(); break;
+                        case '-': if (rhs && setter[key]) delete target[key]; break; // HACK: not present in seter suggests it's a kp, defer for later
+                    }
+                }
+        }
     }
 
-    let foundOperators;
-    for (const key of Object.keys(setter)) {
+    for (const key of Object.keys(expandedSetter)) {
         switch (key) {
-            case '<=': case '<&': case '<|': case '<?': case '<!': case '<+': case '<!': case '<-': case '<^':
+            case '<*': case '<=': case '<&': case '<|': case '<?': case '<!': case '<+': case '<!': case '<-': case '<^':
                 const method = <any>key.slice(1);
-                foundOperators = true;
-                target = mergeObject(target, setter[key], {
+                const res = mergeObject(target, expandedSetter[key], {
                     objectMergeMethod: method,
-                    arrayMergeMethod
+                    arrayMergeMethod,
+                    indent: indent + '  ',
                 });
+                extend(results, res);
             default: break;
         }
-
     }
-    if (foundOperators) return target;
 
-    for (const key of Object.keys(setter)) {
-        const lhs = target[key];
-        const rhs = setter[key];
-
-        const assign = applyMergeMethod(lhs, rhs, options);
-
+    for (const key of Object.keys(target)) {
+        let lhs = target[key];
+        let rhs = results[key];
         switch (objectMergeMethod) {
-            case '=': case '|': case '+': res[key] = assign; break;
-            case '!': case '^': if (!lhs) res[key] = assign; break;
-            case '?': if (lhs) res[key] = assign; break;
-            case '&':
-                if (lhs && rhs) res[key] = assign;
-                else delete res[key];
+            case '=': if (!rhs) delete target[key]; break;
+            case '&': case '*': if (!rhs) delete target[key]; break;
+            case '^':
+                if (check(lhs, Object) && check(rhs, Object)) {
+                } else {
+                    if (lhs && rhs) delete target[key];
+                    else if (rhs) target[key] = rhs;
+                }
                 break;
-            case '-': if (rhs) delete res[key]; break;
+            default: break;
         }
     }
-    return res;
+
+    return target;
 }
 
 export function merge<T>(target: T & { [index: string]: any }, setter: any, options: MergeOptions = {}): T {
@@ -229,7 +265,7 @@ export function merge<T>(target: T & { [index: string]: any }, setter: any, opti
     if (check(target, Array)) {
         return <T><any>mergeArray(<any>target, setter, arrayMergeMethod);
     }
-    return mergeObject(target, setter, { objectMergeMethod, arrayMergeMethod });
+    return mergeObject(target, setter, { objectMergeMethod, arrayMergeMethod, indent: '' });
 }
 
 export function mergeN<T>(target: T & { [index: string]: any }, ...args: any[]): T {
@@ -648,7 +684,7 @@ export function clone<T>(obj: T, stacktrace: any[] = [], recursive: any = []): T
 
     for (const ptr in recursive) {
         if (ptr as any == obj[key]) {
-            console.log(ptr, '=', obj);
+            // console.log(ptr, '=', obj);
             throw new Error(`terminate recursive clone @ ${key}, stack: ${stacktrace.join('.')}`);
         }
     }
@@ -688,7 +724,7 @@ export function clone<T>(obj: T, stacktrace: any[] = [], recursive: any = []): T
                     copy = new ((obj as any).constructor)();
                 }
                 catch (e) {
-                    console.log(stacktrace.join('.'), e);
+                    // console.log(stacktrace.join('.'), e);
                     throw new Error(`Error while cloning a(n) [ ${typeof obj} ] instance: ${JSON.stringify(obj)}`);
                     // throw new Error(`${typeof obj} instance: ${from.constructor}() failed: ${e.message}`);
                 }

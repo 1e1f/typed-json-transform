@@ -220,3 +220,12 @@ export function flatObject(object: any, options?: { includeBranches?: boolean })
     }
     return flat;
 }
+
+export const unflatten = (dest: any, source: any) => {
+    each(source, (val: any, keyPath: string) => {
+        if (check(val, Number) || val) {
+            setValueForKeyPath(val, keyPath, dest);
+        }
+    });
+    return dest;
+}
