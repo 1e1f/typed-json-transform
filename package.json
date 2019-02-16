@@ -1,6 +1,6 @@
 {
     "name": "typed-json-transform",
-    "version": "0.23.2",
+    "version": "0.23.3",
     "description": "_ like library written in typescript using templated generics where reasonable",
     "homepage": "https://github.com/1e1f/typed-json-transform",
     "author": {
@@ -33,17 +33,16 @@
         "@types/js-yaml": "^3.11.2",
         "@types/mocha": "^5.2.5",
         "@types/mongodb": "^3.1.14",
-        "@types/mongoose": "^5.3.1",
-        "@types/node": "^8.0.0",
-        "chai": "^4.2.0",
-        "coveralls": "^2.11.9",
-        "js-yaml": "^3.7.0",
+        "@types/mongoose": "^5.3.17",
+        "@types/node": "^8.0",
+        "chai": "^4.2",
+        "coveralls": "^3.0",
+        "js-yaml": "^3.12",
         "mocha": "^5.2.0",
-        "mongodb": "^3.1.9",
-        "mongoose": "^5.3.14",
+        "mongoose": "^5.4.13",
         "nyc": "^13.1.0",
         "ts-node": "^7.0.1",
-        "typescript": "^3.1.6"
+        "typescript": "^3.2.2"
     },
     "nyc": {
         "include": [

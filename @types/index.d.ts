@@ -1,5 +1,3 @@
-/// <reference types="mongodb" />
-
 /// <reference path="./merge.d.ts" />
 
 interface SIO { [index: string]: any }
