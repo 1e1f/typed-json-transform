@@ -60,28 +60,31 @@ fixtures:
             a: b
   embedded:
     nested2:
-      x:
-        v: a
-        a:
-          c: b
+      <=:
+        x:
+          v: a
+          a:
+            b: 1
+            c: b
       <|:
         x:
           v: 1
           a:
-            b: 1
             <-:
-                c: v
+              c: v
     mult:
+      <=:
         x:
           a:
             c: b
           b: v
-        <*:
-          x.a: 1
+      <*:
+        x.a: 1
     xor:
-      s: 
-        x: val
-        y: 1
+      <=:
+        s: 
+          x: val
+          y: 1
       <^:
         s:
           t: 5

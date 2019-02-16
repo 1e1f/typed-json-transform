@@ -1,9 +1,8 @@
-///<reference path="./@types/index.d.ts" />
+///<reference path="../@types/index.d.ts" />
+
 import { check, isArguments, isEmpty, isUndefinedOrNull, isBuffer } from './check';
 import { decycle } from './decycle';
 import { unsetKeyPath, setValueForKeyPath, unflatten } from './keypath';
-
-interface SIO { [index: string]: any }
 
 export function each<T>(iter: { [index: string]: T } | T[], fn: (val: T, index?: string | number, breakLoop?: () => void) => void): void {
     let broken = 0;
@@ -126,14 +125,6 @@ export function combineN<T>(retType: T, ...args: SIO[]): T {
     }
     return result;
 }
-type MergeMethod = '!' | '&' | '!' | '=' | '?' | '+' | '|' | '-' | '^' | '*';
-
-interface MergeOptions {
-    arrayMergeMethod?: MergeMethod
-    objectMergeMethod?: MergeMethod
-    strict?: boolean
-    indent?: string // debug
-}
 
 const compareFilter = (arr1: any[], arr2: any[], fn: (a: any, b: any) => any, filter?: boolean) => {
     const ret = [];
@@ -146,9 +137,9 @@ const compareFilter = (arr1: any[], arr2: any[], fn: (a: any, b: any) => any, fi
     return ret;
 }
 
-function _mergeArray(lhs: any[], _rhs: any[], arrayMergeMethod: MergeMethod) {
+function _mergeArray(lhs: any[], _rhs: any[], operator: Merge.Operator) {
     let rhs = arrayify(_rhs);
-    switch (arrayMergeMethod) {
+    switch (operator) {
         case '=': return rhs;
         case '+': return concat(lhs, rhs);
         case '-': return difference(lhs, rhs);
@@ -160,137 +151,163 @@ function _mergeArray(lhs: any[], _rhs: any[], arrayMergeMethod: MergeMethod) {
             return concat(difference(lhs, common), difference(rhs, common));
         case '?': return compareFilter(lhs, rhs, (a, b) => a && b);
         case '*': return compareFilter(lhs, rhs, (a, b) => b && a);
-        default: throw new Error(`unhandled Array merge operator ${arrayMergeMethod}`);
+        default: throw new Error(`unhandled Array merge operator ${operator}`);
     }
 }
 
-function mergeArray(lhs: any[], rhs: any[], arrayMergeMethod: MergeMethod): any[] {
+export function mergeArray({ data: lhs, state }: Merge.ReturnValue, rhs: any): Merge.ReturnValue {
+    const { merge: { operator } } = state;
     if (check(rhs, Object)) {
-        for (const possiblyMergeOperator of Object.keys(rhs)) {
-            switch (possiblyMergeOperator) {
+        for (const key of Object.keys(rhs)) {
+            switch (key) {
                 case '<*': case '<=': case '<&': case '<|': case '<?': case '<!': case '<+': case '<!': case '<-': case '<^':
-                    return _mergeArray(<any[]>lhs, (<any>rhs)[possiblyMergeOperator], <MergeMethod>possiblyMergeOperator.slice(1));
+                    const data = _mergeArray(<any[]>lhs, (<any>rhs)[key], <Merge.Operator>key.slice(1));
+                    return { data, state };
             }
         };
         throw new Error(`merging object into array (object contains no merge methods), ${JSON.stringify(rhs)}`);
     }
     if (check(rhs, Array)) {
-        return _mergeArray(<any[]>lhs, <any[]>rhs, arrayMergeMethod);
+        const data = _mergeArray(<any[]>lhs, <any[]>rhs, operator);
+        return { data, state };
     }
-    throw new Error('replacing array value with non-array value');
+    switch (operator) {
+        case '=': throw new Error('replacing array value with non-array value');
+        default: return { data: _mergeArray(<any[]>lhs, <any[]>rhs, operator), state };
+    }
 }
 
-export function mergeAny(lhs: any, rhs: any, options: MergeOptions) {
+export function mergeAny(returnValue: Merge.ReturnValue, rhs: any): Merge.ReturnValue {
+    const { data: lhs, state } = returnValue;
+    const { operator, handleObject } = state.merge;
     if (check(lhs, Array)) {
-        return mergeArray(lhs, rhs, options.arrayMergeMethod);
+        return mergeArray(returnValue, rhs);
     }
     if (lhs instanceof Date) {
         if (rhs instanceof Date) {
-            return new Date(rhs.valueOf());
+            return { data: new Date(rhs.valueOf()), state };
         }
         else if (check(rhs, [Boolean, Number])) {
-            return rhs > 0 && rhs < 2 && lhs;
+            return { data: rhs > 0 && rhs < 2 && lhs, state };
         }
-        throw new Error(`ambiguous merge Date ${options.objectMergeMethod} ${typeof rhs}: ${rhs}`);
+        throw new Error(`ambiguous merge Date ${operator} ${typeof rhs}: ${rhs}`);
     }
     if (check(lhs, Object)) {
         if (check(rhs, Object)) {
-            return mergeObject(lhs, rhs, { ...options, indent: options.indent + '  ' });
+            return handleObject({ data: lhs, state }, rhs);
         } else if (check(rhs, [Boolean, Number])) {
-            switch (options.objectMergeMethod) {
-                case '^': return rhs;
-                case '*': return rhs > 0 && rhs < 2 && lhs;
+            switch (operator) {
+                case '^': return { data: rhs, state };
+                case '*': return { data: rhs > 0 && rhs < 2 && lhs, state }
             }
         } else if (check(rhs, Array)) {
-            return rhs;
+            return { data: rhs, state };
         }
-        throw new Error(`ambiguous merge Object ${options.objectMergeMethod} ${typeof rhs}: ${rhs}\n${JSON.stringify(lhs)}`);
+        throw new Error(`ambiguous merge Object ${operator} ${typeof rhs}: ${rhs}\n${JSON.stringify(lhs)}`);
     }
-    switch (options.objectMergeMethod) {
-        case '*': return rhs && lhs;
+    switch (operator) {
+        case '*': return { data: rhs && lhs, state }
     }
-    return rhs;
+    return { data: rhs, state };
 }
 
+export function mergeObject(returnValue: Merge.ReturnValue, _setter: any): Merge.ReturnValue {
+    let { data, state } = returnValue;
+    const { merge: { operator, handleAny } } = state;
+    const setter = unflatten(_setter);
+    let isMergeConstructor;
+    for (const key of Object.keys(setter)) {
+        if ((key.length == 2) && key[0] == '<') {
+            isMergeConstructor = true;
+            const nextOperator = <any>key[1];
+            console.log('handle operator', nextOperator);
+            const nextState = {
+                ...state,
+                merge: {
+                    ...state.merge,
+                    operator: nextOperator
+                }
+            }
 
+            data = handleAny({ data, state: nextState }, setter[key]).data;
+            console.log({ data });
+        }
+    }
+    if (isMergeConstructor) {
+        return { data, state };
+    }
 
-export function mergeObject<T>(target: T & { [index: string]: any }, setter: any, options: MergeOptions): T {
-    const { objectMergeMethod, arrayMergeMethod, indent } = options;
     const results: any = {};
-
-    const expandedSetter = unflatten({}, setter);
-    for (const key of Object.keys(expandedSetter)) {
-        switch (key) {
-            case '<*': case '<=': case '<&': case '<|': case '<?': case '<!': case '<+': case '<!': case '<-': case '<^': break;
-            default:
-                let lhs = target[key];
-                let rhs = expandedSetter[key];
-                const assign = mergeAny(lhs, rhs, options);
-                if (assign) {
-                    const extendIt = () => {
-                        target[key] = assign;
-                        results[key] = assign;
+    for (const key of Object.keys(setter)) {
+        let lhs = data[key];
+        const assign = handleAny({ data: lhs, state }, setter[key]).data;
+        if (assign) {
+            const extendIt = () => {
+                data[key] = assign;
+                results[key] = assign;
+            }
+            switch (operator) {
+                case '|': case '+': extendIt(); break;
+                case '=': extendIt(); break;
+                case '^': if (!lhs) data[key] = assign; else results[key] = assign; break;
+                case '!': if (!lhs) extendIt(); break;
+                case '?': case '&': case '*': if (lhs) extendIt(); break;
+                case '-':
+                    if (!check(assign, [Object])) {
+                        delete data[key];
                     }
-                    switch (objectMergeMethod) {
-                        case '|': case '+': case '=': extendIt(); break;
-                        case '^': if (!lhs) target[key] = assign; else results[key] = assign; break;
-                        case '!': if (!lhs) extendIt(); break;
-                        case '?': case '&': case '*': if (lhs) extendIt(); break;
-                        case '-': if (rhs && setter[key]) delete target[key]; break; // HACK: not present in seter suggests it's a kp, defer for later
-                    }
-                }
+                    break;
+            }
         }
     }
 
-    for (const key of Object.keys(expandedSetter)) {
-        switch (key) {
-            case '<*': case '<=': case '<&': case '<|': case '<?': case '<!': case '<+': case '<!': case '<-': case '<^':
-                const method = <any>key.slice(1);
-                const res = mergeAny(target, expandedSetter[key], {
-                    objectMergeMethod: method,
-                    arrayMergeMethod: method,
-                    indent: indent + '  ',
-                });
-                if (check(res, Object)) {
-                    extend(results, res);
-                } else {
-                    target = res;
-                    // return res;
-                }
-            default: break;
-        }
-    }
-
-    if (check(target, Object)) {
-        for (const key of Object.keys(target)) {
-            let lhs = target[key];
+    if (check(data, Object)) {
+        for (const key of Object.keys(data)) {
+            let lhs = data[key];
             let rhs = results[key];
-            switch (objectMergeMethod) {
-                case '=': if (!rhs) delete target[key]; break;
-                case '&': case '*': if (!rhs) delete target[key]; break;
+            switch (operator) {
+                case '=': if (!rhs) delete data[key]; break;
+                case '&': case '*': if (!rhs) delete data[key]; break;
                 case '^':
                     if (check(lhs, Object) && check(rhs, Object)) {
                     } else {
-                        if (lhs && rhs) delete target[key];
-                        else if (rhs) target[key] = rhs;
+                        if (lhs && rhs) delete data[key];
+                        else if (rhs) data[key] = rhs;
                     }
                     break;
                 default: break;
             }
         }
     }
-
-    return target;
+    return { data, state };
 }
 
-export function merge<T>(target: T & { [index: string]: any }, setter: any, options: MergeOptions = {}): T {
-    const objectMergeMethod = options.objectMergeMethod || '|';
-    const arrayMergeMethod = options.arrayMergeMethod || '=';
-    // this function mutates obj
+
+export function merge<T>(target: any, setter: any, state: Merge.State<T> = { merge: {} }) {
     if (check(target, Array)) {
-        return <T><any>mergeArray(<any>target, setter, arrayMergeMethod);
+        return <T><any>mergeArray({
+            data: target, state: {
+                ...state,
+                merge: {
+                    operator: '=',
+                    handleObject: mergeObject,
+                    handleAny: mergeAny,
+                    ...state.merge,
+                }
+            }
+        }, setter).data;
     }
-    return mergeObject(target, setter, { objectMergeMethod, arrayMergeMethod, indent: '' });
+    return <T><any>mergeObject({
+        data: target, state: {
+            ...state,
+            merge: {
+                operator: '|',
+                handleObject: mergeObject,
+                handleAny: mergeAny,
+                ...state.merge
+            }
+        }
+    }, setter).data;
 }
 
 export function mergeN<T>(target: T & { [index: string]: any }, ...args: any[]): T {
@@ -564,9 +581,9 @@ export function containsAll<T>(set: any[], match: any[]): boolean {
     return true;
 }
 
-export function isEqual(a: any, e: any, opts?: ComparisonOptions): boolean {
+export function isEqual(a: any, e: any, opts?: TJT.ComparisonOptions): boolean {
     // http://wiki.commonjs.org/wiki/Unit_Testing/1.0
-    if (!opts) opts = <ComparisonOptions>{};
+    if (!opts) opts = <TJT.ComparisonOptions>{};
     // 7.1. All identical values are equivalent, as determined by ===.
     if (a === e) {
         return true;
@@ -597,7 +614,7 @@ const compareBuffer = (a: Buffer, b: Buffer) => {
     return true;
 }
 
-function _objEquiv(a: any, b: any, opts?: ComparisonOptions): boolean {
+function _objEquiv(a: any, b: any, opts?: TJT.ComparisonOptions): boolean {
     if (isUndefinedOrNull(a) || isUndefinedOrNull(b)) return false;
     // an identical 'prototype' property.
     if (a.prototype !== b.prototype) return false;

@@ -158,9 +158,9 @@ export function filteredKeyPaths(_keyPaths: string[], ignore?: string[]): string
 }
 
 
-export function keyPaths(obj: SIO, _options?: Keypath.Options, _stack?: string[], parent?: string): string[] {
+export function keyPaths(obj: SIO, _options?: TJT.Keypath.Options, _stack?: string[], parent?: string): string[] {
     const stack = _stack || [];
-    const options = <Keypath.Options>clone(_options || {});
+    const options = <TJT.Keypath.Options>clone(_options || {});
     const keys = Object.keys(obj);
     if (keys.length > 0) {
         for (const el of keys) {
@@ -208,7 +208,7 @@ export function keyPaths(obj: SIO, _options?: Keypath.Options, _stack?: string[]
     return stack;
 }
 
-export function allKeyPaths(obj: SIO, options?: Keypath.Options): string[] {
+export function allKeyPaths(obj: SIO, options?: TJT.Keypath.Options): string[] {
     return keyPaths(obj, { allLevels: true, diffArrays: true, ...options });
 }
 
@@ -221,11 +221,12 @@ export function flatObject(object: any, options?: { includeBranches?: boolean })
     return flat;
 }
 
-export const unflatten = (dest: any, source: any) => {
+export const unflatten = (source: any) => {
+    const ret: any = {};
     each(source, (val: any, keyPath: string) => {
         if (check(val, Number) || val) {
-            setValueForKeyPath(val, keyPath, dest);
+            setValueForKeyPath(val, keyPath, ret);
         }
     });
-    return dest;
+    return ret;
 }

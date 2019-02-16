@@ -23,9 +23,9 @@
     "main": "lib/index.js",
     "types": "index.d.ts",
     "scripts": {
-        "build": "gulp scripts",
         "test": "NODE_ENV=test mocha --recursive --compilers ts:ts-node/register --bail",
         "cover": "NODE_ENV=test nyc --report-dir coverage npm t",
+        "build": "tsc",
         "travis": "npm run build && npm run cover"
     },
     "devDependencies": {
@@ -37,8 +37,6 @@
         "@types/node": "^8.0.0",
         "chai": "^4.2.0",
         "coveralls": "^2.11.9",
-        "gulp": "^3.9.1",
-        "gulp-typescript": "^4.0.2",
         "js-yaml": "^3.7.0",
         "mocha": "^5.2.0",
         "mongodb": "^3.1.9",

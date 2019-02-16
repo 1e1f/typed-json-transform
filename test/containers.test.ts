@@ -272,7 +272,7 @@ describe('merge', function () {
         const expected = operators[key];
         it('object: ' + key, () => {
             const { a, b } = clone(o.fixtures);
-            const actual = merge(a, b, { objectMergeMethod: <any>key[1] });
+            const actual = merge(a, b, { merge: { operator: <any>key[1] } });
             assert.deepEqual(actual, expected);
         });
     })
@@ -280,7 +280,7 @@ describe('merge', function () {
     Object.keys(arrayOperators).forEach((key) => {
         it('array: ' + key, () => {
             const { c, d } = clone(o.fixtures);
-            const actual = merge(c, d, { arrayMergeMethod: <any>key[1] });
+            const actual = merge(c, d, { merge: { operator: <any>key[1] } });
             assert.deepEqual(actual, arrayOperators[key]);
         });
     })

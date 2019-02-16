@@ -1,3 +1,5 @@
+/// <reference path="./@types/index.d.ts" />
+
 declare module 'typed-json-transform' {
   /*
   String
@@ -19,13 +21,6 @@ declare module 'typed-json-transform' {
   /* 
   * Container Methods
   */
-  interface ComparisonOptions {
-    [index: string]: boolean;
-    strict: boolean;
-  }
-
-
-  interface SIO { [index: string]: any }
 
   function each<T>(iter: { [index: string]: T } | T[], fn: (val: T, index?: string | number, breakLoop?: () => void) => void): void
   function replace<A, B>(target: A & SIO, source: B & SIO): A & B
@@ -38,14 +33,10 @@ declare module 'typed-json-transform' {
   function combine<A, B>(a: A, b: B): A & B
   function combineN<T>(retType: T, ...args: SIO[]): T
 
-  type MergeMethod = '!' | '&' | '!' | '=' | '?' | '+' | '|' | '-' | '^';
 
-  interface MergeOptions {
-    arrayMergeMethod?: MergeMethod
-    objectMergeMethod?: MergeMethod
-  }
-
-  function merge<T>(target: T & { [index: string]: any }, setter: any, options?: MergeOptions): T
+  function mergeAny<StateShape>(returnValue: Merge.ReturnValue<StateShape>, setter: any): Merge.ReturnValue<StateShape>
+  function mergeObject<StateShape>(returnValue: Merge.ReturnValue<StateShape>, setter: any): Merge.ReturnValue<StateShape>
+  function merge<T>(target: any, setter: any, state?: Merge.State<T>): T
   function mergeN<T>(target: T & { [index: string]: any }, ...args: any[]): T
   function or<A, B>(a: A, b: B): A & B
   function any<T>(iter: { [index: string]: T } | T[], fn: (val: T, index?: string | number) => boolean): boolean
@@ -97,7 +88,7 @@ declare module 'typed-json-transform' {
   function keyPaths(obj: SIO, _options?: Keypath.Options, _stack?: string[], parent?: string): string[]
   function allKeyPaths(obj: SIO): string[]
   function flatObject(object: any, options?: { includeBranches?: boolean }): SIO
-
+  function unflatten(source: any): SIO
   /*
   * Diff / Mongo Method
   */
@@ -174,27 +165,5 @@ declare module 'typed-json-transform' {
     dependenciesOf(node: string, leavesOnly: boolean): any[];
     dependantsOf(node: string, leavesOnly: boolean): any[];
     overallOrder(leavesOnly: boolean): any[];
-  }
-
-  /*
-  Optionally Linked Hash Maps
-  */
-
-  class OLHV<T> {
-    require?: string;
-    value: T
-  }
-  class OLHM<T> {
-    [index: string]: OLHV<T>;
-  }
-
-  namespace OLHM {
-    function parse(object: any): OLHM<any>;
-    function safe<T>(olhm: OLHM<T>): T[];
-  }
-
-  namespace OLHV {
-    function is(obj: any): boolean;
-    function safe<T>(objOrVal: OLHV<T> | T): T;
   }
 }
