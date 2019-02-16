@@ -135,14 +135,31 @@ interface MergeOptions {
     indent?: string // debug
 }
 
-function _mergeArray(existing: any[], future: any[], arrayMergeMethod: MergeMethod) {
+const compareFilter = (arr1: any[], arr2: any[], fn: (a: any, b: any) => any, filter?: boolean) => {
+    const ret = [];
+    for (let i = 0; i < arr1.length; i++) {
+        const a = arr1[i];
+        const b = arr2[i];
+        const v = fn(a, b);
+        if (v || (check(v, Number))) ret.push(v);
+    }
+    return ret;
+}
+
+function _mergeArray(lhs: any[], _rhs: any[], arrayMergeMethod: MergeMethod) {
+    let rhs = arrayify(_rhs);
     switch (arrayMergeMethod) {
-        case '=': return future;
-        case '+': return concat(existing, arrayify(future));
-        case '|': return union(existing, future);
-        case '?': case '&': case '*': return intersect(existing, future);
-        case '-': return difference(existing, arrayify(future));
-        case '^': case '!': return difference(future, existing);
+        case '=': return rhs;
+        case '+': return concat(lhs, rhs);
+        case '-': return difference(lhs, rhs);
+        case '!': return difference(rhs, lhs);
+        case '&': return intersect(lhs, rhs);
+        case '|': return union(lhs, rhs);
+        case '^':
+            const common = intersect(lhs, rhs);
+            return concat(difference(lhs, common), difference(rhs, common));
+        case '?': return compareFilter(lhs, rhs, (a, b) => a && b);
+        case '*': return compareFilter(lhs, rhs, (a, b) => b && a);
         default: throw new Error(`unhandled Array merge operator ${arrayMergeMethod}`);
     }
 }
@@ -184,8 +201,10 @@ export function mergeAny(lhs: any, rhs: any, options: MergeOptions) {
                 case '^': return rhs;
                 case '*': return rhs > 0 && rhs < 2 && lhs;
             }
+        } else if (check(rhs, Array)) {
+            return rhs;
         }
-        throw new Error(`ambiguous merge Object ${options.objectMergeMethod} ${typeof rhs}: ${rhs}`);
+        throw new Error(`ambiguous merge Object ${options.objectMergeMethod} ${typeof rhs}: ${rhs}\n${JSON.stringify(lhs)}`);
     }
     switch (options.objectMergeMethod) {
         case '*': return rhs && lhs;
@@ -198,7 +217,6 @@ export function mergeAny(lhs: any, rhs: any, options: MergeOptions) {
 export function mergeObject<T>(target: T & { [index: string]: any }, setter: any, options: MergeOptions): T {
     const { objectMergeMethod, arrayMergeMethod, indent } = options;
     const results: any = {};
-
 
     const expandedSetter = unflatten({}, setter);
     for (const key of Object.keys(expandedSetter)) {
@@ -228,30 +246,37 @@ export function mergeObject<T>(target: T & { [index: string]: any }, setter: any
         switch (key) {
             case '<*': case '<=': case '<&': case '<|': case '<?': case '<!': case '<+': case '<!': case '<-': case '<^':
                 const method = <any>key.slice(1);
-                const res = mergeObject(target, expandedSetter[key], {
+                const res = mergeAny(target, expandedSetter[key], {
                     objectMergeMethod: method,
-                    arrayMergeMethod,
+                    arrayMergeMethod: method,
                     indent: indent + '  ',
                 });
-                extend(results, res);
+                if (check(res, Object)) {
+                    extend(results, res);
+                } else {
+                    target = res;
+                    // return res;
+                }
             default: break;
         }
     }
 
-    for (const key of Object.keys(target)) {
-        let lhs = target[key];
-        let rhs = results[key];
-        switch (objectMergeMethod) {
-            case '=': if (!rhs) delete target[key]; break;
-            case '&': case '*': if (!rhs) delete target[key]; break;
-            case '^':
-                if (check(lhs, Object) && check(rhs, Object)) {
-                } else {
-                    if (lhs && rhs) delete target[key];
-                    else if (rhs) target[key] = rhs;
-                }
-                break;
-            default: break;
+    if (check(target, Object)) {
+        for (const key of Object.keys(target)) {
+            let lhs = target[key];
+            let rhs = results[key];
+            switch (objectMergeMethod) {
+                case '=': if (!rhs) delete target[key]; break;
+                case '&': case '*': if (!rhs) delete target[key]; break;
+                case '^':
+                    if (check(lhs, Object) && check(rhs, Object)) {
+                    } else {
+                        if (lhs && rhs) delete target[key];
+                        else if (rhs) target[key] = rhs;
+                    }
+                    break;
+                default: break;
+            }
         }
     }
 

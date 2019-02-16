@@ -5,8 +5,8 @@ fixtures:
   b:
     b: b
     c: b
-  c: [a, b]
-  d: [b, c]
+  c: [a, b, 1, 1]
+  d: [b, c, 0, 1]
   complexA:
     a: a
     b:
@@ -107,12 +107,15 @@ expect:
     <-:
       a: a
   arrayOperators:
-    <=: [b, c]
-    <|: [a, b, c]
-    <+: [a, b, b, c]
-    <&: [b]
-    <!: [c]
+    <=: [b, c, 0, 1]
+    <|: [a, b, 1, c, 0]
+    <+: [a, b, 1, 1, b, c, 0, 1]
+    <&: [b, 1]
+    <^: [a, c, 0]
     <-: [a]
+    <!: [c, 0]
+    <*: [a, b, 0, 1]
+    <?: [b, c, 0, 1]
   complex:
     assign:
       b:
