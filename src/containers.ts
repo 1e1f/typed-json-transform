@@ -220,7 +220,6 @@ export function mergeObject(returnValue: Merge.ReturnValue, _setter: any): Merge
         if ((key.length == 2) && key[0] == '<') {
             isMergeConstructor = true;
             const nextOperator = <any>key[1];
-            console.log('handle operator', nextOperator);
             const nextState = {
                 ...state,
                 merge: {
