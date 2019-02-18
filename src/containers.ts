@@ -229,7 +229,7 @@ export function mergeObject(returnValue: Merge.ReturnValue, _setter: any): Merge
             }
 
             data = handleAny({ data, state: nextState }, setter[key]).data;
-            console.log({ data });
+            // console.log({ data });
         }
     }
     if (isMergeConstructor) {

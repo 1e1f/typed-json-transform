@@ -7,6 +7,11 @@ import {
   allKeyPaths, filteredKeyPaths
 } from './keypath';
 
+interface Modifier {
+  $set?: any
+  $unset?: any
+}
+
 function shouldSet(val: any, prev: any): boolean | void {
   if (Array.isArray(val)) {
     return !isEqual(prev, val);
@@ -39,8 +44,8 @@ function shouldUnset(val: any, prev: any): boolean {
   return false;
 }
 
-function diffToModifier(prev: SIO, doc: SIO, fieldsToIgnore?: string[], pruneEmptyObjects?: boolean): Mongo.Modifier<any> {
-  const delta: Mongo.Modifier<any> = { $set: {}, $unset: {} };
+function diffToModifier(prev: SIO, doc: SIO, fieldsToIgnore?: string[], pruneEmptyObjects?: boolean): Modifier {
+  const delta: Modifier = { $set: {}, $unset: {} };
   if (doc) {
     const forwardKeyPaths =
       filteredKeyPaths(keyPaths(doc), fieldsToIgnore || []);
@@ -85,7 +90,7 @@ function diffToModifier(prev: SIO, doc: SIO, fieldsToIgnore?: string[], pruneEmp
   }
 }
 
-function modifierToObj(modifier: Mongo.Modifier<any>): SIO {
+function modifierToObj(modifier: Modifier): SIO {
   if (modifier) {
     const obj = {};
     for (const keyPath of Object.keys(modifier.$set || {})) {
@@ -99,11 +104,11 @@ function modifierToObj(modifier: Mongo.Modifier<any>): SIO {
   }
 }
 
-function objToModifier(obj: SIO): Mongo.Modifier<any> {
+function objToModifier(obj: SIO): Modifier {
   return diffToModifier(null, obj);
 }
 
-function apply<T>(dest: T, source: Mongo.Modifier<any>): T {
+function apply<T>(dest: T, source: Modifier): T {
   if (!source) {
     return dest;
   }
@@ -118,7 +123,7 @@ function apply<T>(dest: T, source: Mongo.Modifier<any>): T {
   return prune(dest);
 }
 
-function $set(dest: SIO, source?: Mongo.Modifier<any>): void {
+function $set(dest: SIO, source?: Modifier): void {
   if (!source) {
     return;
   }
@@ -142,7 +147,7 @@ function $addToSet<T>(dest: T[], src: T): T[] {
   return dest;
 }
 
-function $unset(dest: Object, source?: Mongo.Modifier<any>): void {
+function $unset(dest: Object, source?: Modifier): void {
   if (!source) {
     return;
   }
@@ -152,7 +157,7 @@ function $unset(dest: Object, source?: Mongo.Modifier<any>): void {
   each(<any>source, (val: any, keyPath: string) => { unsetKeyPath(keyPath, dest); });
 }
 
-function update(doc: any, options: any): Mongo.Modifier<any> {
+function update(doc: any, options: any): Modifier {
   let model: any;
   if (check(options.get, Function)) {
     model = options.get();
@@ -182,11 +187,11 @@ function update(doc: any, options: any): Mongo.Modifier<any> {
 }
 
 
-function mapModifierToKey(modifier: Mongo.Modifier<any>, key: string): Mongo.Modifier<any> {
+function mapModifierToKey(modifier: Modifier, key: string): Modifier {
   if (!modifier) {
     throw new Error('called mapModifierToKey on undefined');
   }
-  const valueModifier: Mongo.Modifier<any> = {};
+  const valueModifier: Modifier = {};
   for (const keyPath of Object.keys(modifier.$set || {})) {
     if (valueModifier.$set == null) {
       valueModifier.$set = {};
