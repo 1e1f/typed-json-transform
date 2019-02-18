@@ -282,7 +282,7 @@ export function mergeObject(returnValue: Merge.ReturnValue, _setter: any): Merge
 }
 
 
-export function merge<T>(target: any, setter: any, state: Merge.State<T> = { merge: {} }) {
+export function merge<T>(target: any, setter: any, state: Merge.State = { merge: {} }) {
     if (check(target, Array)) {
         return <T><any>mergeArray({
             data: target, state: {
