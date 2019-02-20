@@ -78,7 +78,7 @@ describe('flatObject', function () {
     });
 
     it('flatObject {includeBranches: true}', () => {
-        const flat = flatObject(makeD(), { includeBranches: true });
+        const flat = flatObject(makeD(), { allLevels: true });
         assert.deepEqual(flat, {
             'a.b.c': 0,
             'a.b': {

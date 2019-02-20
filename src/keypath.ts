@@ -1,5 +1,6 @@
 import { check } from './check';
-import { isEqual, intersect, clean, each, map, every, extend, extendOwn, existentialExtend, replace, any, contains, containsAny, containsAll, combine, prune, plain, clone, arrayify, union, concat, difference } from './containers';
+import { each, extend, clone } from './containers';
+import { union, difference } from './arrays';
 
 export function setValueForKeyPath(value: any, keyPath: string, input: SIO): void {
     let current = input;
@@ -158,9 +159,9 @@ export function filteredKeyPaths(_keyPaths: string[], ignore?: string[]): string
 }
 
 
-export function keyPaths(obj: SIO, _options?: TJT.Keypath.Options, _stack?: string[], parent?: string): string[] {
+export function keyPaths(obj: SIO, _options?: Keypath.Options, _stack?: string[], parent?: string): string[] {
     const stack = _stack || [];
-    const options = <TJT.Keypath.Options>clone(_options || {});
+    const options = <Keypath.Options>clone(_options || {});
     const keys = Object.keys(obj);
     if (keys.length > 0) {
         for (const el of keys) {
@@ -208,14 +209,13 @@ export function keyPaths(obj: SIO, _options?: TJT.Keypath.Options, _stack?: stri
     return stack;
 }
 
-export function allKeyPaths(obj: SIO, options?: TJT.Keypath.Options): string[] {
+export function allKeyPaths(obj: SIO, options?: Keypath.Options): string[] {
     return keyPaths(obj, { allLevels: true, diffArrays: true, ...options });
 }
 
-export function flatObject(object: any, options?: { includeBranches?: boolean }): SIO {
+export function flatObject(object: any, options?: Keypath.Options): SIO {
     const flat = <SIO>{};
-    const kpFunc = (options || {}).includeBranches ? allKeyPaths : keyPaths;
-    for (const keyPath of kpFunc(object)) {
+    for (const keyPath of keyPaths(object, options)) {
         flat[keyPath] = valueForKeyPath(keyPath, object);
     }
     return flat;

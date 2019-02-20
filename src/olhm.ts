@@ -1,5 +1,6 @@
 import { check } from './check';
-import { arrayify, containsAll, map as _map } from './containers';
+import { containsAll } from './arrays';
+import { map as _map } from './containers';
 import { Graph } from './graph';
 
 export class OLHV<T> {

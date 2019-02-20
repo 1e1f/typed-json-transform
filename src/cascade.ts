@@ -1,4 +1,5 @@
-import { sumIfEvery, greatestResult, each, or, contains, okmap } from './containers';
+import { contains } from './arrays';
+import { sumIfEvery, greatestResult, each, or, okmap } from './containers';
 import { valueForKeyPath, mergeValueAtKeypath, keyPaths } from './keypath';
 import { startsWith, replaceAll } from './string';
 

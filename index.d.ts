@@ -10,11 +10,7 @@ declare module 'typed-json-transform' {
   function replaceAll(str: string, find: string, rep: string): string
   function trim(str: string): string
 
-  interface CamelOptions {
-    delimiter?: string
-    upperCase?: boolean
-    capsLock?: boolean
-  }
+
 
   function toCamel(input: string, options?: CamelOptions): string
   function fromCamel(input: string, options?: CamelOptions): string
@@ -34,9 +30,9 @@ declare module 'typed-json-transform' {
   function combineN<T>(retType: T, ...args: SIO[]): T
 
 
-  function mergeAny<StateShape>(returnValue: Merge.ReturnValue<StateShape>, setter: any): Merge.ReturnValue<StateShape>
+  function mergeArray<StateShape>(returnValue: Merge.ReturnValue<StateShape>, setter: any): Merge.ReturnValue<StateShape>
   function mergeObject<StateShape>(returnValue: Merge.ReturnValue<StateShape>, setter: any): Merge.ReturnValue<StateShape>
-  function merge<T>(target: any, setter: any, state?: Merge.State<T>): T
+  function merge<T>(target: any, setter: any, state?: Merge.State): T
   function mergeN<T>(target: T & { [index: string]: any }, ...args: any[]): T
   function or<A, B>(a: A, b: B): A & B
   function any<T>(iter: { [index: string]: T } | T[], fn: (val: T, index?: string | number) => boolean): boolean
@@ -58,7 +54,7 @@ declare module 'typed-json-transform' {
   function contains<T>(set: any[], match: T): number
   function containsAny<T>(set: any[], match: any[]): number
   function containsAll<T>(set: any[], match: any[]): boolean
-  function isEqual(actual: any, expected: any, opts?: ComparisonOptions): boolean
+  function isEqual(actual: any, expected: any, opts?: TJT.ComparisonOptions): boolean
   function prune<T>(obj: T): T
   function clean<T>(obj: T): T
   function plain<T>(obj: T): T
@@ -71,12 +67,6 @@ declare module 'typed-json-transform' {
   /*
   * Keypath
   */
-  namespace Keypath {
-    interface Options extends SIO {
-      allLevels?: boolean;
-      diffArrays?: boolean;
-    }
-  }
 
   function setValueForKeyPath(value: any, keyPath: string, input: SIO): void
   function mergeValueAtKeypath(value: any, keyPath: string, obj: SIO): void
@@ -87,48 +77,24 @@ declare module 'typed-json-transform' {
   function filteredKeyPaths(_keyPaths: string[], ignore?: string[]): string[]
   function keyPaths(obj: SIO, _options?: Keypath.Options, _stack?: string[], parent?: string): string[]
   function allKeyPaths(obj: SIO): string[]
-  function flatObject(object: any, options?: { includeBranches?: boolean }): SIO
+  function flatObject(object: any, options?: Keypath.Options): SIO
   function unflatten(source: any): SIO
   /*
   * Diff / Mongo Method
   */
 
-  namespace Mongo {
-    interface Document extends SIO {
-      _id: string;
-    }
-
-    interface Collection {
-      findOne: Function;
-      find: Function;
-      update: Function;
-    }
-
-    interface UpdateOptions {
-      collection?: Collection;
-      get?: Function;
-      set?: Function;
-      ignore?: string[];
-    }
-
-    interface Modifier {
-      $set?: SIO;
-      $unset?: SIO;
-    }
-  }
-
-  function forwardDiffToModifier(prev: SIO, doc: SIO, fieldsToIgnore?: string[]): Mongo.Modifier
+  function forwardDiffToModifier(prev: SIO, doc: SIO, fieldsToIgnore?: string[]): TJT.Modifier
   function shouldSet(val: any, prev: any): boolean
   function shouldUnset(val: any, prev: any): boolean
-  function diffToModifier(prev: SIO, doc: SIO, fieldsToIgnore?: string[], pruneEmptyObjects?: boolean): Mongo.Modifier
-  function modifierToObj(modifier: Mongo.Modifier): SIO
-  function objToModifier(obj: SIO): Mongo.Modifier
-  function apply<T>(dest: T, source: Mongo.Modifier): T
-  function $set(dest: SIO, source: Mongo.Modifier): void
+  function diffToModifier(prev: SIO, doc: SIO, fieldsToIgnore?: string[], pruneEmptyObjects?: boolean): TJT.Modifier
+  function modifierToObj(modifier: TJT.Modifier): SIO
+  function objToModifier(obj: SIO): TJT.Modifier
+  function apply<T>(dest: T, source: TJT.Modifier): T
+  function $set(dest: SIO, source: TJT.Modifier): void
   function $addToSet<T>(dest: T[], src: T): T[]
-  function $unset(dest: Object, source: Mongo.Modifier): void
-  function update(doc: Mongo.Document, options: Mongo.UpdateOptions): Mongo.Modifier
-  function mapModifierToKey(modifier: Mongo.Modifier, key: string): Mongo.Modifier
+  function $unset(dest: Object, source: TJT.Modifier): void
+  function update(doc: Mongo.Document, options: Mongo.UpdateOptions): TJT.Modifier
+  function mapModifierToKey(modifier: TJT.Modifier, key: string): TJT.Modifier
 
   /*
   * Check

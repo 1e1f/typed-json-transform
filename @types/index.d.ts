@@ -2,6 +2,13 @@
 
 interface SIO { [index: string]: any }
 
+interface CamelOptions {
+  delimiter?: string
+  upperCase?: boolean
+  capsLock?: boolean
+  capitalize: boolean
+}
+
 declare namespace TJT {
   class OLHV<T> {
     require?: string;
@@ -23,15 +30,40 @@ declare namespace TJT {
 
   interface Object { [x: string]: any }
 
-  namespace Keypath {
-    interface Options extends SIO {
-      allLevels?: boolean;
-      diffArrays?: boolean;
-    }
+  interface Modifier {
+    $set?: SIO;
+    $unset?: SIO;
   }
+
 
   interface ComparisonOptions {
     [index: string]: boolean;
     strict: boolean;
+  }
+}
+
+declare namespace Keypath {
+  interface Options extends SIO {
+    allLevels?: boolean;
+    diffArrays?: boolean;
+  }
+}
+
+declare namespace Mongo {
+  interface Document extends SIO {
+    _id: string;
+  }
+
+  interface Collection<T> {
+    findOne<T>(): any;
+    find<T>(): any;
+    update<T>(): any;
+  }
+
+  interface UpdateOptions {
+    collection?: Collection<any>;
+    get?: Function;
+    set?: Function;
+    ignore?: string[];
   }
 }

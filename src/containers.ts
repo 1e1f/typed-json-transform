@@ -1,8 +1,9 @@
 ///<reference path="../@types/index.d.ts" />
 
-import { check, isArguments, isEmpty, isUndefinedOrNull, isBuffer } from './check';
+import { check, isEmpty } from './check';
 import { decycle } from './decycle';
-import { unsetKeyPath, setValueForKeyPath, unflatten } from './keypath';
+import { mergeOrReturnAssignment } from './merge';
+import { every } from './arrays';
 
 export function each<T>(iter: { [index: string]: T } | T[], fn: (val: T, index?: string | number, breakLoop?: () => void) => void): void {
     let broken = 0;
@@ -126,187 +127,20 @@ export function combineN<T>(retType: T, ...args: SIO[]): T {
     return result;
 }
 
-const compareFilter = (arr1: any[], arr2: any[], fn: (a: any, b: any) => any, filter?: boolean) => {
-    const ret = [];
-    for (let i = 0; i < arr1.length; i++) {
-        const a = arr1[i];
-        const b = arr2[i];
-        const v = fn(a, b);
-        if (v || (check(v, Number))) ret.push(v);
-    }
-    return ret;
-}
 
-function _mergeArray(lhs: any[], _rhs: any[], operator: Merge.Operator) {
-    let rhs = arrayify(_rhs);
-    switch (operator) {
-        case '=': return rhs;
-        case '+': return concat(lhs, rhs);
-        case '-': return difference(lhs, rhs);
-        case '!': return difference(rhs, lhs);
-        case '&': return intersect(lhs, rhs);
-        case '|': return union(lhs, rhs);
-        case '^':
-            const common = intersect(lhs, rhs);
-            return concat(difference(lhs, common), difference(rhs, common));
-        case '?': return compareFilter(lhs, rhs, (a, b) => a && b);
-        case '*': return compareFilter(lhs, rhs, (a, b) => b && a);
-        default: throw new Error(`unhandled Array merge operator ${operator}`);
-    }
-}
-
-export function mergeArray({ data: lhs, state }: Merge.ReturnValue, rhs: any): Merge.ReturnValue {
-    const { merge: { operator } } = state;
-    if (check(rhs, Object)) {
-        for (const key of Object.keys(rhs)) {
-            switch (key) {
-                case '<*': case '<=': case '<&': case '<|': case '<?': case '<!': case '<+': case '<!': case '<-': case '<^':
-                    const data = _mergeArray(<any[]>lhs, (<any>rhs)[key], <Merge.Operator>key.slice(1));
-                    return { data, state };
-            }
-        };
-        throw new Error(`merging object into array (object contains no merge methods), ${JSON.stringify(rhs)}`);
-    }
-    if (check(rhs, Array)) {
-        const data = _mergeArray(<any[]>lhs, <any[]>rhs, operator);
-        return { data, state };
-    }
-    switch (operator) {
-        case '=': throw new Error('replacing array value with non-array value');
-        default: return { data: _mergeArray(<any[]>lhs, <any[]>rhs, operator), state };
-    }
-}
-
-export function mergeAny(returnValue: Merge.ReturnValue, rhs: any): Merge.ReturnValue {
-    const { data: lhs, state } = returnValue;
-    const { operator, handleObject } = state.merge;
-    if (check(lhs, Array)) {
-        return mergeArray(returnValue, rhs);
-    }
-    if (lhs instanceof Date) {
-        if (rhs instanceof Date) {
-            return { data: new Date(rhs.valueOf()), state };
-        }
-        else if (check(rhs, [Boolean, Number])) {
-            return { data: rhs > 0 && rhs < 2 && lhs, state };
-        }
-        throw new Error(`ambiguous merge Date ${operator} ${typeof rhs}: ${rhs}`);
-    }
-    if (check(lhs, Object)) {
-        if (check(rhs, Object)) {
-            return handleObject({ data: lhs, state }, rhs);
-        } else if (check(rhs, [Boolean, Number])) {
-            switch (operator) {
-                case '^': return { data: rhs, state };
-                case '*': return { data: rhs > 0 && rhs < 2 && lhs, state }
-            }
-        } else if (check(rhs, Array)) {
-            return { data: rhs, state };
-        }
-        throw new Error(`ambiguous merge Object ${operator} ${typeof rhs}: ${rhs}\n${JSON.stringify(lhs)}`);
-    }
-    switch (operator) {
-        case '*': return { data: rhs && lhs, state }
-    }
-    return { data: rhs, state };
-}
-
-export function mergeObject(returnValue: Merge.ReturnValue, _setter: any): Merge.ReturnValue {
-    let { data, state } = returnValue;
-    const { merge: { operator, handleAny } } = state;
-    const setter = unflatten(_setter);
-    let isMergeConstructor;
-    for (const key of Object.keys(setter)) {
-        if ((key.length == 2) && key[0] == '<') {
-            isMergeConstructor = true;
-            const nextOperator = <any>key[1];
-            const nextState = {
-                ...state,
-                merge: {
-                    ...state.merge,
-                    operator: nextOperator
-                }
-            }
-
-            data = handleAny({ data, state: nextState }, setter[key]).data;
-            // console.log({ data });
-        }
-    }
-    if (isMergeConstructor) {
-        return { data, state };
-    }
-
-    const results: any = {};
-    for (const key of Object.keys(setter)) {
-        let lhs = data[key];
-        const assign = handleAny({ data: lhs, state }, setter[key]).data;
-        if (assign) {
-            const extendIt = () => {
-                data[key] = assign;
-                results[key] = assign;
-            }
-            switch (operator) {
-                case '|': case '+': extendIt(); break;
-                case '=': extendIt(); break;
-                case '^': if (!lhs) data[key] = assign; else results[key] = assign; break;
-                case '!': if (!lhs) extendIt(); break;
-                case '?': case '&': case '*': if (lhs) extendIt(); break;
-                case '-':
-                    if (!check(assign, [Object])) {
-                        delete data[key];
-                    }
-                    break;
-            }
-        }
-    }
-
-    if (check(data, Object)) {
-        for (const key of Object.keys(data)) {
-            let lhs = data[key];
-            let rhs = results[key];
-            switch (operator) {
-                case '=': if (!rhs) delete data[key]; break;
-                case '&': case '*': if (!rhs) delete data[key]; break;
-                case '^':
-                    if (check(lhs, Object) && check(rhs, Object)) {
-                    } else {
-                        if (lhs && rhs) delete data[key];
-                        else if (rhs) data[key] = rhs;
-                    }
-                    break;
-                default: break;
-            }
-        }
-    }
-    return { data, state };
-}
-
-
-export function merge<T>(target: any, setter: any, state: Merge.State = { merge: {} }) {
-    if (check(target, Array)) {
-        return <T><any>mergeArray({
-            data: target, state: {
-                ...state,
-                merge: {
-                    operator: '=',
-                    handleObject: mergeObject,
-                    handleAny: mergeAny,
-                    ...state.merge,
-                }
-            }
-        }, setter).data;
-    }
-    return <T><any>mergeObject({
+export function merge<T>(target: any, setter: any, state?: Merge.State) {
+    const res = mergeOrReturnAssignment({
         data: target, state: {
-            ...state,
             merge: {
-                operator: '|',
-                handleObject: mergeObject,
-                handleAny: mergeAny,
-                ...state.merge
-            }
+                operator: '|'
+            },
+            ...state
         }
     }, setter).data;
+    if (res || check(res, Number)) {
+        return res;
+    }
+    return target;
 }
 
 export function mergeN<T>(target: T & { [index: string]: any }, ...args: any[]): T {
@@ -345,69 +179,6 @@ export function any<T>(iter: { [index: string]: T } | T[], fn: (val: T, index?: 
     }
     return false;
 }
-
-export function every<T>(iter: { [index: string]: T } | T[], fn: (val: T, index?: string | number) => boolean): boolean {
-    if (check(iter, Array)) {
-        let index = 0;
-        if (!(iter as any[]).length) return false;
-        for (const v of <T[]>iter) {
-            if (!fn(v, index)) {
-                return false;
-            }
-            index++;
-        }
-    } if (check(iter, Object)) {
-        const keys = Object.keys(iter);
-        if (!keys.length) return false;
-        for (const k of keys) {
-            if (!fn((<any>iter)[k], k)) {
-                return false;
-            }
-        }
-    }
-    return true;
-}
-
-// export const everyAsync = <T>(iter: { [index: string]: T } | T[], fn: (val: T, index?: string | number) => boolean): Promise<boolean> => {
-//     return new Promise(async (resolve, reject) => {
-//         if (check(iter, Array)) {
-//             let index = 0;
-//             if (!(iter as any[]).length) return resolve(false);
-//             for (const v of <T[]>iter) {
-//                 try {
-//                     const res = await fn(v, index);
-//                     if (!res) return resolve(false);
-//                 } catch (e) {
-//                     return reject(e);
-//                 }
-//                 index++;
-//             }
-//         } if (check(iter, Object)) {
-//             const keys = Object.keys(iter);
-//             if (!keys.length) return resolve(false);
-//             for (const k of keys) {
-//                 try {
-//                     const res = await fn((<any>iter)[k], k);
-//                     if (!res) return resolve(false);
-//                 } catch (e) {
-//                     return reject(e);
-//                 }
-//             }
-//         }
-//         return resolve(true);
-//     });
-// }
-
-// export function every<T>(iterable: T[], fn: (arg: T) => boolean): boolean {
-//     for (const v of iterable) {
-//         if (fn(v) === false) {
-//             return false;
-//         }
-//     }
-//     return true;
-// }
-
-export const all = every;
 
 export function map<R, I>(iter: { [index: string]: I } | I[], fn: (val: I, index: any) => R): R[] {
     const res: R[] = [];
@@ -490,170 +261,6 @@ export function geoSum<T>(input: { [index: string]: T } | Array<T>, fn: (input: 
     return sum;
 }
 
-export function union<T>(...args: T[][]): T[] {
-    const res: T[] = [];
-    for (const arr of args) {
-        for (const v of arr) {
-            if (!contains(res, v)) {
-                res.push(v);
-            }
-        }
-    }
-    return res;
-}
-
-export function concat<T>(...args: T[][]): T[] {
-    const res: T[] = [];
-    for (const arr of args) {
-        for (const v of arr) {
-            res.push(v);
-        }
-    }
-    return res;
-}
-
-export function intersect<T>(...args: T[][]): T[] {
-    const res = <T[]>[];
-    for (const a of args) {
-        for (const v of a) {
-            if (!contains(res, v)) {
-                if (every(args, (b) => {
-                    if (b == a) {
-                        return true;
-                    }
-                    return contains(b, v) > 0;
-                })) {
-                    res.push(v);
-                }
-            }
-        }
-    }
-    return res;
-}
-
-export function difference<T>(a: T[], b: T[]): T[] {
-    const res = <T[]>[];
-    for (const v of a) {
-        if (!contains(b, v)) {
-            res.push(v);
-        }
-    }
-    return res;
-}
-
-export function contains<T>(set: any[], toMatch: T): number {
-    if (check(toMatch, Array)) {
-        return containsAny(set, toMatch as any);
-    }
-    let matches = 0;
-    for (const val of set) {
-        if (isEqual(val, toMatch)) {
-            matches++;
-        }
-    }
-    return matches;
-}
-
-export function containsAny<T>(set: any[], match: any[]): number {
-    if (!check(match, Array)) {
-        throw new Error('contains all takes a list to match');
-    }
-    let matches = 0;
-    for (const val of match) {
-        if (contains(set, val)) {
-            // return true;
-            matches++;
-        }
-    }
-    return matches;
-}
-
-export function containsAll<T>(set: any[], match: any[]): boolean {
-    if (!check(match, Array)) {
-        throw new Error('contains all takes a list to match');
-    }
-    for (const val of match) {
-        if (!contains(set, val)) {
-            return false;
-        }
-    }
-    return true;
-}
-
-export function isEqual(a: any, e: any, opts?: TJT.ComparisonOptions): boolean {
-    // http://wiki.commonjs.org/wiki/Unit_Testing/1.0
-    if (!opts) opts = <TJT.ComparisonOptions>{};
-    // 7.1. All identical values are equivalent, as determined by ===.
-    if (a === e) {
-        return true;
-    }
-    else if (a instanceof Date && e instanceof Date) {
-        return a.getTime() === e.getTime();
-        // 7.3. Other pairs that do not both pass typeof value == 'object',
-        // equivalence is determined by ==.
-    } else if (!a || !e || typeof a != 'object' && typeof e != 'object') {
-        return opts.strict ? a === e : a == e;
-        // 7.4. For all other Object pairs, including Array objects, equivalence is
-        // determined by having the same number of owned properties (as verified
-        // with Object.prototype.hasOwnProperty.call), the same set of keys
-        // (although not necessarily the same order), equivalent values for every
-        // corresponding key, and an identical 'prototype' property. Note: this
-        // accounts for both named and indexed properties on Arrays.
-    }
-    return _objEquiv(a, e, opts);
-}
-
-const pSlice = Array.prototype.slice;
-
-const compareBuffer = (a: Buffer, b: Buffer) => {
-    if (a.length !== b.length) return false;
-    for (let i = 0; i < a.length; i++) {
-        if (a[i] !== b[i]) return false;
-    }
-    return true;
-}
-
-function _objEquiv(a: any, b: any, opts?: TJT.ComparisonOptions): boolean {
-    if (isUndefinedOrNull(a) || isUndefinedOrNull(b)) return false;
-    // an identical 'prototype' property.
-    if (a.prototype !== b.prototype) return false;
-    //~~~I've managed to break Object.keys through screwy arguments passing.
-    //   Converting to array solves the problem.
-    if (isArguments(a)) {
-        if (!isArguments(b)) return false;
-        a = pSlice.call(a);
-        b = pSlice.call(b);
-        return isEqual(a, b, opts);
-    }
-    if (isBuffer(a)) {
-        if (!isBuffer(b)) return false;
-        return compareBuffer(a, b);
-    }
-    let ka, kb;
-    try {
-        ka = Object.keys(a);
-        kb = Object.keys(b);
-    } catch (e) {//happens when one is a string literal and the other isn't
-        return false;
-    }
-    // having the same number of owned properties (keys incorporates
-    // hasOwnProperty)
-    if (ka.length != kb.length) return false;
-    //the same set of keys (although not necessarily the same order),
-    ka.sort();
-    kb.sort();
-    //~~~cheap key test
-    for (let i = ka.length - 1; i >= 0; i--) {
-        if (ka[i] != kb[i]) return false;
-    }
-    //equivalent values for every corresponding key, and
-    //~~~possibly expensive deep test
-    for (let i = ka.length - 1; i >= 0; i--) {
-        const key = ka[i];
-        if (!isEqual(a[key], b[key], opts)) return false;
-    }
-    return typeof a === typeof b;
-}
 
 function _prune(input: SIO): boolean {
     if (!check(input, Object)) {
@@ -725,7 +332,6 @@ export function clone<T>(obj: T, stacktrace: any[] = [], recursive: any = []): T
 
     for (const ptr in recursive) {
         if (ptr as any == obj[key]) {
-            // console.log(ptr, '=', obj);
             throw new Error(`terminate recursive clone @ ${key}, stack: ${stacktrace.join('.')}`);
         }
     }
@@ -765,7 +371,6 @@ export function clone<T>(obj: T, stacktrace: any[] = [], recursive: any = []): T
                     copy = new ((obj as any).constructor)();
                 }
                 catch (e) {
-                    // console.log(stacktrace.join('.'), e);
                     throw new Error(`Error while cloning a(n) [ ${typeof obj} ] instance: ${JSON.stringify(obj)}`);
                     // throw new Error(`${typeof obj} instance: ${from.constructor}() failed: ${e.message}`);
                 }
@@ -780,13 +385,6 @@ export function clone<T>(obj: T, stacktrace: any[] = [], recursive: any = []): T
     }
 
     throw new Error("Unable to copy obj! Its type isn't supported.");
-}
-
-export function arrayify<T>(val: T | T[]): T[] {
-    if (check(val, Array)) {
-        return val as T[];
-    }
-    return [val as T];
 }
 
 export function okmap<R, I, IObject extends { [index: string]: I }, RObject extends { [index: string]: R }>(iterable: IObject | Array<I>, fn: (v: I, k?: string | number) => R): RObject {

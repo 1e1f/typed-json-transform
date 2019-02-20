@@ -7,3 +7,5 @@ export * from './cascade';
 export * from './containers';
 export * from './mongo';
 export * from './string';
+export * from './merge';
+export * from './arrays';
