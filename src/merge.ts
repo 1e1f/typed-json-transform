@@ -41,6 +41,7 @@ export function mergeArray({ data: lhs, state }: Merge.ReturnValue, rhs: any): M
         }
     }
     else if (check(rhs, Array)) {
+        recurArray({ data: null, state }, rhs)
         _mergeArray(<any[]>lhs, <any[]>rhs, operator);
         return { data: null, state };
     }
@@ -122,6 +123,16 @@ function throwIfImplicitConversion(rv: Merge.ReturnValue, rhs: any): any {
     }
 }
 
+export const recurArray = (rv: Merge.ReturnValue, rhs: any): void => {
+    const { state } = rv;
+    rhs.forEach((val: any, index: number) => {
+        const res = mergeOrReturnAssignment({ data: null, state: { ...state, merge: { operator: '=' } } }, val).data
+        if (res || check(res, Number)) {
+            rhs[index] = res;
+        }
+    });
+}
+
 export function mergeOrReturnAssignment(rv: Merge.ReturnValue, rhs: any): any {
     const { data: lhs, state } = rv;
     const { operator } = state.merge;
@@ -153,20 +164,14 @@ export function mergeOrReturnAssignment(rv: Merge.ReturnValue, rhs: any): any {
                 return ret;
             }
         }
+        if (check(rhs, Array)) {
+            throwIfImplicitConversion(rv, rhs);
+            recurArray(rv, rhs);
+        }
         return { data: rhs, state };
     }
     return { data: null, state };
 }
-
-// export function parseNext(rv: Merge.ReturnValue, rhs: any): Merge.ReturnValue {
-//     const { state } = rv;
-//     if (check(rhs, Object)) {
-//         if (!state.merge && isMergeConstructor(rhs)) {
-//             return construct(rv, rhs).data
-//         }
-//     }
-//     return rhs;
-// }
 
 export const isMergeConstructor = (val: any) => {
     for (const key of Object.keys(val)) {
