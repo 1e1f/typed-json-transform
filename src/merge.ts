@@ -94,7 +94,6 @@ export function mergeObject(rv: Merge.ReturnValue, _setter: any): Merge.ReturnVa
 
             if (check(data, Object)) {
                 for (const key of Object.keys(data)) {
-                    let lhs = data[key];
                     let rhs = setter[key];
                     switch (operator) {
                         case '=': if (!rhs) delete data[key]; break;
@@ -108,24 +107,53 @@ export function mergeObject(rv: Merge.ReturnValue, _setter: any): Merge.ReturnVa
     return { data, state };
 }
 
+const printType = (val: any) => {
+    if (check(val, Object)) {
+        return 'object'
+    }
+    return val;
+}
+
+function throwIfImplicitConversion(rv: Merge.ReturnValue, rhs: any): any {
+    const { data: lhs, state } = rv;
+    const { operator } = state.merge;
+    if (lhs && (typeof lhs != typeof rhs) && state.implicitTypeConversionError) {
+        throw new Error(`implicit type change in ${printType(lhs)} ${operator} ${printType(rhs)}\n${JSON.stringify(rhs, null, 2)}`);
+    }
+}
+
 export function mergeOrReturnAssignment(rv: Merge.ReturnValue, rhs: any): any {
     const { data: lhs, state } = rv;
+    const { operator } = state.merge;
     if (check(lhs, Array)) {
         mergeArray(rv, rhs);
     } else if (check(lhs, Object)) {
-        const { operator } = state.merge;
         if (check(rhs, Object)) {
             mergeObject(rv, rhs);
         }
-        else if (contains(['&', '^', '*'], operator)) {
-            switch (operator) {
-                case '*': if (!rhs) return { data: 0, state };
+        else {
+            if (contains(['&', '*', '-'], operator)) {
+                switch (operator) {
+                    case '*': case '&': if (!rhs) return { data: 0, state };
+                    case '-': if (rhs && check(rhs, String)) delete lhs[rhs]; return { data: null, state };
+                }
             }
-        } else {
-            throw new Error(`ambiguous merge ${lhs} ${operator} ${rhs}`);
+            throwIfImplicitConversion(rv, rhs);
         }
     } else {
-        return { data: rhs, state };;
+        if (check(rhs, Object)) {
+            if (isMergeConstructor(rhs)) {
+                const obj = construct(rv, rhs).data;
+                return mergeOrReturnAssignment(rv, obj)
+            }
+            else {
+                throwIfImplicitConversion(rv, rhs);
+                let ret = { data: {}, state: { ...state, merge: { operator: '=' } } };
+                mergeOrReturnAssignment(ret, rhs);
+                return ret;
+            }
+        }
+        return { data: rhs, state };
     }
     return { data: null, state };
 }
@@ -140,29 +168,32 @@ export function mergeOrReturnAssignment(rv: Merge.ReturnValue, rhs: any): any {
 //     return rhs;
 // }
 
-// export const isMergeConstructor = (val: any) => {
-//     for (const key of Object.keys(val)) {
-//         if ((key.length == 2) && (key[0] == '<')) {
-//             return true;
-//         }
-//     }
-// }
+export const isMergeConstructor = (val: any) => {
+    for (const key of Object.keys(val)) {
+        if ((key.length == 2) && (key[0] == '<')) {
+            return true;
+        }
+    }
+}
 
-// export function construct(returnValue: Merge.ReturnValue, constructor: any): Merge.ReturnValue {
-//     const { state } = returnValue;
-//     let data;
-//     for (const key of Object.keys(constructor)) {
-//         if ((key.length == 2) && (key[0] == '<')) {
-//             const nextOperator = <any>key[1];
-//             const nextState = {
-//                 ...state,
-//                 merge: {
-//                     ...state.merge,
-//                     operator: nextOperator
-//                 }
-//             }
-//             data = mergeAny({ data, state: nextState }, constructor[key]).data;
-//         }
-//     }
-//     return { data, state };
-// }
+export function construct(rv: Merge.ReturnValue, constructor: any): Merge.ReturnValue {
+    let data;
+    const { state } = rv;
+    for (const key of Object.keys(constructor)) {
+        if ((key.length == 2) && (key[0] == '<')) {
+            const nextOperator = <any>key[1];
+            const res: any = mergeOrReturnAssignment({
+                data, state: {
+                    merge: {
+                        ...state.merge,
+                        operator: nextOperator
+                    }
+                }
+            }, constructor[key]).data;
+            if (res || check(res, Number)) {
+                data = res;
+            }
+        }
+    }
+    return { data, state };
+}

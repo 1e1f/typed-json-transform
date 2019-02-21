@@ -32,6 +32,7 @@ declare module 'typed-json-transform' {
 
   function mergeArray<StateShape>(returnValue: Merge.ReturnValue<StateShape>, setter: any): Merge.ReturnValue<StateShape>
   function mergeObject<StateShape>(returnValue: Merge.ReturnValue<StateShape>, setter: any): Merge.ReturnValue<StateShape>
+  function mergeOrReturnAssignment<StateShape>(returnValue: Merge.ReturnValue<StateShape>, setter: any): Merge.ReturnValue<StateShape>
   function merge<T>(target: any, setter: any, state?: Merge.State): T
   function mergeN<T>(target: T & { [index: string]: any }, ...args: any[]): T
   function or<A, B>(a: A, b: B): A & B
