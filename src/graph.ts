@@ -128,19 +128,18 @@ class Graph<T> {
         } else {
             // Look for cycles - we run the DFS starting at all the nodes in case there
             // are several disconnected subgraphs inside this dependency graph.
-            var CycleDFS = createDFS(this.outgoingEdges, false, []);
-            keys.forEach(function (n) {
-                CycleDFS(n);
-            });
+            const CycleDFS = createDFS(this.outgoingEdges, false, []);
+            for (const nodeName of keys) {
+                CycleDFS(nodeName);
+            }
 
-            var DFS = createDFS(this.outgoingEdges, leavesOnly, result);
+            const DFS = createDFS(this.outgoingEdges, leavesOnly, result);
             // Find all potential starting points (nodes with nothing depending on them) an
             // run a DFS starting at these points to get the order
-            keys.filter(function (node) {
-                return self.incomingEdges[node].length === 0;
-            }).forEach(function (n) {
-                DFS(n);
-            });
+            const nodeNames = keys.filter(nodeName => self.incomingEdges[nodeName].length === 0);
+            for (const nodeName of nodeNames) {
+                DFS(nodeName);
+            }
 
             return result;
         }
@@ -150,22 +149,23 @@ class Graph<T> {
 function createDFS(edges: any, leavesOnly: boolean, result: any) {
     var currentPath: any = [];
     var visited: { [index: string]: boolean } = {};
-    return function DFS(currentNode: string) {
+    const DFS = (currentNode: string) => {
         visited[currentNode] = true;
         currentPath.push(currentNode);
-        edges[currentNode].forEach(function (node: string) {
+        for (const node of edges[currentNode]) {
             if (!visited[node]) {
                 DFS(node);
             } else if (currentPath.indexOf(node) >= 0) {
                 currentPath.push(node);
                 throw new Error('Dependency Cycle Found: ' + currentPath.join(' -> '));
             }
-        });
+        };
         currentPath.pop();
         if ((!leavesOnly || edges[currentNode].length === 0) && result.indexOf(currentNode) === -1) {
             result.push(currentNode);
         }
     };
+    return DFS;
 }
 
 

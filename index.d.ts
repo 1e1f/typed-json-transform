@@ -1,5 +1,22 @@
 /// <reference path="./@types/index.d.ts" />
 
+declare namespace TypedJSONTransform {
+  class Graph<T> {
+    nodes: { [index: string]: T };
+    
+    addNode(node: string, data?: T): void;
+    removeNode(node: string): void;
+    hasNode(node: string): boolean;
+    getNodeData(node: string): any;
+    setNodeData(node: string, data?: T): void;
+    addDependency(from: string, to: string): void;
+    removeDependency(from: string, to: string): void;
+    dependenciesOf(node: string, leavesOnly?: boolean): string[];
+    dependantsOf(node: string, leavesOnly?: boolean): string[];
+    overallOrder(leavesOnly?: boolean): string[];
+  }
+}
+
 declare module 'typed-json-transform' {
   /*
   String
@@ -119,18 +136,7 @@ declare module 'typed-json-transform' {
   Graph
   */
 
-  class Graph<T> {
-    [index: string]: any;
-
-    addNode(node: string, data?: T): void;
-    removeNode(node: string): void;
-    hasNode(node: string): boolean;
-    getNodeData(node: string): any;
-    setNodeData(node: string, data?: T): void;
-    addDependency(from: string, to: string): void;
-    removeDependency(from: string, to: string): void;
-    dependenciesOf(node: string, leavesOnly: boolean): any[];
-    dependantsOf(node: string, leavesOnly: boolean): any[];
-    overallOrder(leavesOnly: boolean): any[];
+  class Graph<T> extends TypedJSONTransform.Graph<T> {
+    
   }
 }
