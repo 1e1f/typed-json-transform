@@ -29,8 +29,8 @@ declare module 'typed-json-transform' {
 
 
 
-  function toCamel(input: string, options?: CamelOptions): string
-  function fromCamel(input: string, options?: CamelOptions): string
+  function toCamel(input: string, options?: TJT.CamelOptions): string
+  function fromCamel(input: string, options?: TJT.CamelOptions): string
   /* 
   * Container Methods
   */
@@ -41,15 +41,15 @@ declare module 'typed-json-transform' {
   function mapToObject<T>(input: Map<string, T>): { [x: string]: T } 
   
   function each<T>(iter: { [index: string]: T } | T[], fn: (val: T, index?: string | number, breakLoop?: () => void) => void): void
-  function replace<A, B>(target: A & SIO, source: B & SIO): A & B
-  function extend<A, B>(target: A & SIO, source: B & SIO): A & B
-  function extendOwn<A, B>(target: A & SIO, source: B & SIO): A & B
-  function existentialExtend<A, B>(target: A & SIO, source: B & SIO): A & B
-  function extendN<T>(target: T & SIO, ...sources: Array<SIO>): T
+  function replace<A, B>(target: A & TJT.SIO, source: B & TJT.SIO): A & B
+  function extend<A, B>(target: A & TJT.SIO, source: B & TJT.SIO): A & B
+  function extendOwn<A, B>(target: A & TJT.SIO, source: B & TJT.SIO): A & B
+  function existentialExtend<A, B>(target: A & TJT.SIO, source: B & TJT.SIO): A & B
+  function extendN<T>(target: T & TJT.SIO, ...sources: Array<TJT.SIO>): T
   function flatten<A>(arr: A[][]): A[]
   function assign<A, B>(a: A, b: B): A & B
   function combine<A, B>(a: A, b: B): A & B
-  function combineN<T>(retType: T, ...args: SIO[]): T
+  function combineN<T>(retType: T, ...args: TJT.SIO[]): T
 
 
   function mergeArray<StateShape>(returnValue: Merge.ReturnValue<StateShape>, setter: any): Merge.ReturnValue<StateShape>
@@ -91,29 +91,29 @@ declare module 'typed-json-transform' {
   * Keypath
   */
 
-  function setValueForKeyPath(value: any, keyPath: string, input: SIO): void
-  function mergeValueAtKeypath(value: any, keyPath: string, obj: SIO): void
-  function valueForKeyPath(keyPath: string, input: SIO): any
-  function unsetKeyPath(keyPath: string, obj: SIO): boolean
+  function setValueForKeyPath(value: any, keyPath: string, input: TJT.SIO): void
+  function mergeValueAtKeypath(value: any, keyPath: string, obj: TJT.SIO): void
+  function valueForKeyPath(keyPath: string, input: TJT.SIO): any
+  function unsetKeyPath(keyPath: string, obj: TJT.SIO): boolean
   function keyPathContainsPath(keyPath: string, ignorePath: string): boolean
   function lastKey(kp: string): string
   function filteredKeyPaths(_keyPaths: string[], ignore?: string[]): string[]
-  function keyPaths(obj: SIO, _options?: Keypath.Options, _stack?: string[], parent?: string): string[]
-  function allKeyPaths(obj: SIO): string[]
-  function flatObject(object: any, options?: Keypath.Options): SIO
-  function unflatten(source: any): SIO
+  function keyPaths(obj: TJT.SIO, _options?: Keypath.Options, _stack?: string[], parent?: string): string[]
+  function allKeyPaths(obj: TJT.SIO): string[]
+  function flatObject(object: any, options?: Keypath.Options): TJT.SIO
+  function unflatten(source: any): TJT.SIO
   /*
   * Diff / Mongo Method
   */
 
-  function forwardDiffToModifier(prev: SIO, doc: SIO, fieldsToIgnore?: string[]): TJT.Modifier
+  function forwardDiffToModifier(prev: TJT.SIO, doc: TJT.SIO, fieldsToIgnore?: string[]): TJT.Modifier
   function shouldSet(val: any, prev: any): boolean
   function shouldUnset(val: any, prev: any): boolean
-  function diffToModifier(prev: SIO, doc: SIO, fieldsToIgnore?: string[], pruneEmptyObjects?: boolean): TJT.Modifier
-  function modifierToObj(modifier: TJT.Modifier): SIO
-  function objToModifier(obj: SIO): TJT.Modifier
+  function diffToModifier(prev: TJT.SIO, doc: TJT.SIO, fieldsToIgnore?: string[], pruneEmptyObjects?: boolean): TJT.Modifier
+  function modifierToObj(modifier: TJT.Modifier): TJT.SIO
+  function objToModifier(obj: TJT.SIO): TJT.Modifier
   function apply<T>(dest: T, source: TJT.Modifier): T
-  function $set(dest: SIO, source: TJT.Modifier): void
+  function $set(dest: TJT.SIO, source: TJT.Modifier): void
   function $addToSet<T>(dest: T[], src: T): T[]
   function $unset(dest: Object, source: TJT.Modifier): void
   function update(doc: Mongo.Document, options: Mongo.UpdateOptions): TJT.Modifier
