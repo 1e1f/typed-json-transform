@@ -89,6 +89,23 @@ class SimpleClass {
     }
 }
 
+class HasCopyMethod {
+    props: string[];
+    classDefault: string;
+    isClone: boolean;
+
+    constructor(props: string[]) {
+        this.props = clone(props);
+        this.classDefault = 'staticSetting';
+    }
+
+    clone() {
+        const copy = new HasCopyMethod(this.props);
+        copy.isClone = true;
+        return copy;
+    }
+}
+
 describe('clone', () => {
     const date = new Date();
     const test = makeZ(date);
@@ -128,6 +145,15 @@ describe('clone', () => {
         // extend(inherits, instance);
         assert.deepEqual(clone(instance), instance);
     });
+    it('clone a class via clone function', () => {
+        const instance = new HasCopyMethod(['a', 'b']);
+        // extend(inherits, instance);
+        const copy = clone(instance);
+        assert.notDeepEqual(copy, instance);
+        instance.isClone = true;
+        assert.deepEqual(copy, instance);
+    });
+
     it('clone a class definition', () => {
         const Class = Schema.Types.Mixed;
         // extend(inherits, instance);
@@ -188,19 +214,6 @@ describe('arrays', () => {
     });
 });
 
-class toExtend {
-    prop: any;
-    constructor(arg: any) {
-        this.prop = arg;
-    }
-    clone() {
-        return new toExtend(this.prop);
-    }
-    myFunc() {
-        return 'result';
-    }
-}
-
 describe('extend', () => {
     const a = makeA();
     const b = makeB();
@@ -218,13 +231,6 @@ describe('extend', () => {
             e: 'f',
             f: makeD
         });
-    });
-
-    it('extend a class into an object', () => {
-        const inherits = {};
-        const instance = new toExtend('value');
-        extend(inherits, instance);
-        assert.deepEqual(inherits, instance);
     });
 
     it('ignores extending by an undefined object', () => {
