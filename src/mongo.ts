@@ -45,7 +45,7 @@ function shouldUnset(val: any, prev: any): boolean {
   return false;
 }
 
-function diffToModifier(prev: SIO, doc: SIO, fieldsToIgnore?: string[], pruneEmptyObjects?: boolean): Modifier {
+function diffToModifier(prev: TJT.SIO, doc: TJT.SIO, fieldsToIgnore?: string[], pruneEmptyObjects?: boolean): Modifier {
   const delta: Modifier = { $set: {}, $unset: {} };
   if (doc) {
     const forwardKeyPaths =
@@ -91,7 +91,7 @@ function diffToModifier(prev: SIO, doc: SIO, fieldsToIgnore?: string[], pruneEmp
   }
 }
 
-function modifierToObj(modifier: Modifier): SIO {
+function modifierToObj(modifier: Modifier): TJT.SIO {
   if (modifier) {
     const obj = {};
     for (const keyPath of Object.keys(modifier.$set || {})) {
@@ -105,7 +105,7 @@ function modifierToObj(modifier: Modifier): SIO {
   }
 }
 
-function objToModifier(obj: SIO): Modifier {
+function objToModifier(obj: TJT.SIO): Modifier {
   return diffToModifier(null, obj);
 }
 
@@ -124,7 +124,7 @@ function apply<T>(dest: T, source: Modifier): T {
   return prune(dest);
 }
 
-function $set(dest: SIO, source?: Modifier): void {
+function $set(dest: TJT.SIO, source?: Modifier): void {
   if (!source) {
     return;
   }

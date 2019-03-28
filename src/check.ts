@@ -11,6 +11,8 @@ export function check(val: any, type: any) {
   return _c(val, type);
 }
 
+export const MapLike = 'MapLike';
+
 function _c(val: any, type: any): boolean {
   switch (type) {
     case Array:
@@ -19,6 +21,12 @@ function _c(val: any, type: any): boolean {
     case Date:
     case 'Date':
       return val !== undefined && val instanceof Date;
+    case MapLike:
+    case 'MapLike':
+      return (val instanceof Map) || _c(val, Object);
+    case Map:
+    case 'Map':
+      return val instanceof Map;
     case Object:
     case 'Object':
       return val !== null && typeof val === 'object' && !_c(val, Date) && !_c(val, Array) && !_c(val, Error);

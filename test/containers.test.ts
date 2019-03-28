@@ -3,7 +3,11 @@ import { assert, expect } from 'chai';
 import { makeA, makeB, makeC, makeD, makeZ } from './fixtures';
 import { readFileSync } from 'fs';
 import { load, dump } from 'js-yaml';
-import { amap, isEqual, check, combine, combineN, any, each, every, flatten, contains, extend, extendN, intersect, clone, arrayify, map, merge, okmap, union, difference, keysAndValues, aokmap } from '../src';
+import {
+    amap, isEqual, check, combine, combineN, any, each,
+    every, flatten, contains, extend, extendN, intersect, clone,
+    arrayify, map, merge, okmap, union, difference, keysAndValues, aokmap
+} from '../src';
 import { Schema } from 'mongoose';
 
 describe('isEqual', () => {

@@ -25,6 +25,9 @@ function makeD() {
 }
 
 function makeZ(date: Date) {
+    const m = new Map();
+    m.set('x', 'string');
+    m.set(1, { string: 'a' });
     return {
         0: 'arrayLikeThing',
         a: {
@@ -34,6 +37,7 @@ function makeZ(date: Date) {
         },
         d: date,
         e: date,
+        m,
         z: [
             7,
             7, {

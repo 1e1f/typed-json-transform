@@ -35,6 +35,11 @@ declare module 'typed-json-transform' {
   * Container Methods
   */
 
+  function set<T>(t: T & TJT.MapLike<any>, [k, v]: any[]): void
+  function unset<T>(t: T & TJT.MapLike<any>, k: string | number): void
+  function get<T>(s: TJT.MapLike<T>, k: string | number): T
+  function mapToObject<T>(input: Map<string, T>): { [x: string]: T } 
+  
   function each<T>(iter: { [index: string]: T } | T[], fn: (val: T, index?: string | number, breakLoop?: () => void) => void): void
   function replace<A, B>(target: A & SIO, source: B & SIO): A & B
   function extend<A, B>(target: A & SIO, source: B & SIO): A & B

@@ -144,7 +144,8 @@ describe('diff', () => {
       },
       $unset: {
         0: true,
-        e: true
+        e: true,
+        m: true
       }
     });
   });

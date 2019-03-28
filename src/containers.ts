@@ -1,24 +1,54 @@
 ///<reference path="../@types/index.d.ts" />
 
-import { check, isEmpty } from './check';
+import { check, isEmpty, MapLike } from './check';
 import { decycle } from './decycle';
 import { mergeOrReturnAssignment } from './merge';
-import { every } from './arrays';
+import { every, Mutate } from './arrays';
 
-export function each<T>(iter: { [index: string]: T } | T[], fn: (val: T, index?: string | number, breakLoop?: () => void) => void): void {
+
+export const set = <T>(t: T & TJT.MapLike<any>, [k, v]: any[]): void => {
+    if (t instanceof Map) {
+        t.set(k, v);
+    } else {
+        t[k] = v;
+    }
+}
+
+export const unset = <T>(t: T & TJT.MapLike<any>, k: string | number): void => {
+    if (t instanceof Map) {
+        t.delete(k);
+    } else {
+        delete t[k];
+    }
+}
+
+export const get = <T>(s: TJT.MapLike<T>, k: string | number): T =>
+    (s instanceof Map) ?
+        s.get(k)
+        :
+        s[k]
+
+export function each<T>(iter: TJT.Iterable<T>, fn: (val: T, index?: string | number, breakLoop?: () => void) => void): void {
     let broken = 0;
     const breakLoop = (() => { broken = 1; })
 
-    if (check(iter, Array)) {
+    if (Array.isArray(iter)) {
         let index = 0;
-        for (const v of <T[]>iter) {
+        for (const v of iter) {
             fn(v, index, breakLoop);
             if (broken) {
                 return;
             }
             index++;
         }
-    } else if (check(iter, Object)) {
+    } else if (iter instanceof Map) {
+        for (const [k, v] of iter) {
+            fn(v, k, breakLoop);
+            if (broken) {
+                return;
+            }
+        }
+    } else {
         for (const k of Object.keys(iter)) {
             fn((<{ [index: string]: T }><any>iter)[k], k, breakLoop);
             if (broken) {
@@ -28,68 +58,58 @@ export function each<T>(iter: { [index: string]: T } | T[], fn: (val: T, index?:
     }
 }
 
-export function replace<A, B>(target: A & SIO, source: B & SIO): A & B {
-    if (check(source, Object)) {
-        for (const key of Object.keys(source)) {
-            delete target[key];
-        }
-    }
+export function replace<A, B>(target: A & TJT.MapLike<any>, source: B & TJT.MapLike<any>): A & B {
+    each(source, (v, k) => unset(target, k));
     return extend(target, source);
 }
 
-export function extend<A, B>(target: A & SIO, source: B & SIO): A & B {
-    if (check(source, Object)) {
-        return <A & B>extendN(target, source);
+export function extend<A, B>(target: A & TJT.MapLike<any>, source: B & TJT.MapLike<any>): A & B {
+    if (check(source, MapLike)) {
+        return <A & B>extendN(target, source as any);
     }
     return <A & B>target;
 }
 
-export function extendOwn<A, B>(target: A & SIO, source: B & SIO): A & B {
-    if (check(source, Object)) {
-        for (const key of Object.keys(source)) {
-            if (check(source[key], Object) && check(target[key], Object)) {
-                extendOwn(target[key], source[key]);
-            } else if (target[key]) {
-                target[key] = clone(source[key]);
-            }
+export function extendOwn<A, B>(target: A & TJT.MapLike<any>, source: B & TJT.MapLike<any>): A & B {
+
+    each(source, (rhs, key) => {
+        const lhs = get(target, key);
+        if (check(lhs, MapLike) && check(rhs, MapLike)) {
+            extendOwn(lhs, rhs);
+        } else if (lhs) {
+            set(target, [key, clone(get(source, key))]);
         }
-    }
+    });
+
     return <A & B>target;
 }
 
-export function existentialExtend<A, B>(target: A & SIO, source: B & SIO): A & B {
-    if (check(source, Object)) {
-        for (const key of Object.keys(source)) {
-            if (!target[key]) {
-                target[key] = clone(source[key]);
-            }
-            else if (check(source[key], Object) && check(target[key], Object)) {
-                existentialExtend(target[key], source[key]);
-            }
+export function existentialExtend<A, B>(target: A & TJT.MapLike<any>, source: B & TJT.MapLike<any>): A & B {
+    each(source, (v, key) => {
+        const lhs = get(target, key);
+        const rhs = get(source, key);
+        if (!lhs) {
+            set(target, [key, clone(rhs)]);
         }
-    }
+        else if (check(lhs, MapLike) && check(rhs, MapLike)) {
+            existentialExtend(lhs, rhs);
+        }
+    })
     return <A & B>target;
 }
 
-export function extendN<T>(target: T & SIO, ...sources: Array<SIO>): T {
+export function extendN<T>(target: T & TJT.MapLike<any>, ...sources: Array<T | TJT.MapLike<any>>): T {
     for (const source of sources) {
-        if (check(source, Object)) {
-            const copy = clone(source);
-            for (const attr in copy) {
-                target[attr] = copy[attr];
-            }
-        } else {
-            throw new Error(`extending object with scalar value ${JSON.stringify(source)}, only use objects`);
-        }
+        each(source, (v, k) => set(target, [k, v]));
     }
-    return <T>target;
+    return target;
 }
 
 export function flatten<A>(arr: A[][]): A[] {
     let stack: A[] = [];
     for (const v of arr) {
         if (check(v, Array)) {
-            stack = stack.concat(flatten(<A[][]><any>v));
+            Mutate.concat(stack, flatten(<A[][]><any>v));
         } else {
             stack.push(<A><any>v);
         }
@@ -117,7 +137,7 @@ export function combine<A, B>(a: A, b: B): A & B {
     return extend(result || <A>{}, clone(b));
 }
 
-export function combineN<T>(retType: T, ...args: SIO[]): T {
+export function combineN<T>(retType: T, ...args: TJT.MapLike<any>[]): T {
     const result = clone(retType);
     for (const dict of args) {
         if (check(dict, Object)) {
@@ -144,13 +164,12 @@ export function merge<T>(target: any, setter: any, state?: Merge.State) {
 }
 
 export function mergeN<T>(target: T & { [index: string]: any }, ...args: any[]): T {
-    const result = clone(target);
     for (const dict of args) {
         if (check(dict, Object)) {
-            merge(result, dict);
+            merge(target, dict);
         }
     }
-    return result;
+    return target;
 }
 
 export function or<A, B>(a: A, b: B): A & B {
@@ -262,27 +281,26 @@ export function geoSum<T>(input: { [index: string]: T } | Array<T>, fn: (input: 
 }
 
 
-function _prune(input: SIO): boolean {
+function _prune(input: TJT.MapLike<any>): boolean {
     if (!check(input, Object)) {
         throw new Error('attempting to _prune undefined object');
     }
     const ref = input;
     let pruned = false;
-    for (const k of Object.keys(ref)) {
-        const val = ref[k];
+    each(ref, (val, k) => {
         if (check(val, Object)) {
             if (_prune(val)) {
                 pruned = true;
             }
             if (isEmpty(val)) {
-                delete ref[k];
+                unset(ref, k);
                 pruned = true;
             }
         }
         if (val === undefined) {
-            delete ref[k];
+            unset(ref, k);
         }
-    }
+    })
     return pruned;
 }
 
@@ -324,17 +342,19 @@ function ObjectAssign(target: any, source: any) {
     return to;
 }
 
-export function clone<T>(obj: T, stacktrace: any[] = [], recursive: any = []): T {
+export function clone<T>(obj: T & TJT.Iterable<any>, stacktrace: any[] = [], addr: any = []): T {
     var copy;
 
     // Handle the 3 simple types, and null or undefined
-    if (null == obj || "object" != typeof obj) return obj;
+    if (null == obj || ("object" != typeof obj)) return obj;
 
-    for (const ptr in recursive) {
-        if (ptr as any == obj[key]) {
-            throw new Error(`terminate recursive clone @ ${key}, stack: ${stacktrace.join('.')}`);
-        }
-    }
+    each(addr, (ptr) => {
+        each(obj, (v, key) => {
+            if (ptr as any === v) {
+                throw new Error(`terminate recursive clone @ ${key}; ${v} = ${ptr} stack: ${stacktrace.join('.')}, addr: ${addr}}`);
+            }
+        });
+    });
 
     // Handle Date
     if (obj instanceof Date) {
@@ -344,19 +364,26 @@ export function clone<T>(obj: T, stacktrace: any[] = [], recursive: any = []): T
     }
 
     // Handle Array
-    if (obj instanceof Array) {
+    else if (obj instanceof Array) {
         copy = [];
         for (var i = 0, len = obj.length; i < len; i++) {
-            copy[i] = clone(obj[i], stacktrace.concat(`[${i}]`), recursive.concat(obj));
+            copy[i] = clone(obj[i], [...stacktrace, `[${i}]`], [...addr, obj]);
         }
         return <T><any>copy;
     }
 
-    // Handle Object
-    if (obj instanceof Object) {
-        let copy = <any>{};
-        const { hasOwnProperty } = Object.prototype;
+    // Handle Map
+    else if (obj instanceof Map) {
+        copy = new Map();
+        for (const [k, v] of obj) {
+            copy.set(k, clone(v, [...stacktrace, `[${i}]`], [...addr, obj]));
+        }
+        return <T><any>copy;
+    }
 
+    // force to handle as object even if instanceof Object returns null i.e. Object.create(null)
+    else {
+        let copy = <any>{};
         if (obj != null) {
             if ((obj as any).clone) {
                 try {
@@ -375,16 +402,12 @@ export function clone<T>(obj: T, stacktrace: any[] = [], recursive: any = []): T
                     // throw new Error(`${typeof obj} instance: ${from.constructor}() failed: ${e.message}`);
                 }
             }
-            for (var key in obj) {
-                if (hasOwnProperty.call(obj, key)) {
-                    (<any>copy)[key] = clone(obj[key], stacktrace.concat(key), recursive.concat(obj));
-                }
-            }
+            each(obj, (v, key) => {
+                (<any>copy)[key] = clone(v, [...stacktrace, key], [...addr, obj]);
+            });
         }
         return <T><any>copy;
     }
-
-    throw new Error("Unable to copy obj! Its type isn't supported.");
 }
 
 export function okmap<R, I, IObject extends { [index: string]: I }, RObject extends { [index: string]: R }>(iterable: IObject | Array<I>, fn: (v: I, k?: string | number) => R): RObject {

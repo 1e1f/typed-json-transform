@@ -1,15 +1,18 @@
 /// <reference path="./merge.d.ts" />
 
-interface SIO { [index: string]: any }
-
-interface CamelOptions {
-  delimiter?: string
-  upperCase?: boolean
-  capsLock?: boolean
-  capitalize: boolean
-}
-
 declare namespace TJT {
+  interface SIO { [index: string]: any }
+
+  interface CamelOptions {
+    delimiter?: string
+    upperCase?: boolean
+    capsLock?: boolean
+    capitalize: boolean
+  }
+
+  type Iterable<T> = { [index: string]: T } | Map<string | number, T> | T[]
+  type MapLike<T> = { [index: string]: T } | Map<string | number, T>
+
   class OLHV<T> {
     require?: string;
     value: T
@@ -43,14 +46,14 @@ declare namespace TJT {
 }
 
 declare namespace Keypath {
-  interface Options extends SIO {
+  interface Options extends TJT.SIO {
     allLevels?: boolean;
     diffArrays?: boolean;
   }
 }
 
 declare namespace Mongo {
-  interface Document extends SIO {
+  interface Document extends TJT.SIO {
     _id: string;
   }
 

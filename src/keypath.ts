@@ -2,7 +2,7 @@ import { check } from './check';
 import { each, extend, clone } from './containers';
 import { union, difference } from './arrays';
 
-export function setValueForKeyPath(value: any, keyPath: string, input: SIO): void {
+export function setValueForKeyPath(value: any, keyPath: string, input: TJT.SIO): void {
     let current = input;
     const keys = keyPath.split('.');
     for (let i = 0; i < keys.length - 1; i += 1) {
@@ -41,7 +41,7 @@ export function setValueForKeyPath(value: any, keyPath: string, input: SIO): voi
     }
 }
 
-export function mergeValueAtKeypath(value: any, keyPath: string, obj: SIO): void {
+export function mergeValueAtKeypath(value: any, keyPath: string, obj: TJT.SIO): void {
     // this function mutates obj
     const existing = valueForKeyPath(keyPath, obj);
     if (check(value, Object) && check(existing, Object)) {
@@ -53,7 +53,7 @@ export function mergeValueAtKeypath(value: any, keyPath: string, obj: SIO): void
     }
 }
 
-export function valueForKeyPath(keyPath: string, input: SIO): any {
+export function valueForKeyPath(keyPath: string, input: TJT.SIO): any {
     if (!input) {
         throw new Error('attempting to get valueForKeyPath on undefined object');
     }
@@ -80,7 +80,7 @@ export function valueForKeyPath(keyPath: string, input: SIO): any {
     return current[lastKey];
 }
 
-export function unsetKeyPath(keyPath: string, obj: SIO): boolean {
+export function unsetKeyPath(keyPath: string, obj: TJT.SIO): boolean {
     // this function mutates obj
     const keys = keyPath.split('.');
     let current = obj;
@@ -159,7 +159,7 @@ export function filteredKeyPaths(_keyPaths: string[], ignore?: string[]): string
 }
 
 
-export function keyPaths(obj: SIO, _options?: Keypath.Options, _stack?: string[], parent?: string): string[] {
+export function keyPaths(obj: TJT.SIO, _options?: Keypath.Options, _stack?: string[], parent?: string): string[] {
     const stack = _stack || [];
     const options = <Keypath.Options>clone(_options || {});
     const keys = Object.keys(obj);
@@ -209,12 +209,12 @@ export function keyPaths(obj: SIO, _options?: Keypath.Options, _stack?: string[]
     return stack;
 }
 
-export function allKeyPaths(obj: SIO, options?: Keypath.Options): string[] {
+export function allKeyPaths(obj: TJT.SIO, options?: Keypath.Options): string[] {
     return keyPaths(obj, { allLevels: true, diffArrays: true, ...options });
 }
 
-export function flatObject(object: any, options?: Keypath.Options): SIO {
-    const flat = <SIO>{};
+export function flatObject(object: any, options?: Keypath.Options): TJT.SIO {
+    const flat = <TJT.SIO>{};
     for (const keyPath of keyPaths(object, options)) {
         flat[keyPath] = valueForKeyPath(keyPath, object);
     }
