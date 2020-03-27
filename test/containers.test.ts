@@ -6,7 +6,7 @@ import { load, dump } from 'js-yaml';
 import {
     amap, isEqual, check, combine, combineN, any, each,
     every, flatten, contains, extend, extendN, intersect, clone,
-    arrayify, map, merge, okmap, union, difference, keysAndValues, aokmap
+    arrayify, map, merge, okmap, union, difference, keysAndValues, aokmap, mergeArray, mergeObject
 } from '../src';
 import { Schema } from 'mongoose';
 
@@ -278,6 +278,16 @@ describe('merge', function () {
 
     const { operators, arrayOperators, complex } = o.expect;
 
+    it('merges an object with a false', () => {
+        const a = {}
+        const b = {
+            x: 1,
+            b: false
+        }
+        mergeObject({ data: a, state: { merge: { operator: '|' } } }, b)
+        assert.deepEqual(a, { x: 1, b: false });
+    });
+
     Object.keys(operators).forEach((key) => {
         const expected = operators[key];
         it('object: ' + key, () => {
@@ -287,6 +297,17 @@ describe('merge', function () {
         });
     })
 
+    it('merges an array object with a false', () => {
+        const a = [{ any: 'value' }]
+        const b = [{
+            x: 1,
+            b: false
+        }]
+        mergeArray({ data: a, state: { merge: { operator: '|' } } }, b)
+        assert.deepEqual(a, [{ any: 'value' }, { x: 1, b: false }]);
+    });
+
+    
     Object.keys(arrayOperators).forEach((key) => {
         it('array: ' + key, () => {
             const { c, d } = clone(o.fixtures);

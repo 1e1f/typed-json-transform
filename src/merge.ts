@@ -88,9 +88,9 @@ export function mergeObject(rv: Merge.ReturnValue, _setter: any): Merge.ReturnVa
             switch (operator) {
                 case '^': case '|': case '+': doMerge(); break;
                 case '=': doMerge(); break;
-                case '!': if (!lhs) doMerge(); break;
+                case '!': if (lhs === undefined) doMerge(); break;
                 case '?': case '&': case '*': if (lhs) doMerge(); break;
-                case '-': if (rhs) delete data[key]; break;
+                case '-': if (rhs !== undefined) delete data[key]; break;
                 default: throw new Error(`unhandled merge operator ${operator}`)
             }
 
@@ -98,7 +98,7 @@ export function mergeObject(rv: Merge.ReturnValue, _setter: any): Merge.ReturnVa
                 for (const key of Object.keys(data)) {
                     let rhs = setter[key];
                     switch (operator) {
-                        case '=': if (!rhs) delete data[key]; break;
+                        case '=': if (rhs === undefined) delete data[key]; break;
                         case '&': case '*': if (!rhs) delete data[key]; break;
                         default: break;
                     }
