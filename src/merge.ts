@@ -37,21 +37,22 @@ export function mergeArray({ data: lhs, state }: Merge.ReturnValue, rhs: any): M
             }
         }
         if (mutated) {
-            return { data: null, state };
+            return { data: undefined, state };
         }
     }
     else if (check(rhs, Array)) {
         recurArray({ data: null, state }, rhs)
         _mergeArray(<any[]>lhs, <any[]>rhs, operator);
-        return { data: null, state };
+        return { data: undefined, state };
     }
     switch (operator) {
         case '=': throw new Error('replacing array value with non-array value');
         default:
             _mergeArray(<any[]>lhs, arrayify(rhs), operator)
-            return { data: null, state };
+            return { data: undefined, state };
     }
 }
+
 
 export function mergeObject(rv: Merge.ReturnValue, _setter: any): Merge.ReturnValue {
     const { state, data } = rv;
@@ -75,7 +76,7 @@ export function mergeObject(rv: Merge.ReturnValue, _setter: any): Merge.ReturnVa
             const rhs = setter[key];
             const doMerge = () => {
                 const assignment = mergeOrReturnAssignment({ data: lhs, state }, rhs).data;
-                if (assignment || check(assignment, [Number])) {
+                if (assignment !== undefined) {
                     if (operator == '^') {
                         if (data[key] == assignment) delete data[key]
                         else data[key] = assignment
@@ -110,7 +111,7 @@ export function mergeObject(rv: Merge.ReturnValue, _setter: any): Merge.ReturnVa
 
 const printType = (val: any) => {
     if (check(val, Object)) {
-        return 'object'
+        return 'object';
     }
     return val;
 }
@@ -118,7 +119,7 @@ const printType = (val: any) => {
 function throwIfImplicitConversion(rv: Merge.ReturnValue, rhs: any): any {
     const { data: lhs, state } = rv;
     const { operator } = state.merge;
-    if (lhs && (typeof lhs != typeof rhs) && state.implicitTypeConversionError) {
+    if ((lhs !== undefined) && (typeof lhs !== typeof rhs) && state.implicitTypeConversionError) {
         throw new Error(`implicit type change in ${printType(lhs)} ${operator} ${printType(rhs)}\n${JSON.stringify(rhs, null, 2)}`);
     }
 }
@@ -126,8 +127,8 @@ function throwIfImplicitConversion(rv: Merge.ReturnValue, rhs: any): any {
 export const recurArray = (rv: Merge.ReturnValue, rhs: any): void => {
     const { state } = rv;
     rhs.forEach((val: any, index: number) => {
-        const res = mergeOrReturnAssignment({ data: null, state: { ...state, merge: { operator: '=' } } }, val).data
-        if (res || check(res, Number)) {
+        const res = mergeOrReturnAssignment({ data: undefined, state: { ...state, merge: { operator: '=' } } }, val).data
+        if (res !== undefined) {
             rhs[index] = res;
         }
     });
@@ -145,8 +146,8 @@ export function mergeOrReturnAssignment(rv: Merge.ReturnValue, rhs: any): any {
         else {
             if (contains(['&', '*', '-'], operator)) {
                 switch (operator) {
-                    case '*': case '&': if (!rhs) return { data: 0, state };
-                    case '-': if (rhs && check(rhs, String)) delete lhs[rhs]; return { data: null, state };
+                    case '*': case '&': if (rhs === undefined) return { data: 0, state };
+                    case '-': if (rhs && check(rhs, String)) delete lhs[rhs]; return { data: undefined, state };
                 }
             }
             throwIfImplicitConversion(rv, rhs);
@@ -170,7 +171,7 @@ export function mergeOrReturnAssignment(rv: Merge.ReturnValue, rhs: any): any {
         }
         return { data: rhs, state };
     }
-    return { data: null, state };
+    return { data: undefined, state };
 }
 
 export const isMergeConstructor = (val: any) => {

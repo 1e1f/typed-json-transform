@@ -80,7 +80,7 @@ export namespace Mutate {
             for (const v of a) {
                 if (!contains(res, v)) {
                     if (every(args, (b) => {
-                        if (b == a) {
+                        if (isEqual(b, a)) {
                             return true;
                         }
                         return contains(b, v) > 0;
@@ -170,7 +170,7 @@ export function intersect<T>(...args: T[][]): T[] {
         for (const v of a) {
             if (!contains(res, v)) {
                 if (every(args, (b) => {
-                    if (b == a) {
+                    if (isEqual(b, a)) {
                         return true;
                     }
                     return contains(b, v) > 0;

@@ -224,7 +224,7 @@ export function flatObject(object: any, options?: Keypath.Options): TJT.SIO {
 export const unflatten = (source: any) => {
     const ret: any = {};
     each(source, (val: any, keyPath: string) => {
-        if (check(val, Number) || val) {
+        if (val !== undefined) {
             setValueForKeyPath(val, keyPath, ret);
         }
     });
