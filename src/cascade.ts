@@ -95,10 +95,10 @@ export function hashField(trie: any, options: any) {
   const { keywords, selectors } = extractKeywordsAndSelectors(options);
   const match = flatten(deepSearch(trie, keywords, selectors));
   const unselected = okmap(trie, (val: any) => {
-    return false;
+    return false as any;
   });
   const selected = okmap(match, (val: any) => {
-    return !!val;
+    return !!val as any;
   });
   return or(unselected, selected);
 }

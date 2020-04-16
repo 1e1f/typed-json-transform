@@ -1,7 +1,6 @@
 import { assert } from 'chai';
 import { select, cascade, hashField } from '../src';
 
-
 const keywords = [
   'win',
   'mac',

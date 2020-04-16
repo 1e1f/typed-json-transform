@@ -32,7 +32,7 @@ describe('olhm', () => {
   it('throws on a simple value', () => {
     try {
       const res = OLHM.safe(inputs.a);
-      assert.fail(res);
+      assert.fail(res as any);
     } catch (e) {
       assert.equal(e.message, 'OLHM expects an object as input');
     }

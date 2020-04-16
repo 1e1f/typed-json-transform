@@ -6,11 +6,11 @@ import { mergeOrReturnAssignment } from './merge';
 import { every, Mutate } from './arrays';
 
 
-export const set = <T>(t: T & TJT.MapLike<any>, [k, v]: any[]): void => {
+export const set = (t: TJT.MapLike<any>, [k, v]: any[]): void => {
     if (t instanceof Map) {
         t.set(k, v);
     } else {
-        t[k] = v;
+        t[k as string] = v;
     }
 }
 
@@ -98,7 +98,7 @@ export function existentialExtend<A, B>(target: A & TJT.MapLike<any>, source: B 
     return <A & B>target;
 }
 
-export function extendN<T>(target: T & TJT.MapLike<any>, ...sources: Array<T | TJT.MapLike<any>>): T {
+export function extendN<T>(target: any, ...sources: Array<T | TJT.MapLike<any>>): T {
     for (const source of sources) {
         each(source, (v, k) => set(target, [k, v]));
     }
@@ -410,10 +410,11 @@ export function clone<T>(obj: T & TJT.Iterable<any>, stacktrace: any[] = [], add
     }
 }
 
-export function okmap<R, I, IObject extends { [index: string]: I }, RObject extends { [index: string]: R }>(iterable: IObject | Array<I>, fn: (v: I, k?: string | number) => R): RObject {
-    const o = <RObject>{};
-    const a = <RObject><any>[];
-    each(iterable, (_v: I, _k: string) => {
+// export function okmap<R, I, IType extends TJT.Iterable<I>, RType extends R[]>(iterable: IType, fn: (v: I, k?: string | number) => {[index: number]: R}): RType
+export function okmap<R, I, IType extends TJT.Iterable<I>, RType extends TJT.Iterable<R>>(iterable: IType, fn: (v: I, k?: string | number) => R): RType {
+    const o: {[index: string] :R} = {};
+    const a: R[] = <any>[];
+    each(iterable, (_v: I, _k: string | number) => {
         let k = _k;
         let v = fn(_v, k);
         if (check(v, Object)) {
@@ -423,15 +424,14 @@ export function okmap<R, I, IObject extends { [index: string]: I }, RObject exte
                 v = <R>(<any>v).value;
             }
         }
-        o[k] = v;
-        if (<any>k >= 0) {
-            a[k] = v;
+        o[k as string] = v;
+        if (k >= 0) {
+            a[k as number] = v;
         }
     });
-    if (every(Object.keys(o), (k) => check(k, Number))) return a;
-    return o;
+    if (every(Object.keys(o), (k) => check(k, Number))) return a as RType;
+    return o as RType;
 }
-
 
 export function aokmap<R, I, IObject extends { [index: string]: I }>(iterable: IObject | Array<I>, fn: (v: I, k?: string | number) => R | Promise<R>): any {
     const createPromise = (_v: I, _k: string) => new Promise((resolve, reject) => {

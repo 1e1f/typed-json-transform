@@ -1,6 +1,6 @@
 {
     "name": "typed-json-transform",
-    "version": "0.24.11",
+    "version": "0.24.12",
     "description": "_ like library written in typescript using templated generics where reasonable",
     "homepage": "https://github.com/1e1f/typed-json-transform",
     "author": {
@@ -20,29 +20,28 @@
             "url": "https://github.com/1e1f/typed-json-transform/blob/master/LICENSE-MIT"
         }
     ],
-    "main": "lib/index.js",
-    "types": "index.d.ts",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
     "scripts": {
-        "test": "NODE_ENV=test mocha --recursive --compilers ts:ts-node/register --bail",
+        "test": "NODE_ENV=test mocha --recursive --require ts-node/register \"test/**/*.ts\" --bail",
         "cover": "NODE_ENV=test nyc --report-dir coverage npm t",
         "build": "tsc",
         "travis": "npm run build && npm run cover"
     },
     "devDependencies": {
-        "@types/chai": "^4.1.7",
-        "@types/js-yaml": "^3.11.2",
-        "@types/mocha": "^5.2.5",
-        "@types/mongodb": "^3.1.14",
-        "@types/mongoose": "^5.3.17",
-        "@types/node": "^8.0",
+        "@types/chai": "^4.2",
+        "@types/js-yaml": "^3.12",
+        "@types/mocha": "^7",
+        "@types/mongoose": "^5.7.11",
+        "@types/node": "^10.0",
         "chai": "^4.2",
         "coveralls": "^3.0",
-        "js-yaml": "^3.12",
-        "mocha": "^5.2.0",
-        "mongoose": "^5.3.14",
-        "nyc": "^13.1.0",
-        "ts-node": "^7.0.1",
-        "typescript": "^3.2.2"
+        "js-yaml": "^3.13",
+        "mocha": "^7.1",
+        "mongoose": "^5.9",
+        "nyc": "^15.0",
+        "ts-node": "^8.8",
+        "typescript": "^3.8"
     },
     "nyc": {
         "include": [

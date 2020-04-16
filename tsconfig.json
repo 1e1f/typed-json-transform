@@ -3,7 +3,7 @@
         "src/**/*.ts"
     ],
     "compilerOptions": {
-        "outDir": "lib",
+        "outDir": "dist",
         "sourceMap": true,
         "noImplicitAny": true,
         "module": "commonjs",
@@ -13,7 +13,7 @@
             "es2015"
         ],
         "preserveConstEnums": true,
-        "declaration": false,
+        "declaration": true,
         "noEmitOnError": false,
         "downlevelIteration": true
     }
