@@ -162,7 +162,7 @@ export const recurArray = (rv, rhs) => {
         }
     });
 };
-export function mergeOrReturnAssignment(rv, rhs) {
+function mergeOrReturnAssignment(rv, rhs) {
     const { data: lhs, state } = rv;
     const { operator } = state.merge;
     if (check(lhs, Array)) {
@@ -232,5 +232,24 @@ export function construct(rv, constructor) {
         }
     }
     return { data, state };
+}
+export function merge(target, setter, state) {
+    const res = mergeOrReturnAssignment({
+        data: target, state: Object.assign({ merge: {
+                operator: '|'
+            } }, state)
+    }, setter).data;
+    if (res || check(res, Number)) {
+        return res;
+    }
+    return target;
+}
+export function mergeN(target, ...args) {
+    for (const dict of args) {
+        if (check(dict, Object)) {
+            merge(target, dict);
+        }
+    }
+    return target;
 }
 //# sourceMappingURL=merge.js.map

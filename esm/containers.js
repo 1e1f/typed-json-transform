@@ -1,6 +1,5 @@
 import { check, isEmpty, MapLike } from './check';
 import { decycle } from './decycle';
-import { mergeOrReturnAssignment } from './merge';
 import { every, Mutate } from './arrays';
 export const set = (t, [k, v]) => {
     if (t instanceof Map) {
@@ -51,6 +50,34 @@ export function each(iter, fn) {
             }
         }
     }
+}
+export const mapToObject = (input) => {
+    const out = {};
+    each(input, (value, key) => {
+        if (typeof value == 'object') {
+            out[key] = mapToObject(value);
+        }
+        else {
+            out[key] = value;
+        }
+    });
+    return out;
+};
+export function map(iter, fn) {
+    const res = [];
+    if (Array.isArray(iter)) {
+        let i = 0;
+        for (const v of iter) {
+            res.push(fn(v, i));
+            i++;
+        }
+    }
+    else if (Object.keys(iter)) {
+        for (const k of Object.keys(iter)) {
+            res.push(fn(iter[k], k));
+        }
+    }
+    return res;
 }
 export function replace(target, source) {
     each(source, (v, k) => unset(target, k));
@@ -131,25 +158,6 @@ export function combineN(retType, ...args) {
     }
     return result;
 }
-export function merge(target, setter, state) {
-    const res = mergeOrReturnAssignment({
-        data: target, state: Object.assign({ merge: {
-                operator: '|'
-            } }, state)
-    }, setter).data;
-    if (res || check(res, Number)) {
-        return res;
-    }
-    return target;
-}
-export function mergeN(target, ...args) {
-    for (const dict of args) {
-        if (check(dict, Object)) {
-            merge(target, dict);
-        }
-    }
-    return target;
-}
 export function or(a, b) {
     const ret = clone(a);
     each(b, (v, k) => {
@@ -175,22 +183,6 @@ export function any(iter, fn) {
         }
     }
     return false;
-}
-export function map(iter, fn) {
-    const res = [];
-    if (check(iter, Array)) {
-        let i = 0;
-        for (const v of iter) {
-            res.push(fn(v, i));
-            i++;
-        }
-    }
-    if (check(iter, Object)) {
-        for (const k of Object.keys(iter)) {
-            res.push(fn(iter[k], k));
-        }
-    }
-    return res;
 }
 export function amap(iter, fn) {
     const arr = [];

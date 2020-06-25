@@ -1,6 +1,5 @@
 import { check, isEmpty, MapLike } from './check';
 import { decycle } from './decycle';
-import { mergeOrReturnAssignment } from './merge';
 import { every, Mutate } from './arrays';
 import { TJT, Merge } from './types';
 
@@ -54,6 +53,35 @@ export function each<T>(iter: TJT.Iterable<T>, fn: (val: T, index?: string | num
             }
         }
     }
+}
+
+export const mapToObject = <T>(input: Map<string, T>): { [x: string]: T } => {
+    const out: any = {};
+    each(input, (value: any, key: string) => {
+        if (typeof value == 'object') {
+            out[key] = mapToObject(value)
+        }
+        else {
+            out[key] = value
+        }
+    });
+    return out
+}
+
+export function map<R, I>(iter: { [index: string]: I } | I[], fn: (val: I, index: any) => R): R[] {
+    const res: R[] = [];
+    if (Array.isArray(iter)) {
+        let i = 0;
+        for (const v of <I[]>iter) {
+            res.push(fn(v, i));
+            i++;
+        }
+    } else if (Object.keys(iter)) {
+        for (const k of Object.keys(iter)) {
+            res.push(fn((<{ [index: string]: I }>iter)[k], k));
+        }
+    }
+    return res;
 }
 
 export function replace<A, B>(target: A & TJT.MapLike<any>, source: B & TJT.MapLike<any>): A & B {
@@ -146,30 +174,6 @@ export function combineN<T>(retType: T, ...args: TJT.MapLike<any>[]): T {
 }
 
 
-export function merge<T>(target: any, setter: any, state?: Merge.State) {
-    const res = mergeOrReturnAssignment({
-        data: target, state: {
-            merge: {
-                operator: '|'
-            },
-            ...state
-        }
-    }, setter).data;
-    if (res || check(res, Number)) {
-        return res;
-    }
-    return target;
-}
-
-export function mergeN<T>(target: T & { [index: string]: any }, ...args: any[]): T {
-    for (const dict of args) {
-        if (check(dict, Object)) {
-            merge(target, dict);
-        }
-    }
-    return target;
-}
-
 export function or<A, B>(a: A, b: B): A & B {
     const ret = <any>clone(a);
     each(b, (v: any, k: string) => {
@@ -195,22 +199,6 @@ export function any<T>(iter: { [index: string]: T } | T[], fn: (val: T, index?: 
         }
     }
     return false;
-}
-
-export function map<R, I>(iter: { [index: string]: I } | I[], fn: (val: I, index: any) => R): R[] {
-    const res: R[] = [];
-    if (check(iter, Array)) {
-        let i = 0;
-        for (const v of <I[]>iter) {
-            res.push(fn(v, i));
-            i++;
-        }
-    } if (check(iter, Object)) {
-        for (const k of Object.keys(iter)) {
-            res.push(fn((<{ [index: string]: I }>iter)[k], k));
-        }
-    }
-    return res;
 }
 
 export function amap<R, I>(iter: { [index: string]: I } | I[], fn: (val: I, index: any) => R | Promise<R>): Promise<R[]> {

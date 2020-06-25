@@ -54,7 +54,6 @@ export function mergeArray({ data: lhs, state }: Merge.ReturnValue, rhs: any): M
     }
 }
 
-
 export function mergeObject(rv: Merge.ReturnValue, _setter: any): Merge.ReturnValue {
     const { state, data } = rv;
     const { merge: { operator } } = state;
@@ -135,7 +134,7 @@ export const recurArray = (rv: Merge.ReturnValue, rhs: any): void => {
     });
 }
 
-export function mergeOrReturnAssignment(rv: Merge.ReturnValue, rhs: any): any {
+function mergeOrReturnAssignment(rv: Merge.ReturnValue, rhs: any): any {
     const { data: lhs, state } = rv;
     const { operator } = state.merge;
     if (check(lhs, Array)) {
@@ -203,4 +202,29 @@ export function construct(rv: Merge.ReturnValue, constructor: any): Merge.Return
         }
     }
     return { data, state };
+}
+
+
+export function merge<T>(target: any, setter: any, state?: Merge.State) {
+    const res = mergeOrReturnAssignment({
+        data: target, state: {
+            merge: {
+                operator: '|'
+            },
+            ...state
+        }
+    }, setter).data;
+    if (res || check(res, Number)) {
+        return res;
+    }
+    return target;
+}
+
+export function mergeN<T>(target: T & { [index: string]: any }, ...args: any[]): T {
+    for (const dict of args) {
+        if (check(dict, Object)) {
+            merge(target, dict);
+        }
+    }
+    return target;
 }

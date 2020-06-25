@@ -8,5 +8,4 @@ export * from './mongo';
 export * from './string';
 export * from './merge';
 export * from './arrays';
-export * from './map';
 //# sourceMappingURL=index.js.map
