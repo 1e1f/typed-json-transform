@@ -6,3 +6,7 @@ node_modules
 /.tscache
 /.vscode
 /coverage
+.vscode
+/tsconfig.tsbuildinfo
+/index.js
+/esm

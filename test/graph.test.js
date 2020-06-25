@@ -4,7 +4,7 @@ https://github.com/jriecken/dependency-graph
 */
 
 import { assert } from 'chai';
-import { Graph } from '../src';
+import { Graph } from '../esm';
 
 describe('Graph', function () {
   it('should be able to add/remove nodes', function () {

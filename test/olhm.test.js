@@ -2,7 +2,7 @@ import { assert } from 'chai';
 import { load } from 'js-yaml';
 import * as fs from 'fs';
 
-import { check, OLHM, OLHV } from '../src';
+import { check, OLHM, OLHV } from '../esm';
 
 const yamlFile = fs.readFileSync('test/olhm.yaml', 'utf8');
 const o = load(yamlFile);
@@ -32,7 +32,7 @@ describe('olhm', () => {
   it('throws on a simple value', () => {
     try {
       const res = OLHM.safe(inputs.a);
-      assert.fail(res as any);
+      assert.fail(res);
     } catch (e) {
       assert.equal(e.message, 'OLHM expects an object as input');
     }
@@ -72,7 +72,7 @@ describe('olhm', () => {
       assert.ok(check(i, Number));
       return memo + (v * 2);
     }, 0);
-    assert.deepEqual(res, <any>120);
+    assert.deepEqual(res, 120);
   });
   it('did not mutate the input objects', () => {
     const original = load(yamlFile);

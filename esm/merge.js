@@ -40,7 +40,7 @@ export function mergeArray({ data: lhs, state }, rhs) {
         let mutated;
         for (const key of Object.keys(rhs)) {
             if ((key.length == 2) && (key[0] == '<')) {
-                const nextState = Object.assign({}, state, { merge: {
+                const nextState = Object.assign(Object.assign({}, state), { merge: {
                         operator: key[1]
                     } });
                 mutated = true;
@@ -48,19 +48,19 @@ export function mergeArray({ data: lhs, state }, rhs) {
             }
         }
         if (mutated) {
-            return { data: null, state };
+            return { data: undefined, state };
         }
     }
     else if (check(rhs, Array)) {
         recurArray({ data: null, state }, rhs);
         _mergeArray(lhs, rhs, operator);
-        return { data: null, state };
+        return { data: undefined, state };
     }
     switch (operator) {
         case '=': throw new Error('replacing array value with non-array value');
         default:
             _mergeArray(lhs, arrayify(rhs), operator);
-            return { data: null, state };
+            return { data: undefined, state };
     }
 }
 export function mergeObject(rv, _setter) {
@@ -69,7 +69,7 @@ export function mergeObject(rv, _setter) {
     const setter = unflatten(_setter);
     for (const key of Object.keys(setter)) {
         if ((key.length == 2) && (key[0] == '<')) {
-            const nextState = Object.assign({}, state, { merge: {
+            const nextState = Object.assign(Object.assign({}, state), { merge: {
                     operator: key[1]
                 } });
             const assignment = mergeOrReturnAssignment({ data, state: nextState }, setter[key]).data;
@@ -82,7 +82,7 @@ export function mergeObject(rv, _setter) {
             const rhs = setter[key];
             const doMerge = () => {
                 const assignment = mergeOrReturnAssignment({ data: lhs, state }, rhs).data;
-                if (assignment || check(assignment, [Number])) {
+                if (assignment !== undefined) {
                     if (operator == '^') {
                         if (data[key] == assignment)
                             delete data[key];
@@ -104,7 +104,7 @@ export function mergeObject(rv, _setter) {
                     doMerge();
                     break;
                 case '!':
-                    if (!lhs)
+                    if (lhs === undefined)
                         doMerge();
                     break;
                 case '?':
@@ -114,7 +114,7 @@ export function mergeObject(rv, _setter) {
                         doMerge();
                     break;
                 case '-':
-                    if (rhs)
+                    if (rhs !== undefined)
                         delete data[key];
                     break;
                 default: throw new Error(`unhandled merge operator ${operator}`);
@@ -124,7 +124,7 @@ export function mergeObject(rv, _setter) {
                     let rhs = setter[key];
                     switch (operator) {
                         case '=':
-                            if (!rhs)
+                            if (rhs === undefined)
                                 delete data[key];
                             break;
                         case '&':
@@ -149,15 +149,15 @@ const printType = (val) => {
 function throwIfImplicitConversion(rv, rhs) {
     const { data: lhs, state } = rv;
     const { operator } = state.merge;
-    if (lhs && (typeof lhs != typeof rhs) && state.implicitTypeConversionError) {
+    if ((lhs !== undefined) && (typeof lhs !== typeof rhs) && state.implicitTypeConversionError) {
         throw new Error(`implicit type change in ${printType(lhs)} ${operator} ${printType(rhs)}\n${JSON.stringify(rhs, null, 2)}`);
     }
 }
 export const recurArray = (rv, rhs) => {
     const { state } = rv;
     rhs.forEach((val, index) => {
-        const res = mergeOrReturnAssignment({ data: null, state: Object.assign({}, state, { merge: { operator: '=' } }) }, val).data;
-        if (res || check(res, Number)) {
+        const res = mergeOrReturnAssignment({ data: undefined, state: Object.assign(Object.assign({}, state), { merge: { operator: '=' } }) }, val).data;
+        if (res !== undefined) {
             rhs[index] = res;
         }
     });
@@ -176,12 +176,12 @@ export function mergeOrReturnAssignment(rv, rhs) {
             if (contains(['&', '*', '-'], operator)) {
                 switch (operator) {
                     case '*':
-                    case '&': if (!rhs)
+                    case '&': if (rhs === undefined)
                         return { data: 0, state };
                     case '-':
                         if (rhs && check(rhs, String))
                             delete lhs[rhs];
-                        return { data: null, state };
+                        return { data: undefined, state };
                 }
             }
             throwIfImplicitConversion(rv, rhs);
@@ -195,7 +195,7 @@ export function mergeOrReturnAssignment(rv, rhs) {
             }
             else {
                 throwIfImplicitConversion(rv, rhs);
-                let ret = { data: {}, state: Object.assign({}, state, { merge: { operator: '=' } }) };
+                let ret = { data: {}, state: Object.assign(Object.assign({}, state), { merge: { operator: '=' } }) };
                 mergeOrReturnAssignment(ret, rhs);
                 return ret;
             }
@@ -206,7 +206,7 @@ export function mergeOrReturnAssignment(rv, rhs) {
         }
         return { data: rhs, state };
     }
-    return { data: null, state };
+    return { data: undefined, state };
 }
 export const isMergeConstructor = (val) => {
     for (const key of Object.keys(val)) {
@@ -223,7 +223,7 @@ export function construct(rv, constructor) {
             const nextOperator = key[1];
             const res = mergeOrReturnAssignment({
                 data, state: {
-                    merge: Object.assign({}, state.merge, { operator: nextOperator })
+                    merge: Object.assign(Object.assign({}, state.merge), { operator: nextOperator })
                 }
             }, constructor[key]).data;
             if (res || check(res, Number)) {

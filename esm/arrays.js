@@ -79,7 +79,7 @@ export var Mutate;
             for (const v of a) {
                 if (!contains(res, v)) {
                     if (every(args, (b) => {
-                        if (b == a) {
+                        if (isEqual(b, a, { strict: true })) {
                             return true;
                         }
                         return contains(b, v) > 0;
@@ -165,7 +165,7 @@ export function intersect(...args) {
         for (const v of a) {
             if (!contains(res, v)) {
                 if (every(args, (b) => {
-                    if (b == a) {
+                    if (isEqual(b, a, { strict: true })) {
                         return true;
                     }
                     return contains(b, v) > 0;
@@ -198,7 +198,7 @@ export function contains(set, toMatch) {
     }
     let matches = 0;
     for (const val of set) {
-        if (isEqual(val, toMatch)) {
+        if (isEqual(val, toMatch, { strict: true })) {
             matches++;
         }
     }

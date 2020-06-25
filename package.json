@@ -1,67 +1,68 @@
 {
-    "name": "typed-json-transform",
-    "version": "0.24.12",
-    "description": "_ like library written in typescript using templated generics where reasonable",
-    "homepage": "https://github.com/1e1f/typed-json-transform",
-    "author": {
-        "name": "Leif Shackelford",
-        "email": "leif@chroma.io"
-    },
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/1e1f/typed-json-transform.git"
-    },
-    "bugs": {
-        "url": "https://github.com/1e1f/typed-json-transform/issues"
-    },
-    "licenses": [
-        {
-            "type": "MIT",
-            "url": "https://github.com/1e1f/typed-json-transform/blob/master/LICENSE-MIT"
-        }
-    ],
-    "main": "dist/index.js",
-    "types": "dist/index.d.ts",
-    "scripts": {
-        "test": "NODE_ENV=test mocha --recursive --require ts-node/register \"test/**/*.ts\" --bail",
-        "cover": "NODE_ENV=test nyc --report-dir coverage npm t",
-        "build": "tsc",
-        "travis": "npm run build && npm run cover"
-    },
-    "devDependencies": {
-        "@types/chai": "^4.2",
-        "@types/js-yaml": "^3.12",
-        "@types/mocha": "^7",
-        "@types/mongoose": "^5.7.11",
-        "@types/node": "^10.0",
-        "chai": "^4.2",
-        "coveralls": "^3.0",
-        "js-yaml": "^3.13",
-        "mocha": "^7.1",
-        "mongoose": "^5.9",
-        "nyc": "^15.0",
-        "ts-node": "^8.8",
-        "typescript": "^3.8"
-    },
-    "nyc": {
-        "include": [
-            "src/*.ts"
-        ],
-        "exclude": [
-            "**/*.d.ts",
-            "node_modules"
-        ],
-        "extension": [
-            ".ts"
-        ],
-        "require": [
-            "ts-node/register"
-        ],
-        "reporter": [
-            "json",
-            "html",
-            "lcov"
-        ],
-        "all": true
+  "name": "typed-json-transform",
+  "version": "0.24.12",
+  "description": "_ like library written in typescript using templated generics where reasonable",
+  "homepage": "https://github.com/1e1f/typed-json-transform",
+  "author": {
+    "name": "Leif Shackelford",
+    "email": "leif@chroma.io"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/1e1f/typed-json-transform.git"
+  },
+  "bugs": {
+    "url": "https://github.com/1e1f/typed-json-transform/issues"
+  },
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "https://github.com/1e1f/typed-json-transform/blob/master/LICENSE-MIT"
     }
+  ],
+  "private": false,
+  "main": "index.js",
+  "types": "esm/index.d.ts",
+  "scripts": {
+    "build": "rm -Rf esm && rm -f tsconfig.tsbuildinfo && rollup --config rollup.config.js && tsc",
+    "test": "NODE_ENV=test mocha --require @babel/register \"test/**/*.js\" --bail",
+    "cover": "NODE_ENV=test nyc --report-dir coverage npm t",
+    "travis": "npm run build && npm run cover"
+  },
+  "devDependencies": {
+      
+    "@babel/core": "^7.10.3",
+    "@babel/preset-env": "^7.10.3",
+    "@babel/register": "^7.10.3",
+    "@istanbuljs/nyc-config-babel": "^3.0.0",
+    "@rollup/plugin-babel": "^5.0.4",
+    "@rollup/plugin-commonjs": "^13.0.0",
+    "@rollup/plugin-json": "^4.1.0",
+    "@rollup/plugin-node-resolve": "^8.1.0",
+    "@rollup/plugin-typescript": "^5.0.0",
+    "@types/chai": "^4.2",
+    "@types/js-yaml": "^3.12",
+    "@types/mocha": "^7",
+    "@types/mongoose": "^5.7.11",
+    "@types/node": "^10.0",
+    "babel-plugin-istanbul": "^6.0.0",
+    "chai": "^4.2",
+    "coveralls": "^3.0",
+    "js-yaml": "^3.13",
+    "mocha": "^7.1",
+    "mongoose": "^5.9",
+    "rollup": "^2.18.0",
+    "nyc": "^15.0",
+    "ts-node": "^8.8",
+    "tslib": "^1.11",
+    "typescript": "^3.8"
+  },
+  "nyc": {
+    "extends": "@istanbuljs/nyc-config-babel",
+    "reporter": [
+      "json",
+      "html",
+      "lcov"
+    ]
+  }
 }

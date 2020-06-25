@@ -226,7 +226,7 @@ export function flatObject(object, options) {
 export const unflatten = (source) => {
     const ret = {};
     each(source, (val, keyPath) => {
-        if (check(val, Number) || val) {
+        if (val !== undefined) {
             setValueForKeyPath(val, keyPath, ret);
         }
     });

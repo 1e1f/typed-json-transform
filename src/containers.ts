@@ -412,7 +412,7 @@ export function clone<T>(obj: T & TJT.Iterable<any>, stacktrace: any[] = [], add
 
 // export function okmap<R, I, IType extends TJT.Iterable<I>, RType extends R[]>(iterable: IType, fn: (v: I, k?: string | number) => {[index: number]: R}): RType
 export function okmap<R, I, IType extends TJT.Iterable<I>, RType extends TJT.Iterable<R>>(iterable: IType, fn: (v: I, k?: string | number) => R): RType {
-    const o: {[index: string] :R} = {};
+    const o: { [index: string]: R } = {};
     const a: R[] = <any>[];
     each(iterable, (_v: I, _k: string | number) => {
         let k = _k;
@@ -433,9 +433,9 @@ export function okmap<R, I, IType extends TJT.Iterable<I>, RType extends TJT.Ite
     return o as RType;
 }
 
-export function aokmap<R, I, IObject extends { [index: string]: I }>(iterable: IObject | Array<I>, fn: (v: I, k?: string | number) => R | Promise<R>): any {
-    const createPromise = (_v: I, _k: string) => new Promise((resolve, reject) => {
-        let key = _k;
+function createAokPromise<I, R>(_v: I, _k: string, fn: any) {
+    let key = _k;
+    return new Promise((resolve, reject) => {
         return Promise.resolve(fn(_v, key)).then(value => {
             if (check(value, Object)) {
                 const keys = Object.keys(value);
@@ -447,10 +447,12 @@ export function aokmap<R, I, IObject extends { [index: string]: I }>(iterable: I
             return resolve({ key, value })
         }, (e) => reject(e)).catch((e) => reject(e))
     });
+};
 
+export function aokmap<R, I, IObject extends { [index: string]: I }>(iterable: IObject | Array<I>, fn: (v: I, k?: string | number) => R | Promise<R>): any {
     const pa = <Promise<any>[]>[];
     each(iterable, (_v: I, _k: string) => {
-        pa.push(createPromise(_v, _k));
+        pa.push(createAokPromise(_v, _k, fn));
     });
 
     return Promise.all(pa).then((resolved) => {
@@ -469,6 +471,41 @@ export function aokmap<R, I, IObject extends { [index: string]: I }>(iterable: I
         }
     });
 }
+
+// const createAokPromise = async <I, R>(_v: I, _k: string, fn: any) => {
+//     let key = _k;
+//     let value = await fn(_v, key);
+//     if (check(value, Object)) {
+//         const keys = Object.keys(value);
+//         if (keys.length == 2 && (keys[0] == 'key' || keys[1] == 'key')) {
+//             key = (<any>value).key;
+//             value = <R>(<any>value).value;
+//         }
+//     }
+//     return { key, value }
+// };
+
+// export const aokmap = async <R, I, IObject extends { [index: string]: I }>(iterable: IObject | Array<I>, fn: (v: I, k?: string | number) => R | PromiseLike<R>) => {
+//     const pa = <PromiseLike<any>[]>[];
+//     each(iterable, (_v: I, _k: string) => {
+//         pa.push(createAokPromise<I, R>(_v, _k, fn));
+//     });
+
+//     const resolved = await Promise.all(pa);
+//     if (every(resolved, (kv) => check(kv.key, Number))) {
+//         const r: any = [];
+//         for (const kv of resolved) {
+//             r[kv.key] = kv.value;
+//         }
+//         return r;
+//     } else {
+//         const r: any = {};
+//         for (const kv of resolved) {
+//             r[kv.key] = kv.value;
+//         }
+//         return r;
+//     }
+// }
 
 export function stringify(value: any, replacer?: (number | string)[], space?: string | number): string {
     return JSON.stringify(decycle(value), replacer, space || 2);

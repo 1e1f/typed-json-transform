@@ -3,17 +3,17 @@
         "src/**/*.ts"
     ],
     "compilerOptions": {
-        "outDir": "esm",
+        "outDir": "dist",
         "sourceMap": true,
         "noImplicitAny": true,
-        "module": "es2015",
+        "module": "commonjs",
         "moduleResolution": "node",
-        "target": "es6",
+        "target": "es5",
         "lib": [
-            "esnext"
+            "es2015"
         ],
         "preserveConstEnums": true,
-        "declaration": false,
+        "declaration": true,
         "noEmitOnError": false,
         "downlevelIteration": true
     }

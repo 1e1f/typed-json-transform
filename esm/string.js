@@ -24,7 +24,7 @@ export const trim = (str) => {
 };
 const toCamelDefaults = {};
 export const toCamel = (input, options) => {
-    const { delimiter, upperCase } = Object.assign({}, toCamelDefaults, options);
+    const { delimiter, upperCase } = Object.assign(Object.assign({}, toCamelDefaults), options);
     const res = map(input.split(delimiter || " "), (word) => {
         return word.charAt(0).toUpperCase() + word.slice(1);
     }).join('');
@@ -36,7 +36,7 @@ const fromCamelDefaults = {
     upperCase: true
 };
 export const fromCamel = (input, options) => {
-    const { delimiter, upperCase, capitalize, capsLock } = Object.assign({}, fromCamelDefaults, options);
+    const { delimiter, upperCase, capitalize, capsLock } = Object.assign(Object.assign({}, fromCamelDefaults), options);
     var words = input.match(/[A-Za-z][a-z]*/g);
     var out = words;
     out = out.map((word) => {
