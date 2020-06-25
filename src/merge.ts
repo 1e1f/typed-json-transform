@@ -134,7 +134,7 @@ export const recurArray = (rv: Merge.ReturnValue, rhs: any): void => {
     });
 }
 
-function mergeOrReturnAssignment(rv: Merge.ReturnValue, rhs: any): any {
+export function mergeOrReturnAssignment(rv: Merge.ReturnValue, rhs: any): any {
     const { data: lhs, state } = rv;
     const { operator } = state.merge;
     if (check(lhs, Array)) {

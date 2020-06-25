@@ -1,6 +1,6 @@
 {
   "name": "typed-json-transform",
-  "version": "0.25.5",
+  "version": "0.25.6",
   "description": "_ like library written in typescript using templated generics where reasonable",
   "homepage": "https://github.com/1e1f/typed-json-transform",
   "author": {
