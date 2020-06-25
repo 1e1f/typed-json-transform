@@ -1,5 +1,3 @@
-///<reference path="../@types/index.d.ts" />
-
 import { check, isEmpty, MapLike } from './check';
 import { decycle } from './decycle';
 import { mergeOrReturnAssignment } from './merge';
