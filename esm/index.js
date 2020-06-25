@@ -1,4 +1,4 @@
-///<reference path="./@types/index.d.ts" />
+import './types';
 export * from './graph';
 export * from './check';
 export * from './olhm';

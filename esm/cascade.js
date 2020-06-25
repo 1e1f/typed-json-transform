@@ -10,7 +10,7 @@ function deepSearch(object, keywords, selectors) {
     const stack = [];
     each(keyPaths(object), (key) => {
         let filtered = key;
-        const unfiltered = key.split('.');
+        const unfiltered = (key === null || key === void 0 ? void 0 : key.split('.')) || [];
         let level = 0;
         for (const k of unfiltered) {
             if (select(keywords, k)) {
