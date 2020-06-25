@@ -1,17 +1,17 @@
 os:
-- linux
-- osx
+  - linux
+  - osx
 dist: trusty
 language: node_js
 node_js:
-- '6'
-- '8'
-- '10'
+  - "8"
+  - "10"
+  - "11"
 before_install:
-- npm config set progress=false
+  - npm config set progress=false
 script: npm run travis
 after_script:
-- cat ./coverage/lcov.info | ./node_modules/.bin/coveralls
+  - cat ./coverage/lcov.info | ./node_modules/.bin/coveralls
 deploy:
   provider: npm
   on:
