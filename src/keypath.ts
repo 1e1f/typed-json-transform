@@ -1,6 +1,7 @@
 import { check } from './check';
 import { each, extend, clone } from './containers';
 import { union, difference } from './arrays';
+import { TJT, Keypath } from './types';
 
 export function setValueForKeyPath(value: any, keyPath: string, input: TJT.SIO): void {
     let current = input;

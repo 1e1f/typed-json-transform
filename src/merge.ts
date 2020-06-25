@@ -1,3 +1,4 @@
+import { Merge } from './types';
 
 import { check } from './check';
 

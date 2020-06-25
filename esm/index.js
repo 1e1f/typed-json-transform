@@ -1,4 +1,3 @@
-import './types';
 export * from './graph';
 export * from './check';
 export * from './olhm';

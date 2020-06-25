@@ -1,3 +1,5 @@
+import { TJT } from './types';
+
 export function check(val: any, type: any) {
   if (_c(type, Array)) {
     for (const sType of type) {

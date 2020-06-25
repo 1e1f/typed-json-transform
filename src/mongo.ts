@@ -1,3 +1,5 @@
+import { TJT } from './types';
+
 import { check, isEqual } from './check';
 import { contains } from './arrays';
 import { each, prune, clone } from './containers';

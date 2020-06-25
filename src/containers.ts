@@ -2,7 +2,7 @@ import { check, isEmpty, MapLike } from './check';
 import { decycle } from './decycle';
 import { mergeOrReturnAssignment } from './merge';
 import { every, Mutate } from './arrays';
-
+import { TJT, Merge } from './types';
 
 export const set = (t: TJT.MapLike<any>, [k, v]: any[]): void => {
     if (t instanceof Map) {
