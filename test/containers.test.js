@@ -26,8 +26,8 @@ import {
   difference,
   keysAndValues,
   aokmap,
-  mergeArray,
-  mergeObject,
+  mergeArrayToRV,
+  mergeObjectToRV,
 } from "../esm";
 import { Schema } from "mongoose";
 
@@ -287,7 +287,7 @@ describe("merge", function () {
       x: 1,
       b: false,
     };
-    mergeObject({ data: a, state: { merge: { operator: "|" } } }, b);
+    mergeObjectToRV({ data: a, state: { merge: { operator: "|" } } }, b);
     assert.deepEqual(a, { x: 1, b: false });
   });
 
@@ -308,7 +308,7 @@ describe("merge", function () {
         b: false,
       },
     ];
-    mergeArray({ data: a, state: { merge: { operator: "|" } } }, b);
+    mergeArrayToRV({ data: a, state: { merge: { operator: "|" } } }, b);
     assert.deepEqual(a, [{ any: "value" }, { x: 1, b: false }]);
   });
 

@@ -16,7 +16,7 @@ function _mergeArray(lhs: any[], rhs: any[], operator: Merge.Operator) {
         case '^': xor(lhs, rhs); break;
         case '?': compareAndFilter(lhs, rhs, (a, b) => a && b); break;
         case '*': compareAndFilter(lhs, rhs, (a, b) => b && a); break;
-        default: throw new Error(`unhandled Array merge operator ${operator}`);
+        default: throw new Error(`unhandled Array merge operator ${operator} lhs: ${lhs}`);
     }
 }
 
@@ -74,9 +74,12 @@ export function mergeObjectToRV(rv: Merge.ReturnValue, setter: any): Merge.Retur
             const rhs = setter[key];
             const doMerge = () => {
                 const assignment = mergeOrReturnAssignment({ data: lhs, state }, rhs).data;
+                if (rhs?.debug) {
+                    console.log({ assignment, rhs });
+                }
                 if (assignment !== undefined) {
                     if (operator == '^') {
-                        if (data[key] == assignment) delete data[key]
+                        if (data[key] === assignment) delete data[key]
                         else data[key] = assignment
                     } else {
                         data[key] = assignment
