@@ -2,7 +2,6 @@ import { Merge } from './types';
 
 import { check } from './check';
 
-import { unflatten } from './keypath';
 import { arrayify, Mutate, contains } from './arrays';
 
 const { concat, subtract, difference, intersect, union, xor, assign, compareAndFilter } = Mutate;
@@ -21,7 +20,7 @@ function _mergeArray(lhs: any[], rhs: any[], operator: Merge.Operator) {
     }
 }
 
-export function mergeArray({ data: lhs, state }: Merge.ReturnValue, rhs: any): Merge.ReturnValue {
+export function mergeArrayToRV({ data: lhs, state }: Merge.ReturnValue, rhs: any): Merge.ReturnValue {
     const { merge: { operator } } = state;
     if (check(rhs, Object)) {
         let mutated;
@@ -34,7 +33,7 @@ export function mergeArray({ data: lhs, state }: Merge.ReturnValue, rhs: any): M
                     }
                 }
                 mutated = true;
-                mergeArray({ data: lhs, state: nextState }, rhs[key]).data;
+                mergeArrayToRV({ data: lhs, state: nextState }, rhs[key]).data;
             }
         }
         if (mutated) {
@@ -54,11 +53,10 @@ export function mergeArray({ data: lhs, state }: Merge.ReturnValue, rhs: any): M
     }
 }
 
-export function mergeObject(rv: Merge.ReturnValue, _setter: any): Merge.ReturnValue {
+export function mergeObjectToRV(rv: Merge.ReturnValue, setter: any): Merge.ReturnValue {
     const { state, data } = rv;
     const { merge: { operator } } = state;
 
-    const setter = unflatten(_setter);
     for (const key of Object.keys(setter)) {
         if ((key.length == 2) && (key[0] == '<')) {
             const nextState = {
@@ -138,10 +136,10 @@ export function mergeOrReturnAssignment(rv: Merge.ReturnValue, rhs: any): any {
     const { data: lhs, state } = rv;
     const { operator } = state.merge;
     if (check(lhs, Array)) {
-        mergeArray(rv, rhs);
+        mergeArrayToRV(rv, rhs);
     } else if (check(lhs, Object)) {
         if (check(rhs, Object)) {
-            mergeObject(rv, rhs);
+            mergeObjectToRV(rv, rhs);
         }
         else {
             if (contains(['&', '*', '-'], operator)) {
@@ -228,3 +226,5 @@ export function mergeN<T>(target: T & { [index: string]: any }, ...args: any[]):
     }
     return target;
 }
+
+export { Merge }
