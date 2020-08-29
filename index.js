@@ -1850,11 +1850,11 @@
             else {
                 data[key] = assignment;
             }
-            console.log('assigned:', assignment, 'next data:', data);
+            // console.log('assigned:', assignment, 'next data:', data)
         }
-        else {
-            console.log("didn't merge", data[key], "because", assignment, "<=", rhs);
-        }
+        // else {
+        //     console.log("didn't merge", data[key], "because", assignment, "<=", rhs)
+        // }
     };
     function mergeLhsObject(rv, _setter) {
         const { state, data } = rv;
@@ -1957,16 +1957,14 @@
                     switch (operator) {
                         case '*':
                         case '&': if (rhs == null)
-                            return { data: null, state };
+                            return { data: undefined, state };
                         case '-':
                             if (rhs)
                                 delete lhs[rhs];
-                            return { data: null, state };
+                            return { data: undefined, state };
                     }
                 }
-                else {
-                    return { data: rhs, state };
-                }
+                return { data: rhs, state };
                 // throwIfImplicitConversion(rv, rhs);
             }
         }
