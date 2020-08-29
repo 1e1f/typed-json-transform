@@ -8,5 +8,4 @@ node_modules
 /coverage
 .vscode
 /tsconfig.tsbuildinfo
-/index.js
 /esm

@@ -3,6 +3,7 @@ import { Merge } from './types';
 import { check } from './check';
 
 import { arrayify, Mutate, contains } from './arrays';
+import { conditionalUnflatten } from './keypath';
 
 const { concat, subtract, difference, intersect, union, xor, assign, compareAndFilter } = Mutate;
 function _mergeArray(lhs: any[], rhs: any[], operator: Merge.Operator) {
@@ -20,12 +21,13 @@ function _mergeArray(lhs: any[], rhs: any[], operator: Merge.Operator) {
     }
 }
 
-export function mergeArrayToRV({ data: lhs, state }: Merge.ReturnValue, rhs: any): Merge.ReturnValue {
+export function mergeLhsArray({ data: lhs, state }: Merge.ReturnValue, rhs: any): Merge.ReturnValue {
     const { merge: { operator } } = state;
     if (check(rhs, Object)) {
         let mutated;
-        for (const key of Object.keys(rhs)) {
-            if ((key.length == 2) && (key[0] == '<')) {
+        const setter = conditionalUnflatten(rhs);
+        for (const key of Object.keys(setter)) {
+            if ((key.length === 2) && (key[0] === '<')) {
                 const nextState = {
                     ...state,
                     merge: {
@@ -33,7 +35,7 @@ export function mergeArrayToRV({ data: lhs, state }: Merge.ReturnValue, rhs: any
                     }
                 }
                 mutated = true;
-                mergeArrayToRV({ data: lhs, state: nextState }, rhs[key]).data;
+                mergeLhsArray({ data: lhs, state: nextState }, setter[key]).data;
             }
         }
         if (mutated) {
@@ -53,12 +55,30 @@ export function mergeArrayToRV({ data: lhs, state }: Merge.ReturnValue, rhs: any
     }
 }
 
-export function mergeObjectToRV(rv: Merge.ReturnValue, setter: any): Merge.ReturnValue {
+const doMerge = (lhs, operator, rhs, data, key, state) => {
+
+    const assignment = mergeOrReturnAssignment({ data: lhs, state }, rhs).data;
+    if (assignment !== undefined) { // we skip undefined becuase prev mergeOrReturnAssignment "pruned it"
+        if (operator == '^') {
+            if (data[key] === assignment) delete data[key]
+            else data[key] = assignment
+        } else {
+            data[key] = assignment
+        }
+        // console.log('assigned:', assignment, 'next data:', data)
+    }
+    // else {
+    //     console.log("didn't merge", data[key], "because", assignment, "<=", rhs)
+    // }
+}
+
+export function mergeLhsObject(rv: Merge.ReturnValue, _setter: any): Merge.ReturnValue {
     const { state, data } = rv;
     const { merge: { operator } } = state;
 
+    const setter = conditionalUnflatten(_setter);
     for (const key of Object.keys(setter)) {
-        if ((key.length == 2) && (key[0] == '<')) {
+        if ((key.length === 2) && (key[0] === '<')) {
             const nextState = {
                 ...state,
                 merge: {
@@ -66,41 +86,28 @@ export function mergeObjectToRV(rv: Merge.ReturnValue, setter: any): Merge.Retur
                 }
             }
             const assignment = mergeOrReturnAssignment({ data, state: nextState }, setter[key]).data;
-            if (assignment || check(assignment, [Number])) {
+            if (assignment !== undefined) {
                 data[key] = assignment
             }
         } else {
-            let lhs = data[key];
+            const lhsValue = data[key];
             const rhs = setter[key];
-            const doMerge = () => {
-                const assignment = mergeOrReturnAssignment({ data: lhs, state }, rhs).data;
-                if (rhs?.debug) {
-                    console.log({ assignment, rhs });
-                }
-                if (assignment !== undefined) {
-                    if (operator == '^') {
-                        if (data[key] === assignment) delete data[key]
-                        else data[key] = assignment
-                    } else {
-                        data[key] = assignment
-                    }
-                }
-            }
             switch (operator) {
-                case '^': case '|': case '+': doMerge(); break;
-                case '=': doMerge(); break;
-                case '!': if (lhs === undefined) doMerge(); break;
-                case '?': case '&': case '*': if (lhs) doMerge(); break;
+                case '^': case '|': case '+': doMerge(lhsValue, operator, rhs, data, key, state); break;
+                case '=': doMerge(lhsValue, operator, rhs, data, key, state); break;
+                case '!': if (lhsValue === undefined) doMerge(lhsValue, operator, rhs, data, key, state); break;
+                case '?': case '&': case '*': if (lhsValue) doMerge(lhsValue, operator, rhs, data, key, state); break;
                 case '-': if (rhs !== undefined) delete data[key]; break;
                 default: throw new Error(`unhandled merge operator ${operator}`)
             }
 
             if (check(data, Object)) {
+                // rhs to lhs, clear not preset for assignment or mult.
                 for (const key of Object.keys(data)) {
-                    let rhs = setter[key];
+                    const negRhs = setter[key];
                     switch (operator) {
-                        case '=': if (rhs === undefined) delete data[key]; break;
-                        case '&': case '*': if (!rhs) delete data[key]; break;
+                        case '=': if (negRhs === undefined) delete data[key]; break;
+                        case '&': case '*': if (!negRhs) delete data[key]; break;
                         default: break;
                     }
                 }
@@ -139,19 +146,21 @@ export function mergeOrReturnAssignment(rv: Merge.ReturnValue, rhs: any): any {
     const { data: lhs, state } = rv;
     const { operator } = state.merge;
     if (check(lhs, Array)) {
-        mergeArrayToRV(rv, rhs);
+        mergeLhsArray(rv, rhs);
     } else if (check(lhs, Object)) {
+        // console.log(mergeOrReturnAssignment, rhs);
         if (check(rhs, Object)) {
-            mergeObjectToRV(rv, rhs);
+            mergeLhsObject(rv, rhs);
         }
         else {
             if (contains(['&', '*', '-'], operator)) {
                 switch (operator) {
-                    case '*': case '&': if (rhs === undefined) return { data: 0, state };
-                    case '-': if (rhs && check(rhs, String)) delete lhs[rhs]; return { data: undefined, state };
+                    case '*': case '&': if (rhs == null) return { data: undefined, state };
+                    case '-': if (rhs) delete lhs[rhs]; return { data: undefined, state };
                 }
             }
-            throwIfImplicitConversion(rv, rhs);
+            return { data: rhs, state };
+            // throwIfImplicitConversion(rv, rhs);
         }
     } else {
         if (check(rhs, Object)) {
@@ -166,7 +175,7 @@ export function mergeOrReturnAssignment(rv: Merge.ReturnValue, rhs: any): any {
                 return ret;
             }
         }
-        if (check(rhs, Array)) {
+        else if (check(rhs, Array)) {
             throwIfImplicitConversion(rv, rhs);
             recurArray(rv, rhs);
         }

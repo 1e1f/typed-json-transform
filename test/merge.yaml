@@ -66,17 +66,19 @@ fixtures:
           a:
             b: 1
             c: b
-            # d: 
-            #   a: 1
-            #   b: 1
+        expanded:
+          a:
+            b: 1
+            c: 1
       <|:
         x:
           v: 1
           a:
             <-:
               c: v
-          # d:
-          #   <=: 5
+        expanded:
+          a:
+            b: x
     mult:
       <=:
         x:
@@ -84,10 +86,10 @@ fixtures:
             c: b
           b: v
       <*:
-        x.a: 1
+        ~x.a: 1
     xor:
       <=:
-        s: 
+        s:
           x: val
           y: 1
       <^:
@@ -167,6 +169,10 @@ expect:
         v: 1
         a:
           b: 1
+      expanded:
+        a:
+          b: x
+          c: 1
     mult:
       x:
         a:

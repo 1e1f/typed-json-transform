@@ -1,6 +1,6 @@
 {
   "name": "typed-json-transform",
-  "version": "0.25.7",
+  "version": "0.26.0",
   "description": "_ like library written in typescript using templated generics where reasonable",
   "homepage": "https://github.com/1e1f/typed-json-transform",
   "author": {
@@ -21,7 +21,8 @@
     }
   ],
   "private": false,
-  "main": "index.js",
+  "main": "index",
+  "module": "esm/index.js",
   "types": "esm/index.d.ts",
   "scripts": {
     "build": "rm -Rf esm && rm -f tsconfig.tsbuildinfo && rollup --config rollup.config.js && tsc",

@@ -231,3 +231,16 @@ export const unflatten = (source: any) => {
     });
     return ret;
 }
+
+export const conditionalUnflatten = (source: any) => {
+    const ret: any = { ...source };
+    each(source, (val: any, explicitKp: string) => {
+        if (val !== undefined) {
+            if (explicitKp[0] === '~' && (explicitKp.indexOf('.') !== -1)) {
+                const kp = explicitKp.slice(1);
+                setValueForKeyPath(val, kp, ret);
+            }
+        }
+    });
+    return ret;
+}
