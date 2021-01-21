@@ -1275,7 +1275,14 @@
         if (Array.isArray(current)) {
             return current[parseInt(lastKey, 10)];
         }
-        return current.hasOwnProperty(lastKey) ? current[lastKey] : undefined;
+        else if (current) {
+            for (const k of Object.keys(current)) {
+                if (k === lastKey) {
+                    return current[lastKey];
+                }
+            }
+        }
+        return undefined;
     }
     function unsetKeyPath(keyPath, obj) {
         // this function mutates obj

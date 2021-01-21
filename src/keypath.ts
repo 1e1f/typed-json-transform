@@ -77,8 +77,14 @@ export function valueForKeyPath(keyPath: string, input: TJT.SIO): any {
     const lastKey = keys[keys.length - 1];
     if (Array.isArray(current)) {
         return current[parseInt(lastKey, 10)];
+    } else if (current) {
+        for (const k of Object.keys(current)) {
+            if (k === lastKey) {
+                return current[lastKey];
+            }
+        }
     }
-    return current.hasOwnProperty(lastKey) ? current[lastKey] : undefined;
+    return undefined;
 }
 
 export function unsetKeyPath(keyPath: string, obj: TJT.SIO): boolean {
