@@ -78,7 +78,7 @@ export function valueForKeyPath(keyPath: string, input: TJT.SIO): any {
     if (Array.isArray(current)) {
         return current[parseInt(lastKey, 10)];
     }
-    return current[lastKey];
+    return current.hasOwnProperty(lastKey) ? current[lastKey] : undefined;
 }
 
 export function unsetKeyPath(keyPath: string, obj: TJT.SIO): boolean {
