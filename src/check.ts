@@ -1,5 +1,15 @@
 import { TJT } from './types';
 
+export const objectToString = (value) => {
+  if (!value) {
+    return value === undefined ? '[object Undefined]' : '[object Null]'
+  }
+  return Object.prototype.toString.call(value)
+}
+
+export const isArrayBuffer = (val) =>
+  val !== null && typeof val === 'object' && objectToString(val) == '[object ArrayBuffer]'
+
 export function check(val: any, type: any) {
   if (_c(type, Array)) {
     for (const sType of type) {
@@ -17,6 +27,9 @@ export const MapLike = 'MapLike';
 
 function _c(val: any, type: any): boolean {
   switch (type) {
+    case ArrayBuffer:
+    case 'ArrayBuffer':
+      return isArrayBuffer(val);
     case Array:
     case 'Array':
       return Array.isArray(val);

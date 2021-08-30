@@ -4,6 +4,13 @@
     (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory((global.index = global.index || {}, global.index.js = {})));
 }(this, (function (exports) { 'use strict';
 
+    const objectToString = (value) => {
+        if (!value) {
+            return value === undefined ? '[object Undefined]' : '[object Null]';
+        }
+        return Object.prototype.toString.call(value);
+    };
+    const isArrayBuffer = (val) => val !== null && typeof val === 'object' && objectToString(val) == '[object ArrayBuffer]';
     function check(val, type) {
         if (_c(type, Array)) {
             for (const sType of type) {
@@ -19,6 +26,9 @@
     const MapLike = 'MapLike';
     function _c(val, type) {
         switch (type) {
+            case ArrayBuffer:
+            case 'ArrayBuffer':
+                return isArrayBuffer(val);
             case Array:
             case 'Array':
                 return Array.isArray(val);
@@ -221,7 +231,7 @@
         }(object, '$'));
     }
 
-    const compareAndFilter = (arr1, arr2, fn, filter) => {
+    const compareAndFilter$1 = (arr1, arr2, fn, filter) => {
         const ret = [];
         for (let i = 0; i < arr1.length; i++) {
             const a = arr1[i];
@@ -257,6 +267,7 @@
         return true;
     }
     const all = every;
+    exports.Mutate = void 0;
     (function (Mutate) {
         function concat(...args) {
             const [input, ...rest] = args;
@@ -360,7 +371,7 @@
             assign(arr1, ret);
         };
     })(exports.Mutate || (exports.Mutate = {}));
-    function union(...args) {
+    function union$1(...args) {
         const res = [];
         for (const arr of args) {
             for (const v of arr) {
@@ -371,7 +382,7 @@
         }
         return res;
     }
-    function concat(...args) {
+    function concat$1(...args) {
         const res = [];
         for (const arr of args) {
             for (const v of arr) {
@@ -380,7 +391,7 @@
         }
         return res;
     }
-    function intersect(...args) {
+    function intersect$1(...args) {
         const res = [];
         for (const a of args) {
             for (const v of a) {
@@ -398,7 +409,7 @@
         }
         return res;
     }
-    function difference(a, b) {
+    function difference$1(a, b) {
         const res = [];
         for (const v of a) {
             if (!contains(b, v)) {
@@ -569,11 +580,11 @@
         }
         return target;
     }
-    function flatten(arr) {
+    function flatten$1(arr) {
         let stack = [];
         for (const v of arr) {
             if (check(v, Array)) {
-                exports.Mutate.concat(stack, flatten(v));
+                exports.Mutate.concat(stack, flatten$1(v));
             }
             else {
                 stack.push(v);
@@ -590,7 +601,7 @@
         });
         return { keys, values };
     }
-    function assign(a, b) {
+    function assign$1(a, b) {
         let result = clone(a);
         return extend(result || {}, clone(b));
     }
@@ -728,15 +739,18 @@
     function plain(obj) {
         return JSON.parse(JSON.stringify(obj));
     }
+    const shallowCopy = (x) => (typeof x == 'object' ? Array.isArray(x) ? [...x] : Object.assign({}, x) : x);
     function clone(obj, stacktrace = [], addr = []) {
         var copy;
         // Handle the 3 simple types, and null or undefined
         if (null == obj || ("object" != typeof obj))
             return obj;
+        const recursiveError = new Error(`ext stack: ${stacktrace.join('.')}, addr: ${addr}}`);
         each(addr, (ptr) => {
             each(obj, (v, key) => {
                 if (ptr === v) {
-                    throw new Error(`terminate recursive clone @ ${key}; ${v} = ${ptr} stack: ${stacktrace.join('.')}, addr: ${addr}}`);
+                    recursiveError.message += `terminate recursive clone @ ${key}; ${v} = ${ptr};`;
+                    throw recursiveError;
                 }
             });
         });
@@ -746,6 +760,10 @@
             copy.setTime(obj.getTime());
             return copy;
         }
+        // Typed Array
+        // else if (isArrayBuffer(obj)) {
+        //     return <T><any>((obj as any as ArrayBuffer).slice(0));
+        // }
         // Handle Array
         else if (obj instanceof Array) {
             copy = [];
@@ -774,12 +792,23 @@
                         throw new Error(`${typeof obj} instance: clone(${obj}) failed`);
                     }
                 }
+                else if (typeof obj.slice === 'function') {
+                    // Objects supporting slice based copy
+                    return obj.slice(0);
+                }
                 else if (obj.constructor) {
+                    if (obj.then) {
+                        // is a promise
+                        throw new Error(`Attempting to clone a Promise. Maybe something should have been "await"ed?`);
+                    }
                     try {
                         copy = new (obj.constructor)();
                     }
                     catch (e) {
-                        throw new Error(`Error while cloning a(n) [ ${typeof obj} ] instance: ${JSON.stringify(obj)}`);
+                        if (typeof obj === 'object') {
+                            throw new Error(`Error while cloning object with keys ${Object.keys(obj)}, constructor: ${obj.constructor}`);
+                        }
+                        throw new Error(`Error while constructing a(n) [ ${typeof obj} ] instance: ${JSON.stringify(obj)}`);
                         // throw new Error(`${typeof obj} instance: ${from.constructor}() failed: ${e.message}`);
                     }
                 }
@@ -891,10 +920,26 @@
     https://github.com/jriecken/dependency-graph
     */
     class Graph {
-        constructor() {
-            this.nodes = {};
-            this.outgoingEdges = {}; // Node -> [Dependency Node]
-            this.incomingEdges = {}; // Node -> [Dependant Node]
+        constructor(graph) {
+            if (graph) {
+                this.import(graph);
+            }
+            else {
+                this.nodes = {};
+                this.outgoingEdges = {}; // Node -> [Dependency Node]
+                this.incomingEdges = {}; // Node -> [Dependant Node]
+            }
+        }
+        clone() {
+            return new Graph(this);
+        }
+        copy() {
+            return this.clone();
+        }
+        import(graph) {
+            this.nodes = Object.assign({}, graph.nodes);
+            this.incomingEdges = Object.assign({}, graph.incomingEdges);
+            this.outgoingEdges = Object.assign({}, graph.outgoingEdges);
         }
         addNode(node, data) {
             if (!this.hasNode(node)) {
@@ -984,7 +1029,7 @@
                 return result;
             }
             else {
-                throw new Error('Node does not exist: ' + stringify(node));
+                throw new Error("Node does not exist: " + stringify(node));
             }
         }
         dependantsOf(node, leavesOnly) {
@@ -999,7 +1044,7 @@
                 return result;
             }
             else {
-                throw new Error('Node does not exist: ' + stringify(node));
+                throw new Error("Node does not exist: " + stringify(node));
             }
         }
         overallOrder(leavesOnly) {
@@ -1019,7 +1064,7 @@
                 const DFS = createDFS(this.outgoingEdges, leavesOnly, result);
                 // Find all potential starting points (nodes with nothing depending on them) an
                 // run a DFS starting at these points to get the order
-                const nodeNames = keys.filter(nodeName => self.incomingEdges[nodeName].length === 0);
+                const nodeNames = keys.filter((nodeName) => self.incomingEdges[nodeName].length === 0);
                 for (const nodeName of nodeNames) {
                     DFS(nodeName);
                 }
@@ -1039,11 +1084,12 @@
                 }
                 else if (currentPath.indexOf(node) >= 0) {
                     currentPath.push(node);
-                    throw new Error('Dependency Cycle Found: ' + currentPath.join(' -> '));
+                    throw new Error("Dependency Cycle Found: " + currentPath.join(" -> "));
                 }
             }
             currentPath.pop();
-            if ((!leavesOnly || edges[currentNode].length === 0) && result.indexOf(currentNode) === -1) {
+            if ((!leavesOnly || edges[currentNode].length === 0) &&
+                result.indexOf(currentNode) === -1) {
                 result.push(currentNode);
             }
         };
@@ -1244,7 +1290,7 @@
             extend(existing, value);
         }
         else if (check(value, Array) && check(existing, Array)) {
-            setValueForKeyPath(union(existing, value), keyPath, obj);
+            setValueForKeyPath(union$1(existing, value), keyPath, obj);
         }
         else {
             setValueForKeyPath(value, keyPath, obj);
@@ -1356,7 +1402,7 @@
                 }
             }
         }
-        return difference(_keyPaths, toFilter);
+        return difference$1(_keyPaths, toFilter);
     }
     function keyPaths(obj, _options, _stack, parent) {
         const stack = _stack || [];
@@ -1526,7 +1572,7 @@
         });
         return stack;
     }
-    function flatten$1(stack, fn) {
+    function flatten(stack, fn) {
         const flat = {};
         const apply = fn || mergeValueAtKeypath;
         each(stack, (level, height) => {
@@ -1579,7 +1625,7 @@
     }
     function hashField(trie, options) {
         const { keywords, selectors } = extractKeywordsAndSelectors(options);
-        const match = flatten$1(deepSearch(trie, keywords, selectors));
+        const match = flatten(deepSearch(trie, keywords, selectors));
         const unselected = okmap(trie, (val) => {
             return false;
         });
@@ -1589,7 +1635,7 @@
         return or(unselected, selected);
     }
     function cascade(tree, keywords, selectors, apply) {
-        return flatten$1(deepSearch(tree, keywords, selectors), apply);
+        return flatten(deepSearch(tree, keywords, selectors), apply);
     }
 
     function shouldSet(val, prev) {
@@ -1782,35 +1828,35 @@
         return valueModifier;
     }
 
-    const { concat: concat$1, subtract, difference: difference$1, intersect: intersect$1, union: union$1, xor, assign: assign$1, compareAndFilter: compareAndFilter$1 } = exports.Mutate;
+    const { concat, subtract, difference, intersect, union, xor, assign, compareAndFilter } = exports.Mutate;
     function _mergeArray(lhs, rhs, operator) {
         switch (operator) {
             case '=':
-                assign$1(lhs, rhs);
+                assign(lhs, rhs);
                 break;
             case '+':
-                concat$1(lhs, rhs);
+                concat(lhs, rhs);
                 break;
             case '-':
                 subtract(lhs, rhs);
                 break;
             case '!':
-                difference$1(lhs, rhs);
+                difference(lhs, rhs);
                 break;
             case '&':
-                intersect$1(lhs, rhs);
+                intersect(lhs, rhs);
                 break;
             case '|':
-                union$1(lhs, rhs);
+                union(lhs, rhs);
                 break;
             case '^':
                 xor(lhs, rhs);
                 break;
             case '?':
-                compareAndFilter$1(lhs, rhs, (a, b) => a && b);
+                compareAndFilter(lhs, rhs, (a, b) => a && b);
                 break;
             case '*':
-                compareAndFilter$1(lhs, rhs, (a, b) => b && a);
+                compareAndFilter(lhs, rhs, (a, b) => b && a);
                 break;
             default: throw new Error(`unhandled Array merge operator ${operator} lhs: ${lhs}`);
         }
@@ -2058,7 +2104,7 @@
     exports.aokmap = aokmap;
     exports.apply = apply;
     exports.arrayify = arrayify;
-    exports.assign = assign;
+    exports.assign = assign$1;
     exports.beginsWith = beginsWith;
     exports.cascade = cascade;
     exports.check = check;
@@ -2066,15 +2112,15 @@
     exports.clone = clone;
     exports.combine = combine;
     exports.combineN = combineN;
-    exports.compareAndFilter = compareAndFilter;
-    exports.concat = concat;
+    exports.compareAndFilter = compareAndFilter$1;
+    exports.concat = concat$1;
     exports.conditionalUnflatten = conditionalUnflatten;
     exports.construct = construct;
     exports.contains = contains;
     exports.containsAll = containsAll;
     exports.containsAny = containsAny;
     exports.diffToModifier = diffToModifier;
-    exports.difference = difference;
+    exports.difference = difference$1;
     exports.each = each;
     exports.endsWith = endsWith;
     exports.every = every;
@@ -2085,14 +2131,15 @@
     exports.extractKeywordsAndSelectors = extractKeywordsAndSelectors;
     exports.filteredKeyPaths = filteredKeyPaths;
     exports.flatObject = flatObject;
-    exports.flatten = flatten;
+    exports.flatten = flatten$1;
     exports.fromCamel = fromCamel;
     exports.geoSum = geoSum;
     exports.get = get;
     exports.greatestResult = greatestResult;
     exports.hashField = hashField;
-    exports.intersect = intersect;
+    exports.intersect = intersect$1;
     exports.isArguments = isArguments;
+    exports.isArrayBuffer = isArrayBuffer;
     exports.isBuffer = isBuffer;
     exports.isEmpty = isEmpty;
     exports.isEqual = isEqual;
@@ -2114,6 +2161,7 @@
     exports.mergeValueAtKeypath = mergeValueAtKeypath;
     exports.modifierToObj = modifierToObj;
     exports.objToModifier = objToModifier;
+    exports.objectToString = objectToString;
     exports.okmap = okmap;
     exports.or = or;
     exports.plain = plain;
@@ -2125,6 +2173,7 @@
     exports.select = select;
     exports.set = set;
     exports.setValueForKeyPath = setValueForKeyPath;
+    exports.shallowCopy = shallowCopy;
     exports.startsWith = startsWith;
     exports.stringify = stringify;
     exports.sum = sum;
@@ -2132,7 +2181,7 @@
     exports.toCamel = toCamel;
     exports.trim = trim;
     exports.unflatten = unflatten;
-    exports.union = union;
+    exports.union = union$1;
     exports.unset = unset;
     exports.unsetKeyPath = unsetKeyPath;
     exports.update = update;

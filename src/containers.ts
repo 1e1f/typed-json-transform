@@ -1,4 +1,4 @@
-import { check, isEmpty, MapLike } from './check';
+import { check, isEmpty, MapLike, isArrayBuffer } from './check';
 import { decycle } from './decycle';
 import { every, Mutate } from './arrays';
 import { TJT, Merge } from './types';
@@ -328,20 +328,22 @@ function ObjectAssign(target: any, source: any) {
     return to;
 }
 
+export const shallowCopy = <T>(x: T) => (typeof x == 'object' ? Array.isArray(x) ? [...x] : { ...x } : x) as T
+
 export function clone<T>(obj: T & TJT.Iterable<any>, stacktrace: any[] = [], addr: any = []): T {
     var copy;
 
     // Handle the 3 simple types, and null or undefined
     if (null == obj || ("object" != typeof obj)) return obj;
-
+    const recursiveError = new Error(`ext stack: ${stacktrace.join('.')}, addr: ${addr}}`);
     each(addr, (ptr) => {
         each(obj, (v, key) => {
             if (ptr as any === v) {
-                throw new Error(`terminate recursive clone @ ${key}; ${v} = ${ptr} stack: ${stacktrace.join('.')}, addr: ${addr}}`);
+                recursiveError.message += `terminate recursive clone @ ${key}; ${v} = ${ptr};`;
+                throw recursiveError;
             }
         });
     });
-
     // Handle Date
     if (obj instanceof Date) {
         copy = new Date();
@@ -349,6 +351,10 @@ export function clone<T>(obj: T & TJT.Iterable<any>, stacktrace: any[] = [], add
         return <T><any>copy;
     }
 
+    // Typed Array
+    // else if (isArrayBuffer(obj)) {
+    //     return <T><any>((obj as any as ArrayBuffer).slice(0));
+    // }
     // Handle Array
     else if (obj instanceof Array) {
         copy = [];
@@ -379,12 +385,23 @@ export function clone<T>(obj: T & TJT.Iterable<any>, stacktrace: any[] = [], add
                     throw new Error(`${typeof obj} instance: clone(${obj}) failed`);
                 }
             }
+            else if (typeof obj.slice === 'function') {
+                // Objects supporting slice based copy
+                return obj.slice(0);
+            }
             else if (obj.constructor) {
+                if (obj.then) {
+                    // is a promise
+                    throw new Error(`Attempting to clone a Promise. Maybe something should have been "await"ed?`);
+                }
                 try {
                     copy = new ((obj as any).constructor)();
                 }
                 catch (e) {
-                    throw new Error(`Error while cloning a(n) [ ${typeof obj} ] instance: ${JSON.stringify(obj)}`);
+                    if (typeof obj === 'object') {
+                        throw new Error(`Error while cloning object with keys ${Object.keys(obj)}, constructor: ${obj.constructor}`);
+                    }
+                    throw new Error(`Error while constructing a(n) [ ${typeof obj} ] instance: ${JSON.stringify(obj)}`);
                     // throw new Error(`${typeof obj} instance: ${from.constructor}() failed: ${e.message}`);
                 }
             }
