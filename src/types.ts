@@ -1,5 +1,5 @@
 export declare namespace Merge {
-    type Operator = '!' | '&' | '!' | '=' | '?' | '+' | '|' | '-' | '^' | '*';
+    type Operator = '!' | '&' | '=' | '?' | '+' | '|' | '-' | '^' | '*';
     interface ReturnValue<T extends any = any> {
         data: any
         state: T & State

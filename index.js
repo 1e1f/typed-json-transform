@@ -2,7 +2,7 @@
     typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
     typeof define === 'function' && define.amd ? define(['exports'], factory) :
     (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory((global.index = global.index || {}, global.index.js = {})));
-}(this, (function (exports) { 'use strict';
+})(this, (function (exports) { 'use strict';
 
     const objectToString = (value) => {
         if (!value) {
@@ -1644,14 +1644,14 @@
         }
         else if (val instanceof Date) {
             if (prev instanceof Date) {
-                return (val.getTime() !== prev.getTime());
+                return val.getTime() !== prev.getTime();
             }
             return !!val.getTime();
         }
         else if (check(val, Number)) {
-            return (prev !== val) || !check(prev, Number);
+            return prev !== val || !check(prev, Number);
         }
-        else if (val !== null && typeof val === 'object') {
+        else if (val !== null && typeof val === "object") {
             return !isEqual(prev, val);
         }
         else if (val) {
@@ -1660,12 +1660,12 @@
     }
     function shouldUnset(val, prev) {
         if (prev instanceof Date) {
-            return !(val && val.getTime());
+            return !(val && val.getTime && val.getTime());
         }
         if ((prev || check(prev, Number)) && !(val || check(val, Number))) {
             return true;
         }
-        if (val && typeof val === 'object') {
+        if (val && typeof val === "object") {
             if (!Object.keys(val).length) {
                 return true;
             }
@@ -1762,7 +1762,7 @@
     }
     function $addToSet(dest, src) {
         if (!Array.isArray(dest)) {
-            throw new Error('$addToSet, 1st arg not array');
+            throw new Error("$addToSet, 1st arg not array");
         }
         if (!contains(dest, src)) {
             dest.push(src);
@@ -1776,7 +1776,9 @@
         if (source.$unset || source.$set) {
             $unset(dest, source.$unset);
         }
-        each(source, (val, keyPath) => { unsetKeyPath(keyPath, dest); });
+        each(source, (val, keyPath) => {
+            unsetKeyPath(keyPath, dest);
+        });
     }
     function update(doc, options) {
         let model;
@@ -1787,19 +1789,19 @@
             model = options.collection.findOne({ _id: doc._id });
         }
         if (!model) {
-            throw new Error('Diff: no doc to diff against');
+            throw new Error("Diff: no doc to diff against");
         }
         const diff = diffToModifier(model, doc, options.ignore);
         if (diff) {
             if (!options.set && !options.collection) {
-                throw new Error('Diff: no setter provided');
+                throw new Error("Diff: no setter provided");
             }
             if (check(options.set, Function)) {
                 const copy = clone(model);
                 apply(copy, diff);
                 options.set(copy);
                 if (!isEqual(copy, model)) {
-                    throw new Error('Diff: not equal after update');
+                    throw new Error("Diff: not equal after update");
                 }
             }
             else if (options.collection) {
@@ -1810,7 +1812,7 @@
     }
     function mapModifierToKey(modifier, key) {
         if (!modifier) {
-            throw new Error('called mapModifierToKey on undefined');
+            throw new Error("called mapModifierToKey on undefined");
         }
         const valueModifier = {};
         for (const keyPath of Object.keys(modifier.$set || {})) {
@@ -2189,4 +2191,4 @@
 
     Object.defineProperty(exports, '__esModule', { value: true });
 
-})));
+}));

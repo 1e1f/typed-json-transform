@@ -1,18 +1,23 @@
-import { TJT } from './types';
+import { TJT } from "./types";
 
-import { check, isEqual } from './check';
-import { contains } from './arrays';
-import { each, prune, clone } from './containers';
+import { check, isEqual } from "./check";
+import { contains } from "./arrays";
+import { each, prune, clone } from "./containers";
 
 import {
-  valueForKeyPath, _keyPathContainsPath,
-  setValueForKeyPath, mergeValueAtKeypath, unsetKeyPath, keyPaths,
-  allKeyPaths, filteredKeyPaths
-} from './keypath';
+  valueForKeyPath,
+  _keyPathContainsPath,
+  setValueForKeyPath,
+  mergeValueAtKeypath,
+  unsetKeyPath,
+  keyPaths,
+  allKeyPaths,
+  filteredKeyPaths,
+} from "./keypath";
 
 interface Modifier {
-  $set?: any
-  $unset?: any
+  $set?: any;
+  $unset?: any;
 }
 
 function shouldSet(val: any, prev: any): boolean | void {
@@ -20,12 +25,12 @@ function shouldSet(val: any, prev: any): boolean | void {
     return !isEqual(prev, val);
   } else if (val instanceof Date) {
     if (prev instanceof Date) {
-      return (val.getTime() !== prev.getTime());
+      return val.getTime() !== prev.getTime();
     }
     return !!val.getTime();
   } else if (check(val, Number)) {
-    return (prev !== val) || !check(prev, Number);
-  } else if (val !== null && typeof val === 'object') {
+    return prev !== val || !check(prev, Number);
+  } else if (val !== null && typeof val === "object") {
     return !isEqual(prev, val);
   } else if (val) {
     return prev !== val;
@@ -34,12 +39,12 @@ function shouldSet(val: any, prev: any): boolean | void {
 
 function shouldUnset(val: any, prev: any): boolean {
   if (prev instanceof Date) {
-    return !(val && val.getTime());
+    return !(val && val.getTime && val.getTime());
   }
   if ((prev || check(prev, Number)) && !(val || check(val, Number))) {
     return true;
   }
-  if (val && typeof val === 'object') {
+  if (val && typeof val === "object") {
     if (!Object.keys(val).length) {
       return true;
     }
@@ -47,11 +52,18 @@ function shouldUnset(val: any, prev: any): boolean {
   return false;
 }
 
-function diffToModifier(prev: TJT.SIO, doc: TJT.SIO, fieldsToIgnore?: string[], pruneEmptyObjects?: boolean): Modifier {
+function diffToModifier(
+  prev: TJT.SIO,
+  doc: TJT.SIO,
+  fieldsToIgnore?: string[],
+  pruneEmptyObjects?: boolean
+): Modifier {
   const delta: Modifier = { $set: {}, $unset: {} };
   if (doc) {
-    const forwardKeyPaths =
-      filteredKeyPaths(keyPaths(doc), fieldsToIgnore || []);
+    const forwardKeyPaths = filteredKeyPaths(
+      keyPaths(doc),
+      fieldsToIgnore || []
+    );
     for (const keyPath of forwardKeyPaths) {
       const val = valueForKeyPath(keyPath, doc);
       if (shouldSet(val, valueForKeyPath(keyPath, prev))) {
@@ -86,7 +98,12 @@ function diffToModifier(prev: TJT.SIO, doc: TJT.SIO, fieldsToIgnore?: string[], 
   }
   if (Object.keys(delta).length) {
     if (pruneEmptyObjects) {
-      const newDelta = diffToModifier(prev, apply(clone(prev), delta), fieldsToIgnore, false);
+      const newDelta = diffToModifier(
+        prev,
+        apply(clone(prev), delta),
+        fieldsToIgnore,
+        false
+      );
       return newDelta || delta;
     }
     return delta;
@@ -142,7 +159,7 @@ function $set(dest: TJT.SIO, source?: Modifier): void {
 
 function $addToSet<T>(dest: T[], src: T): T[] {
   if (!Array.isArray(dest)) {
-    throw new Error('$addToSet, 1st arg not array');
+    throw new Error("$addToSet, 1st arg not array");
   }
   if (!contains(dest, src)) {
     dest.push(src);
@@ -157,7 +174,9 @@ function $unset(dest: Object, source?: Modifier): void {
   if (source.$unset || source.$set) {
     $unset(dest, source.$unset);
   }
-  each(<any>source, (val: any, keyPath: string) => { unsetKeyPath(keyPath, dest); });
+  each(<any>source, (val: any, keyPath: string) => {
+    unsetKeyPath(keyPath, dest);
+  });
 }
 
 function update(doc: any, options: any): Modifier {
@@ -168,19 +187,19 @@ function update(doc: any, options: any): Modifier {
     model = options.collection.findOne({ _id: doc._id });
   }
   if (!model) {
-    throw new Error('Diff: no doc to diff against');
+    throw new Error("Diff: no doc to diff against");
   }
   const diff = diffToModifier(model, doc, options.ignore);
   if (diff) {
     if (!options.set && !options.collection) {
-      throw new Error('Diff: no setter provided');
+      throw new Error("Diff: no setter provided");
     }
     if (check(options.set, Function)) {
       const copy = clone(model);
       apply(copy, diff);
       options.set(copy);
       if (!isEqual(copy, model)) {
-        throw new Error('Diff: not equal after update');
+        throw new Error("Diff: not equal after update");
       }
     } else if (options.collection) {
       options.collection.update({ _id: model._id }, { $set: diff });
@@ -189,10 +208,9 @@ function update(doc: any, options: any): Modifier {
   return diff;
 }
 
-
 function mapModifierToKey(modifier: Modifier, key: string): Modifier {
   if (!modifier) {
-    throw new Error('called mapModifierToKey on undefined');
+    throw new Error("called mapModifierToKey on undefined");
   }
   const valueModifier: Modifier = {};
   for (const keyPath of Object.keys(modifier.$set || {})) {
@@ -211,6 +229,13 @@ function mapModifierToKey(modifier: Modifier, key: string): Modifier {
 }
 
 export {
-  diffToModifier, modifierToObj, objToModifier, $set, $addToSet, $unset, update,
-  apply, mapModifierToKey
+  diffToModifier,
+  modifierToObj,
+  objToModifier,
+  $set,
+  $addToSet,
+  $unset,
+  update,
+  apply,
+  mapModifierToKey,
 };
