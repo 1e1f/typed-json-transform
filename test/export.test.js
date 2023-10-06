@@ -1,8 +1,4 @@
-import { createRequire } from "node:module";
 import { assert } from "chai";
-// import { check } from "../esm";
-// import { CustomType } from "../esm/fixtures";
-
 
 describe("package access", () => {
 
@@ -10,4 +6,5 @@ describe("package access", () => {
         const imported = await import("typed-json-transform");
         assert(imported.Graph.name === "Graph");
     });
+
 });
