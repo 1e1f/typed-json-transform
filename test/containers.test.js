@@ -1,8 +1,9 @@
 import { describe, it } from "mocha";
 import { assert, expect } from "chai";
-import { makeA, makeB, makeC, makeD, makeZ } from "./fixtures";
+import { makeA, makeB, makeC, makeD, makeZ } from "./fixtures.js";
 import { readFileSync } from "fs";
-import { load, dump } from "js-yaml";
+import yaml from "js-yaml";
+const { load, dump } = yaml;
 import {
   amap,
   isEqual,
@@ -28,10 +29,11 @@ import {
   aokmap,
   mergeLhsArray,
   mergeLhsObject,
-} from "../esm";
-import { Schema } from "mongoose";
+} from "../dist/esm/index.mjs";
+import mongoose from "mongoose";
+const { Schema } = mongoose;
 
-import { SimpleClass, HasCopyMethod } from "../esm/fixtures";
+import { SimpleClass, HasCopyMethod } from "../dist/esm/fixtures.mjs";
 
 describe("isEqual", () => {
   it("isEqual", () => {

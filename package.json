@@ -1,6 +1,7 @@
 {
   "name": "typed-json-transform",
   "version": "0.26.6",
+  "type": "module",
   "description": "_ like library written in typescript using templated generics where reasonable",
   "homepage": "https://github.com/1e1f/typed-json-transform",
   "author": {
@@ -21,12 +22,33 @@
     }
   ],
   "private": false,
-  "main": "index",
-  "module": "esm/index.js",
-  "types": "esm/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/esm/index.d.ts",
+      "require": {
+        "types": "./dist/common/index.d.ts",
+        "default": "./dist/common/index.cjs"
+      },
+      "import": {
+        "types": "./dist/esm/index.d.ts",
+        "default": "./dist/esm/index.mjs"
+      }
+    },
+    "./fixtures": {
+      "types": "./dist/esm/fixtures.d.ts",
+      "require": {
+        "types": "./dist/common/fixtures.d.ts",
+        "default": "./dist/common/fixtures.cjs"
+      },
+      "import": {
+        "types": "./dist/esm/fixtures.d.ts",
+        "default": "./dist/esm/fixtures.mjs"
+      }
+    }
+  },
   "scripts": {
-    "build": "rm -Rf esm && rm -f tsconfig.tsbuildinfo && rollup --config rollup.config.js && tsc",
-    "watch": "rm -Rf esm && rm -f tsconfig.tsbuildinfo && concurrently \"rollup --watch --config rollup.config.js\" \"tsc -w\"",
+    "build": "rm -Rf dist && rm -f tsconfig.tsbuildinfo && rollup --config rollup.config.js",
+    "watch": "rm -Rf dist && rm -f tsconfig.tsbuildinfo && concurrently \"rollup --watch --config rollup.config.js\" \"tsc -w\"",
     "test": "NODE_ENV=test mocha --require @babel/register \"test/**/*.js\" --bail",
     "cover": "NODE_ENV=test nyc --report-dir coverage npm t",
     "travis": "npm run build && npm run cover"
@@ -40,7 +62,8 @@
     "@rollup/plugin-commonjs": "^13.0.0",
     "@rollup/plugin-json": "^4.1.0",
     "@rollup/plugin-node-resolve": "^8.1.0",
-    "@rollup/plugin-typescript": "^5.0.0",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-typescript": "^11.1.5",
     "@types/chai": "^4.2",
     "@types/js-yaml": "^3.12",
     "@types/mocha": "^7",
@@ -52,8 +75,8 @@
     "js-yaml": "^3.13",
     "mocha": "^7.1",
     "mongoose": "^5.9",
-    "rollup": "^2.18.0",
     "nyc": "^15.0",
+    "rollup": "^4.0.2",
     "ts-node": "^8.8",
     "tslib": "^1.11",
     "typescript": "^3.8"

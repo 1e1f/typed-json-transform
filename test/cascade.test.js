@@ -1,5 +1,5 @@
 import { assert } from "chai";
-import { select, cascade, hashField } from "../esm";
+import { select, cascade, hashField } from "../dist/esm/index.mjs";
 
 const keywords = [
   "win",

@@ -1,7 +1,8 @@
 import { assert } from "chai";
-import { check, modifierToObj, diffToModifier, apply } from "../esm";
-import { makeA, makeB, makeC, makeD, makeZ, makeZp } from "./fixtures";
-import { ObjectId } from "mongodb";
+import { check, modifierToObj, diffToModifier, apply } from "../dist/esm/index.mjs";
+import { makeA, makeB, makeC, makeD, makeZ, makeZp } from "./fixtures.js";
+import mongodb from "mongodb";
+const { ObjectId } = mongodb;
 
 const dates = {
   sampleDate: new Date(),
