@@ -1,8 +1,8 @@
 // rollup.config.js
-import resolve from "@rollup/plugin-node-resolve";
+// import resolve from "@rollup/plugin-node-resolve";
 import typescript from "@rollup/plugin-typescript";
-// import commonjs from "@rollup/plugin-commonjs";
-import json from "@rollup/plugin-json";
+import commonjs from "@rollup/plugin-commonjs";
+// import json from "@rollup/plugin-json";
 
 export default [{
   input: [ "src/index.ts", "src/fixtures.ts" ],
@@ -10,11 +10,10 @@ export default [{
     dir: "dist/esm",
     format: "esm",
     sourcemap: true,
+    chunkFileNames: ({ name }) => `${name}.mjs`,
     entryFileNames: ({ name }) => `${name}.mjs`
   },
   plugins: [
-    resolve(),
-    json(),
     typescript({outDir:"dist/esm"}),
   ],
 },{
@@ -23,11 +22,10 @@ export default [{
     dir: "dist/common",
     format: "cjs",
     sourcemap: true,
+    chunkFileNames: ({ name }) => `${name}.cjs`,
     entryFileNames: ({ name }) => `${name}.cjs`
   },
   plugins: [
-    resolve(),
-    json(),
     typescript({outDir:"dist/common"}),
   ],
 }];
