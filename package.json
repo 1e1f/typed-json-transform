@@ -1,6 +1,6 @@
 {
   "name": "typed-json-transform",
-  "version": "0.27.0",
+  "version": "0.27.1",
   "type": "module",
   "description": "_ like library written in typescript using templated generics where reasonable",
   "homepage": "https://github.com/1e1f/typed-json-transform",
@@ -44,6 +44,9 @@
         "types": "./dist/esm/fixtures.d.ts",
         "default": "./dist/esm/fixtures.mjs"
       }
+    },
+    "./types": {
+      "types": "./src/types.ts"
     }
   },
   "scripts": {
