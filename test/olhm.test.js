@@ -1,8 +1,9 @@
 import { assert } from 'chai';
-import { load } from 'js-yaml';
+import yaml from "js-yaml";
+const { load } = yaml;
 import * as fs from 'fs';
 
-import { check, OLHM, OLHV } from '../esm';
+import { check, OLHM, OLHV } from '../dist/esm/index.mjs';
 
 const yamlFile = fs.readFileSync('test/olhm.yaml', 'utf8');
 const o = load(yamlFile);

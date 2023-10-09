@@ -1,6 +1,7 @@
 import { assert } from "chai";
-import { check } from "../esm";
-import { CustomType } from "../esm/fixtures";
+import { check } from "../dist/esm/index.mjs";
+import { CustomType } from '../dist/esm/fixtures.mjs';
+
 const data = {
   object: {},
   objectArray: {

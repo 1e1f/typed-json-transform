@@ -13,9 +13,9 @@ import {
   setValueForKeyPath,
   unsetKeyPath,
   keyPaths,
-} from "../esm";
+} from "../dist/esm/index.mjs";
 
-import { makeA, makeB, makeC, makeD, makeZ } from "./fixtures";
+import { makeA, makeB, makeC, makeD, makeZ } from "./fixtures.js";
 
 describe("keyPaths", () => {
   it("allKeyPaths", () => {

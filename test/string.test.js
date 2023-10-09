@@ -1,5 +1,5 @@
 import { assert } from 'chai';
-import { trim, toCamel, fromCamel } from '../esm';
+import { trim, toCamel, fromCamel } from '../dist/esm/index.mjs';
 
 const email = 'email@domain.com';
 
